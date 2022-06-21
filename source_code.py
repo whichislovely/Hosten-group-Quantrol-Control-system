@@ -41,10 +41,11 @@ class MainWindow(QMainWindow):
 
         class Digital:
             #Object is used to describe digital channels' values
-            def __init__(self, value = 0, expression = 0, evaluation = 0, changed = False):
+            def __init__(self, value = 0, expression = 0, evaluation = 0, for_python = 0, changed = False):
                 self.value = value
                 self.expression = expression
                 self.evaluation = evaluation
+                self.for_python = for_python
                 self.changed = changed
                 self.is_scanned = False
 
@@ -148,8 +149,7 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle(title)
         msg.exec_()
 
-        
-
+    
     #SEQUENCE TAB RELATED
     def sequence_table_changed(self, item):
         if self.to_update:
@@ -331,9 +331,10 @@ class MainWindow(QMainWindow):
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
 
     def dummy_button_clicked(self):
-        #print("new variables")
-        #for item in self.experiment.new_variables:
-        #    print("NAME: ", item.name, "VALUE", item.value)
+
+        print("new variables")
+        for item in self.experiment.new_variables:
+            print("NAME: ", item.name, "VALUE", item.value, "SCANNED", item.is_scanned)
         print("variables", self.experiment.variables)
         for key, item in self.experiment.variables.items():
             print("NAME", item.name, "VALUE", item.value, "PYTHON", item.for_python, "SCANNED", item.is_scanned)
@@ -354,23 +355,6 @@ class MainWindow(QMainWindow):
     def clear_logger_button_clicked(self):
         self.logger.clear()
 
-    def scan_table_parameters_changed(self, item):
-        row = item.row()
-        col = item.column()
-        table_item = self.scan_table_parameters.item(row, col)
-        if col == 0:
-            pass
-        elif col == 1:
-            self.experiment.scanned_variables[row].min_val = float(table_item.text())
-            for item in self.experiment.new_variables:
-                if item.name == self.scan_drop_down.currentText():
-                    item.value = self.experiment.scanned_variables[row].min_val #quick fix for updating the scanned variable value for sorting in time sequence
-        elif col == 2:    
-            self.experiment.scanned_variables[row].max_val = float(table_item.text())
-        elif col == 3:    
-            self.experiment.scanned_variables[row].step = float(table_item.text())
-        update_evaluations.do(self)
-        update_tabs.do(self)        
        
 
     #DIGITAL TAB RELATED
@@ -486,7 +470,7 @@ class MainWindow(QMainWindow):
         if self.to_update:
             row = item.row()
             col = item.column()
-            channel = self.experiment.sequence[row].analog[channel]
+            channel = self.experiment.sequence[row].analog[col - 4]
             table_item = self.analog_table.item(row,col)
             if table_item.text() == "":
                 if row == 0:
@@ -558,7 +542,7 @@ class MainWindow(QMainWindow):
                         if is_scanned:
                             exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = for_python" %self.setting_dict[setting])
                         else:
-                            exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = " + for_python %self.setting_dict[setting])
+                            exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = "%self.setting_dict[setting] + for_python )
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.value = self.dummy_val" %self.setting_dict[setting])
                         self.experiment.sequence[edge_num].dds[channel].changed = True
                     else:
@@ -616,7 +600,7 @@ class MainWindow(QMainWindow):
                     output_eval += "self.experiment.variables['" + current + "'].value" + text[index]
                     variable = self.experiment.variables[current]
                     print(variable.name, variable.value, variable.is_scanned)
-                    if variable.is_scanned:#if scanned assign the python form else assign the value
+                    if self.experiment.do_scan and variable.is_scanned:#if scanned assign the python form else assign the value
                         is_scanned = True
                         output_for_python += str(self.experiment.variables[current].for_python) + text[index]
                         print("HEY THERE", output_for_python)
@@ -638,7 +622,7 @@ class MainWindow(QMainWindow):
         except:
             output_eval += "self.experiment.variables['" + current + "'].value"
             variable = self.experiment.variables[current]
-            if variable.is_scanned:#if scanned assign the python form else assign the value
+            if self.experiment.do_scan and variable.is_scanned:#if scanned assign the python form else assign the value
                 is_scanned = True
                 output_for_python += str(self.experiment.variables[current].for_python)
                 #output_for_python += "self.experiment.variables['" + current + "'].for_python"
@@ -648,6 +632,12 @@ class MainWindow(QMainWindow):
                 print("hello", output_for_python)
             if output_eval:
                 print("output", output_eval, output_for_python)
+        
+        try:
+            exec("self.temp =" + output_for_python)
+            output_for_python = str(self.temp)
+        except:
+            pass
         print("FINAL", output_eval, output_for_python)
         return (output_eval, output_for_python, is_scanned) 
 
@@ -721,8 +711,40 @@ class MainWindow(QMainWindow):
         except:
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
             
-    def scan_table_activated(self):
+    def scan_table_checked(self):
         self.experiment.do_scan = self.scan_table.isChecked()
+        if self.experiment.do_scan == False:
+            self.scan_drop_down.setCurrentText("None")
+            # make the values 0 when disabled needs to be extended for having multiple variables
+            self.scan_table_parameters.setItem(0,1, QTableWidgetItem(str(0)))
+            self.scan_table_parameters.setItem(0,2, QTableWidgetItem(str(0)))
+            self.scan_table_parameters.setItem(0,3, QTableWidgetItem(str(0)))
+            for item in self.experiment.new_variables:
+                self.experiment.variables[item.name].value = item.value
+            update_expressions.do(self)
+            update_tabs.do(self)
+
+    def scan_table_parameters_changed(self, item):
+        if self.experiment.do_scan:
+            row = item.row()
+            col = item.column()
+            table_item = self.scan_table_parameters.item(row, col)
+            if col == 0:
+                pass
+            elif col == 1:
+                print("CHANGED", row, col)
+                self.experiment.scanned_variables[row].min_val = float(table_item.text())
+                variable_name = self.scan_drop_down.currentText()
+                self.experiment.variables[variable_name].value = float(table_item.text())
+
+            elif col == 2:    
+                self.experiment.scanned_variables[row].max_val = float(table_item.text())
+            elif col == 3:    
+                self.experiment.scanned_variables[row].step = float(table_item.text())
+            update_evaluations.do(self)
+            update_tabs.do(self)        
+
+
 
     def scan_drop_down_changed(self):
         if self.to_update:
@@ -730,15 +752,21 @@ class MainWindow(QMainWindow):
             for item in self.experiment.new_variables:
                 item.is_scanned = False
             self.experiment.scanned_variables = []
+            #making all variables not scanned to reassign scanned ones later
+            for item in self.experiment.new_variables:
+                self.experiment.variables[item.name].is_scanned = False
             #assigning new scanned variable
             for item in self.experiment.new_variables:
                 if item.name == self.scan_drop_down.currentText():
                     self.experiment.variables[item.name].is_scanned = True
+                    item.is_scanned = True
                     self.experiment.scanned_variables.append(self.Scanned_variable(item.name, 0,0,0))
                     #item.value = float(self.scan_table_parameters.item(0, 1).text()) we do not change the value of new_variable and will use that when we turn off the scan
-                    self.experiment.variables[item.name].value = item.value
+                    self.experiment.variables[item.name].value = float(self.scan_table_parameters.item(0, 1).text())
                     self.experiment.variables[item.name].for_python = item.name
+            
             update_expressions.do(self)
+            update_tabs.do(self)
 
         
 def run():

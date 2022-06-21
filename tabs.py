@@ -136,7 +136,7 @@ def sequence_tab_build(self):
     hBox.addWidget(self.scan_table_parameters)
     self.scan_table.setFont(QFont("Arial", 14))
     self.scan_table.setGeometry(1100, 30, 675, 200)
-    self.scan_table.toggled.connect(self.scan_table_activated)
+    self.scan_table.toggled.connect(self.scan_table_checked)
     self.scan_table_parameters.setCellWidget(0,0,self.scan_drop_down)   
 
 
