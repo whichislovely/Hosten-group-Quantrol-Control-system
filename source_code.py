@@ -150,6 +150,7 @@ class MainWindow(QMainWindow):
 
     def some_dummy_function():
         print("You called a dummy function")
+        print("this one was added from PC")
 
     #SEQUENCE TAB RELATED
     def sequence_table_changed(self, item):
