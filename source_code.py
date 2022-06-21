@@ -150,6 +150,7 @@ class MainWindow(QMainWindow):
 
     def some_dummy_function():
         print("You called a dummy function")
+        print('Written with Umang')
         
         
 
