@@ -1,0 +1,170 @@
+import os
+from datetime import datetime
+
+def create_experiment(self):
+    file_name = "run_experiment.py"
+    if not os.path.exists(file_name):
+        with open(file_name, 'w'): pass
+
+    file = open(file_name,'w')
+    indentation = ""
+    file.write(indentation + "from artiq.experiment import *\n\n")
+    file.write(indentation + "from numpy import linspace\n\n")
+    file.write(indentation + "class " + file_name[:-3] + "(EnvExperiment):\n")
+    indentation += "    "
+    file.write(indentation + "def build(self):\n")
+    indentation += "    "
+    file.write(indentation + "self.setattr_device('core')\n")
+    for _ in range(3):
+        file.write(indentation + "self.setattr_device('urukul%d_cpld')\n" %_) 
+        for i in range(4):
+            file.write(indentation + "self.setattr_device('urukul%d_ch%d')\n" %(_,i)) 
+    for _ in range(16):
+        file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
+    file.write(indentation + "self.setattr_device('zotino0')\n")
+    file.write(indentation + "self.%s = linspace(%f, %f, %f)\n"%(self.experiment.scanned_variables[0].name,self.experiment.scanned_variables[0].min_val, self.experiment.scanned_variables[0].max_val,self.experiment.scanned_variables[0].step))
+    file.write("\n")
+    indentation = indentation[:-4]
+    file.write(indentation + "@kernel\n")
+    file.write(indentation + "def run(self):\n")
+    indentation += "    "
+    if self.experiment.do_scan == True:
+        file.write(indentation + "for %s in self.%s:\n"%(self.experiment.scanned_variables[0].name,self.experiment.scanned_variables[0].name))
+        indentation += "    "
+    file.write(indentation + "self.core.reset()\n")
+    file.write(indentation + "self.core.break_realtime()\n")
+    file.write(indentation + "self.zotino0.init()\n")
+    file.write(indentation + "self.urukul0_cpld.init()\n")
+    file.write(indentation + "self.urukul0_ch0.init()\n")
+    file.write(indentation + "self.urukul0_ch1.init()\n")
+    file.write(indentation + "self.urukul0_ch2.init()\n")
+    file.write(indentation + "self.urukul0_ch3.init()\n")
+    file.write(indentation + "self.urukul1_cpld.init()\n")
+    file.write(indentation + "self.urukul1_ch0.init()\n")
+    file.write(indentation + "self.urukul1_ch1.init()\n")
+    file.write(indentation + "self.urukul1_ch2.init()\n")
+    file.write(indentation + "self.urukul1_ch3.init()\n")
+    file.write(indentation + "self.urukul2_cpld.init()\n")
+    file.write(indentation + "self.urukul2_ch0.init()\n")
+    file.write(indentation + "self.urukul2_ch1.init()\n")
+    file.write(indentation + "self.urukul2_ch2.init()\n")
+    file.write(indentation + "self.urukul2_ch3.init()\n")
+    file.write(indentation + "delay(5*ms)\n")  
+    delta_t = 0
+
+    #flag_init is used to indicate that there is no need for a delay calculation for the first row
+    flag_init = 0
+    for edge in range(self.sequence_num_rows):
+        file.write(indentation + "#Edge number " + str(edge) + " name of edge: " + self.experiment.sequence[edge].name + "\n")
+        if flag_init == 0:
+            flag_init = 1
+        else:
+            if self.experiment.sequence[edge].is_scanned:
+                exec("self.temp = " + self.experiment.sequence[edge].evaluation)
+                self.experiment.sequence[edge].time = self.temp
+            delta_t = float(self.experiment.sequence[edge].time) - float(self.experiment.sequence[edge-1].time)
+        if delta_t != 0:
+            file.write(indentation + "delay(" + str(delta_t) + "*ms)\n")
+        for index, channel in enumerate(self.experiment.sequence[edge].digital):
+            if channel.changed == True:
+                if channel.is_scanned == True:
+                    file.write(indentation + "temp = " + str(channel.value) + "\n")
+                    file.write(indentation + "if temp == 1: \n")
+                    file.write(indentation + "    " + "self.ttl" + str(index) + ".on()\n") 
+                    file.write(indentation + "else: \n")
+                    file.write(indentation + "    " + "self.ttl" + str(index) + ".off()\n") 
+                else:
+                    if channel.value == 0:
+                        file.write(indentation + "self.ttl" + str(index) + ".off()\n")
+                    elif channel.value == 1:
+                        file.write(indentation + "self.ttl" + str(index) + ".on()\n") 
+        flag_zotino_change_needed = False      
+        for index, channel in enumerate(self.experiment.sequence[edge].analog):
+            if channel.changed == True:
+                flag_zotino_change_needed = True
+                if channel.is_scanned == True:
+                    file.write(indentation + "self.zotino0.write_dac(%d, %s)\n" %(index, channel.value))
+                else:   
+                    file.write(indentation + "self.zotino0.write_dac(%d, %f)\n" %(index, channel.value))
+        if flag_zotino_change_needed:
+            file.write(indentation + "self.zotino0.load()\n")
+        for index, channel in enumerate(self.experiment.sequence[edge].dds):
+            if channel.changed == True:
+                urukul_num = int(index // 4)
+                channel_num = int(index % 4)
+                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att(" + str(channel.attenuation.value) + "*dB) \n")    
+                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.value) + "*MHz, amplitude = " + str(channel.amplitude.value) + ", phase = " + str(channel.phase.value) + ")\n")    
+                file.write(indentation + "temp = " + str(channel.state.value) + "\n")
+                file.write(indentation + "if temp == 1: \n")
+                file.write(indentation + "    " + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
+                file.write(indentation + "else: \n")
+                file.write(indentation + "    " + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
+
+    file.close()
+
+
+def create_go_to_edge(self):
+    edge = self.sequence_table.selectedIndexes()[0].row()
+    self.experiment.go_to_edge = edge
+    file_name = "go_to_edge.py"
+    if not os.path.exists(file_name):
+        with open(file_name, 'w'): pass
+    file = open(file_name,'w')
+    indentation = ""
+    file.write(indentation + "from artiq.experiment import *\n\n")
+    file.write(indentation + "class " + file_name[:-3] + "(EnvExperiment):\n")
+    indentation += "    "
+    file.write(indentation + "def build(self):\n")
+    indentation += "    "
+    file.write(indentation + "self.setattr_device('core')\n")
+    for _ in range(3):
+        file.write(indentation + "self.setattr_device('urukul%d_cpld')\n" %_) 
+        for i in range(4):
+            file.write(indentation + "self.setattr_device('urukul%d_ch%d')\n" %(_,i)) 
+    for _ in range(16):
+        file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
+    file.write(indentation + "self.setattr_device('zotino0')\n")
+    file.write("\n")
+    indentation = indentation[:-4]
+    file.write(indentation + "@kernel\n")
+    file.write(indentation + "def run(self):\n")
+    indentation += "    "
+    file.write(indentation + "self.core.reset()\n")
+    file.write(indentation + "self.core.break_realtime()\n")
+    file.write(indentation + "self.zotino0.init()\n")
+    file.write(indentation + "self.urukul0_cpld.init()\n")
+    file.write(indentation + "self.urukul0_ch0.init()\n")
+    file.write(indentation + "self.urukul0_ch1.init()\n")
+    file.write(indentation + "self.urukul0_ch2.init()\n")
+    file.write(indentation + "self.urukul0_ch3.init()\n")
+    file.write(indentation + "self.urukul1_cpld.init()\n")
+    file.write(indentation + "self.urukul1_ch0.init()\n")
+    file.write(indentation + "self.urukul1_ch1.init()\n")
+    file.write(indentation + "self.urukul1_ch2.init()\n")
+    file.write(indentation + "self.urukul1_ch3.init()\n")
+    file.write(indentation + "self.urukul2_cpld.init()\n")
+    file.write(indentation + "self.urukul2_ch0.init()\n")
+    file.write(indentation + "self.urukul2_ch1.init()\n")
+    file.write(indentation + "self.urukul2_ch2.init()\n")
+    file.write(indentation + "self.urukul2_ch3.init()\n")
+    file.write(indentation + "delay(5*ms)\n")  
+
+    for index, channel in enumerate(self.experiment.sequence[edge].digital):
+        if channel.value == 0:
+            file.write(indentation + "self.ttl" + str(index) + ".off()\n")
+        elif channel.value == 1:
+            file.write(indentation + "self.ttl" + str(index) + ".on()\n")        
+    for index, channel in enumerate(self.experiment.sequence[edge].analog):
+        file.write(indentation + "self.zotino0.write_dac(%d, %.4f)\n" %(index, channel.value))
+    file.write(indentation + "self.zotino0.load()\n")
+    for index, channel in enumerate(self.experiment.sequence[edge].dds):
+        urukul_num = int(index // 4)
+        channel_num = int(index % 4)
+        file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att(" + str(channel.attenuation.value) + "*dB) \n")    
+        file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.value) + "*MHz, amplitude = " + str(channel.amplitude.value) + ", phase = " + str(channel.phase.value) + ")\n")    
+        if channel.state.value == 1:
+            file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
+        elif channel.state.value == 0:
+            file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")                
+
+    file.close()
