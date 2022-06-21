@@ -148,10 +148,6 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle(title)
         msg.exec_()
 
-    def some_dummy_function():
-        print("You called a dummy function")
-        print('Written with Umang')   
-        print("")
         
 
     #SEQUENCE TAB RELATED
