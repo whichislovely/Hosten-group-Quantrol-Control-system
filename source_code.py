@@ -150,8 +150,8 @@ class MainWindow(QMainWindow):
 
     def some_dummy_function():
         print("You called a dummy function")
-        print('Written with Umang')
-        
+        print('Written with Umang')   
+        print("")
         
 
     #SEQUENCE TAB RELATED
