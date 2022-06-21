@@ -148,7 +148,8 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle(title)
         msg.exec_()
 
-
+    def some_dummy_function():
+        print("You called a dummy function")
 
     #SEQUENCE TAB RELATED
     def sequence_table_changed(self, item):
