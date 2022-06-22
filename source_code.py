@@ -300,19 +300,9 @@ class MainWindow(QMainWindow):
 
 
     def run_experiment_button_clicked(self):
-        #os.system('. /home/hostengroup/anaconda3/etc/profile.d/conda.sh; conda activate artiq; artiq_run new_first.py') this was useful for linux based computers
         try:
-#            if self.experiment.do_scan:
-#                min_value = float(self.scan_table_parameters.item(0,1).text())
-#                max_value = float(self.scan_table_parameters.item(0,2).text())
-#                step_value = int(self.scan_table_parameters.item(0,3).text())
-#                var_name = self.scan_drop_down.currentText()
-#                scan_iterable = np.linspace(min_value, max_value, step_value)
-#                for value in scan_iterable:
-#                    print("performing the scan of %s at value %f" %(var_name, value))
-#                    self.experiment.variables[var_name] = value
-#                    update_evaluations.do(self)
             file_name = write_to_python.create_experiment(self)
+            print("python file is written")
             os.system("conda activate artiq_5 && artiq_run %s" %file_name)        
 
 

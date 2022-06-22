@@ -22,7 +22,8 @@ def create_experiment(self):
     for _ in range(16):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
     file.write(indentation + "self.setattr_device('zotino0')\n")
-    file.write(indentation + "self.%s = linspace(%f, %f, %f)\n"%(self.experiment.scanned_variables[0].name,self.experiment.scanned_variables[0].min_val, self.experiment.scanned_variables[0].max_val,self.experiment.scanned_variables[0].step))
+    if self.experiment.do_scan:
+        file.write(indentation + "self.%s = linspace(%f, %f, %f)\n"%(self.experiment.scanned_variables[0].name,self.experiment.scanned_variables[0].min_val, self.experiment.scanned_variables[0].max_val,self.experiment.scanned_variables[0].step))
     file.write("\n")
     indentation = indentation[:-4]
     file.write(indentation + "@kernel\n")
@@ -50,7 +51,7 @@ def create_experiment(self):
     file.write(indentation + "self.urukul2_ch2.init()\n")
     file.write(indentation + "self.urukul2_ch3.init()\n")
     file.write(indentation + "delay(5*ms)\n")  
-    delta_t = 0
+    self.delta_t = 0
 
     #flag_init is used to indicate that there is no need for a delay calculation for the first row
     flag_init = 0
@@ -59,47 +60,42 @@ def create_experiment(self):
         if flag_init == 0:
             flag_init = 1
         else:
-            if self.experiment.sequence[edge].is_scanned:
-                exec("self.temp = " + self.experiment.sequence[edge].evaluation)
-                self.experiment.sequence[edge].time = self.temp
-            delta_t = float(self.experiment.sequence[edge].time) - float(self.experiment.sequence[edge-1].time)
-        if delta_t != 0:
-            file.write(indentation + "delay(" + str(delta_t) + "*ms)\n")
+            self.delta_t = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
+            try:
+                print(self.delta_t)
+                exec("self.delta_t = " + self.delta_t)
+                print("Done")
+                print(self.delta_t)
+            except:
+                pass
+        if self.delta_t != 0:
+            file.write(indentation + "delay((" + str(self.delta_t) + ")*ms)\n")
         for index, channel in enumerate(self.experiment.sequence[edge].digital):
             if channel.changed == True:
-                if channel.is_scanned == True:
-                    file.write(indentation + "temp = " + str(channel.value) + "\n")
-                    file.write(indentation + "if temp == 1: \n")
-                    file.write(indentation + "    " + "self.ttl" + str(index) + ".on()\n") 
-                    file.write(indentation + "else: \n")
-                    file.write(indentation + "    " + "self.ttl" + str(index) + ".off()\n") 
-                else:
-                    if channel.value == 0:
-                        file.write(indentation + "self.ttl" + str(index) + ".off()\n")
-                    elif channel.value == 1:
-                        file.write(indentation + "self.ttl" + str(index) + ".on()\n") 
+                file.write(indentation + "temp = " + channel.for_python + "\n")
+                file.write(indentation + "if temp == 1: \n")
+                file.write(indentation + "    " + "self.ttl" + str(index) + ".on()\n") 
+                file.write(indentation + "else: \n")
+                file.write(indentation + "    " + "self.ttl" + str(index) + ".off()\n") 
         flag_zotino_change_needed = False      
         for index, channel in enumerate(self.experiment.sequence[edge].analog):
             if channel.changed == True:
                 flag_zotino_change_needed = True
-                if channel.is_scanned == True:
-                    file.write(indentation + "self.zotino0.write_dac(%d, %s)\n" %(index, channel.value))
-                else:   
-                    file.write(indentation + "self.zotino0.write_dac(%d, %f)\n" %(index, channel.value))
+                file.write(indentation + "self.zotino0.write_dac(%d, " %index)
+                file.write(channel.for_python + ")\n")
         if flag_zotino_change_needed:
             file.write(indentation + "self.zotino0.load()\n")
         for index, channel in enumerate(self.experiment.sequence[edge].dds):
             if channel.changed == True:
                 urukul_num = int(index // 4)
                 channel_num = int(index % 4)
-                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att(" + str(channel.attenuation.value) + "*dB) \n")    
-                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.value) + "*MHz, amplitude = " + str(channel.amplitude.value) + ", phase = " + str(channel.phase.value) + ")\n")    
+                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att(" + str(channel.attenuation.for_python) + "*dB) \n")    
+                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.for_python) + "*MHz, amplitude = " + str(channel.amplitude.for_python) + ", phase = " + str(channel.phase.for_python) + ")\n")    
                 file.write(indentation + "temp = " + str(channel.state.value) + "\n")
                 file.write(indentation + "if temp == 1: \n")
                 file.write(indentation + "    " + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
                 file.write(indentation + "else: \n")
                 file.write(indentation + "    " + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
-
     file.close()
 
 

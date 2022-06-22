@@ -32,7 +32,6 @@ def do(self):
     self.variables_table_row_count = len(self.experiment.new_variables)
     self.variables_table.setRowCount(self.variables_table_row_count)
     for index, variable in enumerate(self.experiment.new_variables):
-        
         self.variables_table.setItem(index, 0, QTableWidgetItem(variable.name))
         if self.experiment.do_scan and variable.is_scanned:
             item = QTableWidgetItem("scanned")
