@@ -321,23 +321,11 @@ class MainWindow(QMainWindow):
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
 
     def dummy_button_clicked(self):
-
-        print("new variables")
-        for item in self.experiment.new_variables:
-            print("NAME: ", item.name, "VALUE", item.value, "SCANNED", item.is_scanned)
-        print("variables", self.experiment.variables)
-        for key, item in self.experiment.variables.items():
-            print("NAME", item.name, "VALUE", item.value, "PYTHON", item.for_python, "SCANNED", item.is_scanned)
-
-        print("TIME")
-        for item in self.experiment.sequence:
-            print("name", item.name)
-            print("value", item.value)
-            print("evaluation", item.evaluation)
-            print("for python", item.for_python)
-        print()
-        print()
-        print()
+        for variable in self.experiment.scanned_variables:
+            print("Name:", variable.name)
+            print("min:", variable.min_val)
+            print("max:", variable.max_val)
+            print("step:", variable.step)
 
 
 
