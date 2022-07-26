@@ -340,6 +340,16 @@ class MainWindow(QMainWindow):
         else:
             pass
 
+    def delete_scanned_variable_button_pressed(self):
+        try:
+            row = self.scan_table_parameters.selectedIndexes()[0].row()
+            del self.experiment.scanned_variables[row]
+            update_tabs.do(self)
+            update_expressions.do(self)
+            self.scan_table_parameters.setCurrentCell(row-1, 0)
+        except:
+            self.error_message("Select the variable that needs to be deleted", "No variable selected")
+
 
     #DIGITAL TAB RELATED
     def update_digital_table_header(self, index, name):
@@ -675,7 +685,6 @@ class MainWindow(QMainWindow):
             update_tabs.do(self)
 
     def delete_new_variable_clicked(self):
-        row_selected = True
         try:
             row = self.variables_table.selectedIndexes()[0].row()
             name = self.variables_table.item(row,0).text()
@@ -694,7 +703,9 @@ class MainWindow(QMainWindow):
                 self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
         except:
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
-            
+
+
+
     def scan_table_checked(self):
         self.experiment.do_scan = self.scan_table.isChecked()
         if self.experiment.do_scan == False:

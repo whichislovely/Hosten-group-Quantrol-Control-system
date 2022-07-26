@@ -127,7 +127,7 @@ def sequence_tab_build(self):
     self.delete_scanned_variable_button = QPushButton()
     self.delete_scanned_variable_button.setFont(QFont('Arial', 14))
     self.delete_scanned_variable_button.setText("Delete scanned variable")
-    self.delete_scanned_variable_button.clicked.connect(self.dummy_button_clicked)#this should be modified
+    self.delete_scanned_variable_button.clicked.connect(self.delete_scanned_variable_button_pressed)#this should be modified
 
     #STEP SIZE INPUT
     self.step_size_label = QLabel()
