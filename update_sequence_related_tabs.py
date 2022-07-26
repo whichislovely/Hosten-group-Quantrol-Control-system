@@ -244,6 +244,12 @@ def do(self):
                 dummy_item.setToolTip(str(channel.state.value))
                 self.dds_table.setItem(row+2, col+4, dummy_item)
 
-
+    self.scan_table_parameters.setRowCount(len(self.experiment.scanned_variables))
+    for row, variable in enumerate(self.experiment.scanned_variables):
+        self.scan_table_parameters.setItem(row,0, QTableWidgetItem(str(variable.name)))
+        self.scan_table_parameters.setItem(row,1, QTableWidgetItem(str(variable.min_val)))
+        self.scan_table_parameters.setItem(row,2, QTableWidgetItem(str(variable.max_val)))
+        
+        
 
     self.update_on()
