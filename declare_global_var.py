@@ -6,7 +6,8 @@ def build(self):
     self.experiment.sequence = [self.Edge("Default", 0, 0, 0)]
     self.experiment.variables['id0'] = self.Variable(name = "id0", value = 0.0, for_python = 0.0)
     self.experiment.variables[''] = self.Variable(name = '', value = 0.0, for_python = 0.0)   #in order to be able to process expressions like -5 we need to have it as first item in decode will be "" that should be 0
-    self.current_dict = [{} for i in range(12)] # this dict is used in filling the DDS channels
+    #self.experiment.variables['None'] = self.Variable(name = 'None', value = 0.0, for_python = 0.0)   #in order to be able to make a variable "none"
+    self.current_dict = [{} for i in range(12)] # this dict is used in filling the DDS channels 
     #INITIAL PARAMETERS
     for i in range(16):
         exec("self.experiment.sequence[0].digital[%d].changed = True" %i)
