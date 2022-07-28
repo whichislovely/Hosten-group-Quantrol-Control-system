@@ -1,11 +1,12 @@
 import os
-from datetime import datetime
 
 def create_experiment(self):
+    #CREATING A FILE
     file_name = "run_experiment.py"
     if not os.path.exists(file_name):
         with open(file_name, 'w'): pass
 
+    #IMPORT AND BUILD FUNCTIONS
     file = open(file_name,'w')
     indentation = ""
     file.write(indentation + "from artiq.experiment import *\n\n")
@@ -22,16 +23,27 @@ def create_experiment(self):
     for _ in range(16):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
     file.write(indentation + "self.setattr_device('zotino0')\n")
+
     if self.experiment.do_scan:
-        file.write(indentation + "self.%s = linspace(%f, %f, %f)\n"%(self.experiment.scanned_variables[0].name,self.experiment.scanned_variables[0].min_val, self.experiment.scanned_variables[0].max_val,self.experiment.scanned_variables[0].step))
+        #iterating over valid (not "None") scanned variables and creating an array to be used as a collection of names
+        var_names = ""
+        for_zipping = ""
+        for variable in self.experiment.scanned_variables:
+            if variable.name != "None":
+                file.write(indentation + "self.%s = linspace(%f, %f, %f)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.step_val))
+                var_names += variable.name + ", "
+                for_zipping += "self." + variable.name + ", "
+
     file.write("\n")
     indentation = indentation[:-4]
     file.write(indentation + "@kernel\n")
     file.write(indentation + "def run(self):\n")
     indentation += "    "
     if self.experiment.do_scan == True:
-        file.write(indentation + "for %s in self.%s:\n"%(self.experiment.scanned_variables[0].name,self.experiment.scanned_variables[0].name))
+        #making a scanning loop 
+        file.write(indentation + "for %s in zip(%s):\n" %(var_names[:-2], for_zipping[:-2]))
         indentation += "    "
+
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
     file.write(indentation + "self.zotino0.init()\n")
@@ -61,22 +73,29 @@ def create_experiment(self):
             flag_init = 1
         else:
             self.delta_t = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
-            try:
+            try: #this try is used to try evaluating the expression. It will only be able to do so in case it is scanned
                 print(self.delta_t)
                 exec("self.delta_t = " + self.delta_t)
                 print("Done")
                 print(self.delta_t)
             except:
                 pass
+        #ADDING A DELAY
         if self.delta_t != 0:
             file.write(indentation + "delay((" + str(self.delta_t) + ")*ms)\n")
+
+        #DIGITAL CHANNEL CHANGES
         for index, channel in enumerate(self.experiment.sequence[edge].digital):
+            if edge == 0 and index == 8: #adding a 5 ms delay to make changes into TTL channels
+                file.write(indentation + "delay(5*ms)\n")
+
             if channel.changed == True:
-                file.write(indentation + "temp = " + channel.for_python + "\n")
-                file.write(indentation + "if temp == 1: \n")
-                file.write(indentation + "    " + "self.ttl" + str(index) + ".on()\n") 
-                file.write(indentation + "else: \n")
-                file.write(indentation + "    " + "self.ttl" + str(index) + ".off()\n") 
+                if channel.value == 1:
+                    file.write(indentation + "self.ttl" + str(index) + ".on()\n") 
+                else:
+                    file.write(indentation + "self.ttl" + str(index) + ".off()\n") 
+
+        #ANALOG CHANNEL CHANGES
         flag_zotino_change_needed = False      
         for index, channel in enumerate(self.experiment.sequence[edge].analog):
             if channel.changed == True:
@@ -85,17 +104,19 @@ def create_experiment(self):
                 file.write(channel.for_python + ")\n")
         if flag_zotino_change_needed:
             file.write(indentation + "self.zotino0.load()\n")
+
+        #DDS CHANNEL CHANGES
         for index, channel in enumerate(self.experiment.sequence[edge].dds):
             if channel.changed == True:
                 urukul_num = int(index // 4)
                 channel_num = int(index % 4)
                 file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att(" + str(channel.attenuation.for_python) + "*dB) \n")    
                 file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.for_python) + "*MHz, amplitude = " + str(channel.amplitude.for_python) + ", phase = " + str(channel.phase.for_python) + ")\n")    
-                file.write(indentation + "temp = " + str(channel.state.value) + "\n")
-                file.write(indentation + "if temp == 1: \n")
-                file.write(indentation + "    " + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
-                file.write(indentation + "else: \n")
-                file.write(indentation + "    " + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
+                if channel.state.value == 1:
+                    file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
+                else:
+                    file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
+                
     file.close()
 
 

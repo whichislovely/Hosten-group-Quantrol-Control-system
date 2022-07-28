@@ -132,8 +132,13 @@ def sequence_tab_build(self):
     #STEP SIZE INPUT
     self.step_size_label = QLabel()
     self.step_size_label.setText("Step size")
-    self.step_size_input = QLineEdit()
-    self.step_size_input.setText(str(1))
+    self.step_size_input = QTableWidget()
+    self.step_size_input.setColumnCount(1)
+    self.step_size_input.setRowCount(1)
+    self.step_size_input.verticalHeader().setVisible(False)
+    self.step_size_input.horizontalHeader().setVisible(False)
+    self.step_size_input.setItem(0, 0, QTableWidgetItem("1"))
+    self.step_size_input.itemChanged.connect(self.step_size_input_changed)
 
     #HORIZONTAL LAYOUT
     hBox = QHBoxLayout()

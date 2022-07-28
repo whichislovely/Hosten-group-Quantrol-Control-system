@@ -32,10 +32,11 @@ class MainWindow(QMainWindow):
 
         class Analog:
             #Object is used to describe analog channels' values
-            def __init__(self, value = 0, expression = 0, evaluation = 0, changed = False):
+            def __init__(self, value = 0, expression = 0, evaluation = 0, for_python = "0", changed = False):
                 self.value = value
                 self.expression = expression
                 self.evaluation = evaluation
+                self.for_python = for_python
                 self.changed = changed
                 self.is_scanned = False
 
@@ -78,6 +79,7 @@ class MainWindow(QMainWindow):
             self.new_variables = [] #this was decided to be a list in order to display the human defined variables
             self.variables = {}
             self.do_scan = False
+            self.step_val = 1
             self.file_name = ""
             self.scanned_variables = [] #list of variables involved in a scan
 
@@ -170,11 +172,12 @@ class MainWindow(QMainWindow):
                         self.update_on()
                 else:                        
                     try:
-                        edge.expression = table_item.text()
-                        (evaluation, for_python, is_scanned) = self.decode_input(edge.expression)
+                        expression = table_item.text()
+                        (evaluation, for_python, is_scanned) = self.decode_input(expression)
                         exec("self.value = " + str(edge.evaluation)) # this is done here to be able to assign value of the id# type variable
                         edge.evaluation = evaluation
                         edge.is_scanned = is_scanned
+                        edge.expression = expression
                         if edge.is_scanned:
                             edge.for_python = for_python
                         else:
@@ -277,7 +280,7 @@ class MainWindow(QMainWindow):
 
 
     def go_to_edge_button_clicked(self):
-        try:
+        try:                
             edge_num = self.sequence_table.selectedIndexes()[0].row()
             self.experiment.go_to_edge_num = edge_num
             write_to_python.create_go_to_edge(self)
@@ -291,13 +294,16 @@ class MainWindow(QMainWindow):
         except:
             self.error_message("Chose the edge you want the system to go","No edge selected")
 
-
+    def step_size_input_changed(self):
+        #need a check whether the text is a valid integer
+        print("hey there")
+        self.experiment.step_val = int(self.step_size_input.item(0,0).text())
+    
     def run_experiment_button_clicked(self):
         try:
-            file_name = write_to_python.create_experiment(self)
+            write_to_python.create_experiment(self)
             print("python file is written")
-            os.system("conda activate artiq_5 && artiq_run %s" %file_name)        
-
+            os.system("conda activate artiq_5 && artiq_run %s" %"run_experiment.py")        
 
 #            else:
 #                file_name = write_to_python.create_experiment(self)P
