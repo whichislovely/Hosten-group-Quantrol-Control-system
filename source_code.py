@@ -297,7 +297,7 @@ class MainWindow(QMainWindow):
     def step_size_input_changed(self):
         #need a check whether the text is a valid integer
         print("hey there")
-        self.experiment.step_val = int(self.step_size_input.item(0,0).text())
+        self.experiment.step_val = int(self.step_size_input.text())
     
     def run_experiment_button_clicked(self):
         try:
@@ -326,6 +326,9 @@ class MainWindow(QMainWindow):
         print("scanned_variables")
         for item in self.experiment.scanned_variables:
             print(item.name, item.min_val, item.max_val)
+        print("new variables")
+        for item in self.experiment.new_variables:
+            asdadasdasd
 
 
 
@@ -345,13 +348,18 @@ class MainWindow(QMainWindow):
         try:
             row = self.scan_table_parameters.selectedIndexes()[0].row()
             variable = self.experiment.scanned_variables[row]
-            self.experiment.variables[variable.name].is_scanned = False
-            self.experiment.variables[variable.name].for_python = False
-            self.experiment.variables[variable.name].value = self.experiment.new_variables[self.is_a_defined_variable(variable.name)].value #make the value of variable to the previous before being scanned
-            self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
+            index = self.index_of_a_new_variable(variable.name)
+            if index != None: #this is done to avoid trying to access "None" variable
+                #reverting the value and scanning state of the variable that is not scanned anymore
+                self.experiment.variables[variable.name].is_scanned = False
+                self.experiment.variables[variable.name].for_python = False
+                self.experiment.variables[variable.name].value = self.experiment.new_variables[index].value #make the value of variable to the previous before being scanned
+                self.experiment.new_variables[index].is_scanned = False
+                self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
             del self.experiment.scanned_variables[row]
+            update_evaluations.do(self)
             update_tabs.do(self)
-            update_expressions.do(self)
+            
             self.scan_table_parameters.setCurrentCell(row-1, 0)
         except:
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
@@ -581,7 +589,6 @@ class MainWindow(QMainWindow):
 
 
     def decode_input(self, text):
-        print("decoding", text)
         index = 0
         output_eval = ""
         output_for_python = ""
@@ -597,22 +604,16 @@ class MainWindow(QMainWindow):
                 except:
                     output_eval += "self.experiment.variables['" + current + "'].value" + text[index]
                     variable = self.experiment.variables[current]
-                    print(variable.name, variable.value, variable.is_scanned)
                     if self.experiment.do_scan and variable.is_scanned:#if scanned assign the python form else assign the value
                         is_scanned = True
                         output_for_python += str(self.experiment.variables[current].for_python) + text[index]
-                        print("HEY THERE", output_for_python)
                     else:
                         output_for_python += str(variable.value) + text[index]
-                        print("hello", output_for_python)
-
                 current = ""
                 index += 1
             if text[index] != " ":
                 current += text[index]
             index += 1
-            if output_eval:
-                print("output", output_eval, output_for_python)
         try: #check if a variable is a float
             float(current)
             output_eval += current
@@ -623,20 +624,13 @@ class MainWindow(QMainWindow):
             if self.experiment.do_scan and variable.is_scanned:#if scanned assign the python form else assign the value
                 is_scanned = True
                 output_for_python += str(self.experiment.variables[current].for_python)
-                #output_for_python += "self.experiment.variables['" + current + "'].for_python"
-                print("HEY THERE", output_for_python)
             else:
                 output_for_python += str(variable.value)
-                print("hello", output_for_python)
-            if output_eval:
-                print("output", output_eval, output_for_python)
-        
         try:
             exec("self.temp =" + output_for_python)
             output_for_python = str(self.temp)
         except:
             pass
-        print("FINAL", output_eval, output_for_python)
         return (output_eval, output_for_python, is_scanned) 
 
     def variables_table_changed(self, item):
@@ -715,15 +709,24 @@ class MainWindow(QMainWindow):
             update_expressions.do(self)
             update_tabs.do(self)
 
-    def is_a_defined_variable(self, name):
+    def index_of_a_new_variable(self, name):
         #this function takes a variable name and checks whether it is in a previously human defined variables or not
         #in case it is found returns its index otherwise returns -1
-        index = -1
+        index = None
         for ind, variable in enumerate(self.experiment.new_variables):
             if variable.name == name:
                 index = ind
                 break
         return index
+
+    def already_scanned(self, name):
+        '''Takes a varible name as an input and checks whether there exists a scanned variable with the same name.
+            Returns True is case of dublicates and False otherwise'''
+        output = False
+        for variable in self.experiment.scanned_variables:
+            if variable.name == name:
+                return output
+        return output
 
     def scan_table_parameters_changed(self, item):
         if self.to_update:
@@ -732,30 +735,31 @@ class MainWindow(QMainWindow):
                 col = item.column()
                 table_item = self.scan_table_parameters.item(row, col)
                 variable = self.experiment.scanned_variables[row]
-                if col == 0:
-                    #check if the given variable is defined previously or not
-                    index = self.is_a_defined_variable(table_item.text())
-                    if index != -1:
-                        try: #this try is done to avoid trying to assign a value to a variable name "none"
-                            self.experiment.variables[variable.name].value = self.experiment.new_variables[self.is_a_defined_variable(variable.name)].value #make the value of variable to the previous before being scanned
-                        except:
-                            pass
-                        try:
-                            self.experiment.variables[variable.name].is_scanned = False #this try is done to avoid trying to assign a value to a variable name "none"
-                            self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
-                        except:
-                            pass
-                        variable.name = table_item.text()
-                        self.experiment.variables[variable.name] = self.Variable(variable.name, variable.min_val, variable.min_val, True) #add a new variable with updated name
-                        self.experiment.variables[variable.name].for_python = variable.name
-                    else:
-                        self.error_message("The variable name you entered was not defined in variables tab", "Not defined variable")
-                elif col == 1:
+                if col == 0: #name of the scanned variable changed
+                    if self.already_scanned(table_item.text()): #check if the given variable is defined previously or not
+                        self.error_message("The variable name you entered was already used for scanning.", "Scanning variable dublicate")
+                    else: # if entered name does not have dublicates then we proceed on checking whether the varible name is defined in Variables tab
+                        index = self.index_of_a_new_variable(table_item.text())
+                        if index != None:
+                            prev_index = self.index_of_a_new_variable(variable.name)
+                            if prev_index != None: #make the value of variable to the previous before being scanned. Try is used to avoid accessing "None" variable
+                                #reverting the values and scanning states of the previous variable
+                                self.experiment.variables[variable.name].value = self.experiment.new_variables[prev_index].value 
+                                self.experiment.new_variables[prev_index].is_scanned = False
+                                self.experiment.variables[variable.name].is_scanned = False 
+                                self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
+                            #updating the values and scanning states of the new scanning  variable
+                            variable.name = table_item.text()
+                            self.experiment.variables[variable.name] = self.Variable(variable.name, variable.min_val, variable.min_val, True) #add a new variable with updated name
+                            self.experiment.variables[variable.name].for_python = variable.name
+                            self.experiment.new_variables[index].is_scanned = True
+                        else:
+                            self.error_message("The variable name you entered was not defined in variables tab", "Not defined variable")
+                elif col == 1: #min_val of the scanned variable changed
                     variable.min_val = float(table_item.text())
-                    print("!!!!!!!!!", self.scan_table_parameters.item(row, 0).text())
                     if self.scan_table_parameters.item(row, 0).text() != "None": # this makes sure that we do not have to deal with "None" named variable
                         self.experiment.variables[variable.name].value = float(table_item.text())
-                elif col == 2:    
+                elif col == 2: #max_val of the scanned variable changed
                     variable.max_val = float(table_item.text())
                 update_evaluations.do(self)
                 update_expressions.do(self)
