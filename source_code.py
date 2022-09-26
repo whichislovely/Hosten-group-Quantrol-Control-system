@@ -328,7 +328,7 @@ class MainWindow(QMainWindow):
             print(item.name, item.min_val, item.max_val)
         print("new variables")
         for item in self.experiment.new_variables:
-            asdadasdasd
+            print(item.name, item.value, item.is_scanned)
 
 
 
@@ -722,11 +722,12 @@ class MainWindow(QMainWindow):
     def already_scanned(self, name):
         '''Takes a varible name as an input and checks whether there exists a scanned variable with the same name.
             Returns True is case of dublicates and False otherwise'''
-        output = False
+        print("checking", name)
         for variable in self.experiment.scanned_variables:
+            print("variable.name is", variable.name, variable.name == name)
             if variable.name == name:
-                return output
-        return output
+                return True
+        return False
 
     def scan_table_parameters_changed(self, item):
         if self.to_update:
