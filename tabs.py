@@ -400,8 +400,8 @@ def dds_tab_build(self):
         self.dds_dummy_header.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
         self.dds_dummy_header.item(0,i).setTextAlignment(Qt.AlignCenter)
 
-    #self.dds_dummy_header.setItemDelegateForRow(1, delegate)
-    self.dds_table.setItemDelegateForRow(2, delegate)
+    self.dds_dummy_header.setItemDelegateForRow(1, delegate)
+    #self.dds_table.setItemDelegateForRow(2, delegate)
 
     self.dds_dummy_header.setColumnWidth(0,50)
     self.dds_dummy_header.setColumnWidth(1,180)

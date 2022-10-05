@@ -13,9 +13,7 @@ def do(self):
             exec("edge.value = " + str(edge.evaluation))
         except:
             return "time expression edge number %d"%edge_index
-        
-
-    
+            
         for channel_index, sub_channel in enumerate(edge.digital):
             try:
                 exec("sub_channel.value = " + str(sub_channel.evaluation))
