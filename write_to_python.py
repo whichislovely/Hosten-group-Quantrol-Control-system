@@ -30,7 +30,7 @@ def create_experiment(self):
         for_zipping = ""
         for variable in self.experiment.scanned_variables:
             if variable.name != "None":
-                file.write(indentation + "self.%s = linspace(%f, %f, %f)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.step_val))
+                file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.step_val))
                 var_names += variable.name + ", "
                 for_zipping += "self." + variable.name + ", "
 
@@ -39,11 +39,6 @@ def create_experiment(self):
     file.write(indentation + "@kernel\n")
     file.write(indentation + "def run(self):\n")
     indentation += "    "
-    if self.experiment.do_scan == True:
-        #making a scanning loop 
-        file.write(indentation + "for %s in zip(%s):\n" %(var_names[:-2], for_zipping[:-2]))
-        indentation += "    "
-
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
     file.write(indentation + "self.zotino0.init()\n")
@@ -62,7 +57,15 @@ def create_experiment(self):
     file.write(indentation + "self.urukul2_ch1.init()\n")
     file.write(indentation + "self.urukul2_ch2.init()\n")
     file.write(indentation + "self.urukul2_ch3.init()\n")
-    file.write(indentation + "delay(5*ms)\n")  
+    file.write(indentation + "delay(5*s)\n") 
+    if self.experiment.do_scan == True:
+        #making a scanning loop 
+        #introduce a flag for multi and single variable scan
+        file.write(indentation + "for %s in %s:\n" %(var_names[:-2], for_zipping[:-2]))
+#        file.write(indentation + "for %s in zip(%s):\n" %(var_names[:-2], for_zipping[:-2]))
+        indentation += "    "
+
+ 
     self.delta_t = 0
 
     #flag_init is used to indicate that there is no need for a delay calculation for the first row
