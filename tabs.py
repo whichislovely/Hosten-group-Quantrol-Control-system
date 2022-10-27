@@ -130,19 +130,19 @@ def sequence_tab_build(self):
     self.delete_scanned_variable_button.clicked.connect(self.delete_scanned_variable_button_pressed)#this should be modified
 
     #STEP SIZE INPUT
-    self.step_size_label = QLabel()
-    self.step_size_label.setText("Step size")
-    self.step_size_input = QLineEdit()
-    self.step_size_input.editingFinished.connect(self.step_size_input_changed)
-    self.step_size_input.setText("1")
+    self.number_of_steps_label = QLabel()
+    self.number_of_steps_label.setText("Number of steps")
+    self.number_of_steps_input = QLineEdit()
+    self.number_of_steps_input.editingFinished.connect(self.number_of_steps_input_changed)
+    self.number_of_steps_input.setText("1")
 
     #HORIZONTAL LAYOUT
     hBox = QHBoxLayout()
     temp = QWidget()
     hBox.addWidget(self.add_scanned_variable_button)
     hBox.addWidget(self.delete_scanned_variable_button)     
-    hBox.addWidget(self.step_size_label)
-    hBox.addWidget(self.step_size_input)
+    hBox.addWidget(self.number_of_steps_label)
+    hBox.addWidget(self.number_of_steps_input)
     temp.setLayout(hBox)
     #SCAN PARAMETERS
     self.scan_table = QGroupBox(self.sequence_tab_widget)

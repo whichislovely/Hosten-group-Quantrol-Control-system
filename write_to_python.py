@@ -30,7 +30,7 @@ def create_experiment(self):
         for_zipping = ""
         for variable in self.experiment.scanned_variables:
             if variable.name != "None":
-                file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.step_val))
+                file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.step_number))
                 var_names += variable.name + ", "
                 for_zipping += "self." + variable.name + ", "
 

@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
             self.new_variables = [] #this was decided to be a list in order to display the human defined variables
             self.variables = {}
             self.do_scan = False
-            self.step_val = 1
+            self.number_of_steps = 1
             self.file_name = ""
             self.scanned_variables = [] #list of variables involved in a scan
             self.scanned_variables_count = 0
@@ -226,6 +226,7 @@ class MainWindow(QMainWindow):
                 self.sequence = self.experiment.sequence
                 self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
                 self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
+                self.scan_table.setChecked(self.experiment.do_scan)
                 #update the label showing the sequence that is being modified 
                 self.create_file_name_label()
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence loaded from %s" %self.experiment.file_name)
@@ -298,11 +299,24 @@ class MainWindow(QMainWindow):
         except:
             self.error_message("Chose the edge you want the system to go","No edge selected")
 
-    def step_size_input_changed(self):
-        #need a check whether the text is a valid integer
-        print("hey there")
-        self.experiment.step_val = int(self.step_size_input.text())
-    
+    def number_of_steps_input_changed(self):
+        #a check whether the text can be evaluated
+        try:
+            expression = self.number_of_steps_input.text()
+            (evaluation, for_python, is_scanned) = self.decode_input(expression)
+            exec("self.value = " + str(evaluation))
+            if isinstance(self.value, int): #check whether it is an integer
+                if self.value > 0: #check whether it is a positive integer
+                    self.experiment.number_of_steps = int(self.value)
+                else:
+                    self.number_of_steps_input.setText(str(self.experiment.number_of_steps))
+                    self.error_message("Only positive integers larger than 0 are allowed", "Wrong entry")    
+            else:
+                self.number_of_steps_input.setText(str(self.experiment.number_of_steps))
+                self.error_message("Only integer values for number of steps are allowed", "Wrong entry")
+        except:
+            self.error_message("Expression can not be evaluated", "Wrong entry")
+
     def count_scanned_variables(self):
         #this function iterates over all scanned variables that are not "None" and assigns its value to 
         #self.experiment.scanned_variables_count. The function does not return anything
@@ -335,6 +349,7 @@ class MainWindow(QMainWindow):
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
 
     def dummy_button_clicked(self):
+        print("STEP SIZE", self.experiment.number_of_steps)
         print("variables")
         for key, variable in self.experiment.variables.items():
             print(variable.name, variable.value, variable.for_python, variable.is_scanned)
