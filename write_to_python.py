@@ -30,7 +30,7 @@ def create_experiment(self):
         for_zipping = ""
         for variable in self.experiment.scanned_variables:
             if variable.name != "None":
-                file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.step_val))
+                file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.step_number))
                 var_names += variable.name + ", "
                 for_zipping += "self." + variable.name + ", "
 
@@ -57,12 +57,16 @@ def create_experiment(self):
     file.write(indentation + "self.urukul2_ch1.init()\n")
     file.write(indentation + "self.urukul2_ch2.init()\n")
     file.write(indentation + "self.urukul2_ch3.init()\n")
-    file.write(indentation + "delay(5*s)\n") 
+
     if self.experiment.do_scan == True:
+        # this delay needs to be optimized. It may depend on scanning parameters as well
+        file.write(indentation + "delay(5*s)\n") 
         #making a scanning loop 
         #introduce a flag for multi and single variable scan
-        file.write(indentation + "for %s in %s:\n" %(var_names[:-2], for_zipping[:-2]))
-#        file.write(indentation + "for %s in zip(%s):\n" %(var_names[:-2], for_zipping[:-2]))
+        if self.experiment.scanned_variables_count > 1:
+            file.write(indentation + "for %s in zip(%s):\n" %(var_names[:-2], for_zipping[:-2]))
+        else:
+            file.write(indentation + "for %s in %s:\n" %(var_names[:-2], for_zipping[:-2]))        
         indentation += "    "
 
  
@@ -170,6 +174,8 @@ def create_go_to_edge(self):
     file.write(indentation + "delay(5*ms)\n")  
 
     for index, channel in enumerate(self.experiment.sequence[edge].digital):
+        if edge == 0 and index == 8: #adding a 5 ms delay to make changes into TTL channels
+            file.write(indentation + "delay(5*ms)\n")
         if channel.value == 0:
             file.write(indentation + "self.ttl" + str(index) + ".off()\n")
         elif channel.value == 1:

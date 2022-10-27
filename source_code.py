@@ -79,9 +79,10 @@ class MainWindow(QMainWindow):
             self.new_variables = [] #this was decided to be a list in order to display the human defined variables
             self.variables = {}
             self.do_scan = False
-            self.step_val = 1
+            self.number_of_steps = 1
             self.file_name = ""
             self.scanned_variables = [] #list of variables involved in a scan
+            self.scanned_variables_count = 0
 
     class Scanned_variable:
         def __init__(self, name, min_val, max_val):
@@ -159,10 +160,10 @@ class MainWindow(QMainWindow):
             col = item.column()
             edge = self.experiment.sequence[row]
             table_item = self.sequence_table.item(row,col)
-            if col == 3:
+            if col == 3: # edge time expression changed
                 if table_item.text() == "":
                     if row == 0:
-                        self.error_message("You can not delete initial value! Only '0' or '1' are expected", "Initial value is needed!")
+                        self.error_message("You can not delete initial value! Only positive values are expected", "Initial value is needed!")
                         self.update_off()
                         table_item.setText(str(edge.expression))
                         self.update_on()
@@ -174,20 +175,23 @@ class MainWindow(QMainWindow):
                     try:
                         expression = table_item.text()
                         (evaluation, for_python, is_scanned) = self.decode_input(expression)
-                        exec("self.value = " + str(edge.evaluation)) # this is done here to be able to assign value of the id# type variable
-                        edge.evaluation = evaluation
-                        edge.is_scanned = is_scanned
-                        edge.expression = expression
-                        if edge.is_scanned:
-                            edge.for_python = for_python
+                        exec("self.value = " + str(evaluation)) # this is done here to be able to assign value of the id# type variable
+                        if self.value < 0:
+                            self.error_message("Negative values are not allowed", "Negative time value")
                         else:
-                            exec("edge.for_python = " + for_python)
-                        edge.value = self.value
-                        variable_name = "id" + str(edge.id)
-                        self.experiment.variables[variable_name] = self.Variable(name = variable_name, value = edge.value, for_python = edge.for_python, is_scanned = edge.is_scanned)
+                            edge.value = self.value
+                            edge.evaluation = evaluation
+                            edge.is_scanned = is_scanned
+                            edge.expression = expression
+                            if edge.is_scanned:
+                                edge.for_python = for_python
+                            else:
+                                exec("edge.for_python = " + for_python)
+                            variable_name = "id" + str(edge.id)
+                            self.experiment.variables[variable_name] = self.Variable(name = variable_name, value = edge.value, for_python = edge.for_python, is_scanned = edge.is_scanned)
                     except:
                         self.error_message("Expression can not be evaluated", "Wrong entry")
-            elif col == 1:           
+            elif col == 1: # edge name changed
                 edge.name = table_item.text()
             update_evaluations.do(self)
             update_tabs.do(self)
@@ -222,6 +226,7 @@ class MainWindow(QMainWindow):
                 self.sequence = self.experiment.sequence
                 self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
                 self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
+                self.scan_table.setChecked(self.experiment.do_scan)
                 #update the label showing the sequence that is being modified 
                 self.create_file_name_label()
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence loaded from %s" %self.experiment.file_name)
@@ -294,12 +299,36 @@ class MainWindow(QMainWindow):
         except:
             self.error_message("Chose the edge you want the system to go","No edge selected")
 
-    def step_size_input_changed(self):
-        #need a check whether the text is a valid integer
-        print("hey there")
-        self.experiment.step_val = int(self.step_size_input.text())
-    
+    def number_of_steps_input_changed(self):
+        #a check whether the text can be evaluated
+        try:
+            expression = self.number_of_steps_input.text()
+            (evaluation, for_python, is_scanned) = self.decode_input(expression)
+            exec("self.value = " + str(evaluation))
+            if isinstance(self.value, int): #check whether it is an integer
+                if self.value > 0: #check whether it is a positive integer
+                    self.experiment.number_of_steps = int(self.value)
+                else:
+                    self.number_of_steps_input.setText(str(self.experiment.number_of_steps))
+                    self.error_message("Only positive integers larger than 0 are allowed", "Wrong entry")    
+            else:
+                self.number_of_steps_input.setText(str(self.experiment.number_of_steps))
+                self.error_message("Only integer values for number of steps are allowed", "Wrong entry")
+        except:
+            self.error_message("Expression can not be evaluated", "Wrong entry")
+
+    def count_scanned_variables(self):
+        #this function iterates over all scanned variables that are not "None" and assigns its value to 
+        #self.experiment.scanned_variables_count. The function does not return anything
+        count = 0
+        for variable in self.experiment.scanned_variables:
+            if variable.name != "None":
+                count += 1
+        self.experiment.scanned_variables_count = count
+
     def run_experiment_button_clicked(self):
+        self.count_scanned_variables()
+        self.experiment.do_scan = self.experiment.scanned_variables_count > 0
         try:
             write_to_python.create_experiment(self)
             print("python file is written")
@@ -320,6 +349,7 @@ class MainWindow(QMainWindow):
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
 
     def dummy_button_clicked(self):
+        print("STEP SIZE", self.experiment.number_of_steps)
         print("variables")
         for key, variable in self.experiment.variables.items():
             print(variable.name, variable.value, variable.for_python, variable.is_scanned)
@@ -329,6 +359,9 @@ class MainWindow(QMainWindow):
         print("new variables")
         for item in self.experiment.new_variables:
             print(item.name, item.value, item.is_scanned)
+        print(self.experiment.do_scan)
+        print(self.experiment.scanned_variables_count)
+        
 
 
 
@@ -731,40 +764,40 @@ class MainWindow(QMainWindow):
 
     def scan_table_parameters_changed(self, item):
         if self.to_update:
-            if self.experiment.do_scan:
-                row = item.row()
-                col = item.column()
-                table_item = self.scan_table_parameters.item(row, col)
-                variable = self.experiment.scanned_variables[row]
-                if col == 0: #name of the scanned variable changed
-                    if self.already_scanned(table_item.text()): #check if the given variable is defined previously or not
-                        self.error_message("The variable name you entered was already used for scanning.", "Scanning variable dublicate")
-                    else: # if entered name does not have dublicates then we proceed on checking whether the varible name is defined in Variables tab
-                        index = self.index_of_a_new_variable(table_item.text())
-                        if index != None:
-                            prev_index = self.index_of_a_new_variable(variable.name)
-                            if prev_index != None: #make the value of variable to the previous before being scanned. Try is used to avoid accessing "None" variable
-                                #reverting the values and scanning states of the previous variable
-                                self.experiment.variables[variable.name].value = self.experiment.new_variables[prev_index].value 
-                                self.experiment.new_variables[prev_index].is_scanned = False
-                                self.experiment.variables[variable.name].is_scanned = False 
-                                self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
-                            #updating the values and scanning states of the new scanning  variable
-                            variable.name = table_item.text()
-                            self.experiment.variables[variable.name] = self.Variable(variable.name, variable.min_val, variable.min_val, True) #add a new variable with updated name
-                            self.experiment.variables[variable.name].for_python = variable.name
-                            self.experiment.new_variables[index].is_scanned = True
-                        else:
-                            self.error_message("The variable name you entered was not defined in variables tab", "Not defined variable")
-                elif col == 1: #min_val of the scanned variable changed
-                    variable.min_val = float(table_item.text())
-                    if self.scan_table_parameters.item(row, 0).text() != "None": # this makes sure that we do not have to deal with "None" named variable
-                        self.experiment.variables[variable.name].value = float(table_item.text())
-                elif col == 2: #max_val of the scanned variable changed
-                    variable.max_val = float(table_item.text())
-                update_evaluations.do(self)
-                update_expressions.do(self)
-                update_tabs.do(self)        
+            row = item.row()
+            col = item.column()
+            table_item = self.scan_table_parameters.item(row, col)
+            variable = self.experiment.scanned_variables[row]
+            if col == 0: #name of the scanned variable changed
+                if self.already_scanned(table_item.text()): #check if the given variable is defined previously or not
+                    self.error_message("The variable name you entered was already used for scanning.", "Scanning variable dublicate")
+                else: # if entered name does not have dublicates then we proceed on checking whether the varible name is defined in Variables tab
+                    index = self.index_of_a_new_variable(table_item.text())
+                    if index != None:
+                        prev_index = self.index_of_a_new_variable(variable.name)
+                        if prev_index != None: #make the value of variable to the previous before being scanned. Try is used to avoid accessing "None" variable
+                            #reverting the values and scanning states of the previous variable
+                            self.experiment.variables[variable.name].value = self.experiment.new_variables[prev_index].value 
+                            self.experiment.new_variables[prev_index].is_scanned = False
+                            self.experiment.variables[variable.name].is_scanned = False 
+                            self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
+                        #updating the values and scanning states of the new scanning  variable
+                        variable.name = table_item.text()
+                        self.experiment.variables[variable.name] = self.Variable(variable.name, variable.min_val, variable.min_val, True) #add a new variable with updated name
+                        self.experiment.variables[variable.name].for_python = variable.name
+                        self.experiment.new_variables[index].is_scanned = True
+                    else:
+                        self.error_message("The variable name you entered was not defined in variables tab", "Not defined variable")
+            elif col == 1: #min_val of the scanned variable changed
+                variable.min_val = float(table_item.text())
+                if self.scan_table_parameters.item(row, 0).text() != "None": # this makes sure that we do not have to deal with "None" named variable
+                    self.experiment.variables[variable.name].value = float(table_item.text())
+            elif col == 2: #max_val of the scanned variable changed
+                variable.max_val = float(table_item.text())
+            self.count_scanned_variables()
+            update_evaluations.do(self)
+            update_expressions.do(self)
+            update_tabs.do(self)        
         else:
             pass
 
