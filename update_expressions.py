@@ -11,6 +11,7 @@ def do(self):
         #sequence table
         (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(self.sequence_table.item(row,3).text())
         name = "id" + str(edge.id)
+        exec("edge.value = " + edge.evaluation)
         self.experiment.variables[name].evaluation = edge.evaluation
         self.experiment.variables[name].for_python = edge.for_python
         self.experiment.variables[name].is_scanned = edge.is_scanned

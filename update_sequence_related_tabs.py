@@ -7,7 +7,6 @@ from PyQt5.QtGui import *
 def do(self):
     self.update_off()
     self.sequence_num_rows = len(self.experiment.sequence) 
-
     #EVALUATING TIMES WITH GIVEN EXPRESSIONS
 #    print(self.experiment.variables)
 #    for row in range(self.sequence_num_rows):
@@ -34,7 +33,13 @@ def do(self):
     self.variables_table.setRowCount(self.variables_table_row_count)
     for index, variable in enumerate(self.experiment.new_variables):
         self.variables_table.setItem(index, 0, QTableWidgetItem(variable.name))
-        self.variables_table.setItem(index, 1, QTableWidgetItem(str(variable.value)))    
+        if self.experiment.do_scan and variable.is_scanned:
+            item = QTableWidgetItem("scanned")
+            item.setFlags(Qt.NoItemFlags)
+            self.variables_table.setItem(index, 1, item)    
+            
+        else:
+            self.variables_table.setItem(index, 1, QTableWidgetItem(str(variable.value)))    
     
     self.variables_table_contents = [0] * self.variables_table_row_count
     for row in range(self.variables_table_row_count):
@@ -239,6 +244,12 @@ def do(self):
                 dummy_item.setToolTip(str(channel.state.value))
                 self.dds_table.setItem(row+2, col+4, dummy_item)
 
-
+    self.scan_table_parameters.setRowCount(len(self.experiment.scanned_variables))
+    for row, variable in enumerate(self.experiment.scanned_variables):
+        self.scan_table_parameters.setItem(row,0, QTableWidgetItem(str(variable.name)))
+        self.scan_table_parameters.setItem(row,1, QTableWidgetItem(str(variable.min_val)))
+        self.scan_table_parameters.setItem(row,2, QTableWidgetItem(str(variable.max_val)))
+        
+        
 
     self.update_on()

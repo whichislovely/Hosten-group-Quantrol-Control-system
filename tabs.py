@@ -1,4 +1,4 @@
-from PyQt5.QtCore import *
+from PyQt5.QtCore import * 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from datetime import datetime
@@ -45,7 +45,7 @@ def sequence_tab_build(self):
     self.sequence_table.setItemDelegateForColumn(2,delegate)
     self.sequence_table.setItemDelegateForColumn(4,delegate)
     #self.sequence_table.setItemDelegateForRow(0,delegate)
-    
+
     #button to save current sequence
     self.save_sequence_as_button = QPushButton(self.sequence_tab_widget)
     self.save_sequence_as_button.setFont(QFont('Arial', 14))
@@ -105,39 +105,59 @@ def sequence_tab_build(self):
     self.clear_logger_button.setText("Clear logger")
     self.clear_logger_button.clicked.connect(self.clear_logger_button_clicked)
 
-     #DROP DOWN MENU FOR VARIABLE SELECTION
-    self.scan_drop_down = QComboBox()
-    self.scan_drop_down.setFont(QFont("Arial", 14))
-    self.scan_drop_down.setMinimumWidth(200)
-    self.scan_drop_down.addItem("None")
-    self.scan_drop_down.currentTextChanged.connect(self.scan_drop_down_changed)
     #Table of parameters
     self.scan_table_parameters = QTableWidget()
-    self.scan_table_parameters.setColumnCount(4)
-    self.scan_table_parameters.setRowCount(1)
+    self.scan_table_parameters.setColumnCount(3)
+    self.scan_table_parameters.setRowCount(0)
     self.scan_table_parameters.verticalHeader().setVisible(False)
     self.scan_table_parameters.setFont(QFont("Arial", 14))
-    self.scan_table_parameters.setHorizontalHeaderLabels(["Variable","Min value", "Max value", "Step"])
-    self.scan_table_parameters.setColumnWidth(0,200)
-    self.scan_table_parameters.setColumnWidth(1,150)
-    self.scan_table_parameters.setColumnWidth(2,150)
-    self.scan_table_parameters.setColumnWidth(3,150)
-    self.scan_table_parameters.setItem(0,1, QTableWidgetItem(str(0)))
-    self.scan_table_parameters.setItem(0,2, QTableWidgetItem(str(0)))
-    self.scan_table_parameters.setItem(0,3, QTableWidgetItem(str(0)))
+    self.scan_table_parameters.setHorizontalHeaderLabels(["Variable","Min value", "Max value"])
+    self.scan_table_parameters.setColumnWidth(0,250)
+    self.scan_table_parameters.setColumnWidth(1,200)
+    self.scan_table_parameters.setColumnWidth(2,200)
     self.scan_table_parameters.itemChanged.connect(self.scan_table_parameters_changed)
+    #ADD SCANNED VARIABLE BUTTON
+    self.add_scanned_variable_button = QPushButton()
+    self.add_scanned_variable_button.setFont(QFont('Arial', 14))
+    self.add_scanned_variable_button.resize(200, 50)
+    self.add_scanned_variable_button.setText("Add scanned variable")
+    self.add_scanned_variable_button.clicked.connect(self.add_scanned_variable_button_pressed)#this should be modified
+
+    #DELETE SCANNED VARIABLE BUTTON
+    self.delete_scanned_variable_button = QPushButton()
+    self.delete_scanned_variable_button.setFont(QFont('Arial', 14))
+    self.delete_scanned_variable_button.setText("Delete scanned variable")
+    self.delete_scanned_variable_button.clicked.connect(self.delete_scanned_variable_button_pressed)#this should be modified
+
+    #STEP SIZE INPUT
+    self.step_size_label = QLabel()
+    self.step_size_label.setText("Step size")
+    self.step_size_input = QLineEdit()
+    self.step_size_input.editingFinished.connect(self.step_size_input_changed)
+    self.step_size_input.setText("1")
+
+    #HORIZONTAL LAYOUT
+    hBox = QHBoxLayout()
+    temp = QWidget()
+    hBox.addWidget(self.add_scanned_variable_button)
+    hBox.addWidget(self.delete_scanned_variable_button)     
+    hBox.addWidget(self.step_size_label)
+    hBox.addWidget(self.step_size_input)
+    temp.setLayout(hBox)
     #SCAN PARAMETERS
     self.scan_table = QGroupBox(self.sequence_tab_widget)
     self.scan_table.setTitle("Scan")
     self.scan_table.setCheckable(True)
     self.scan_table.setChecked(False)
-    hBox = QHBoxLayout()
-    self.scan_table.setLayout(hBox)
-    hBox.addWidget(self.scan_table_parameters)
     self.scan_table.setFont(QFont("Arial", 14))
-    self.scan_table.setGeometry(1100, 30, 675, 200)
-    self.scan_table.toggled.connect(self.scan_table_activated)
-    self.scan_table_parameters.setCellWidget(0,0,self.scan_drop_down)   
+    self.scan_table.move(1100, 30)
+    #self.scan_table.setGeometry(1100, 30, 675, 250)
+    self.scan_table.toggled.connect(self.scan_table_checked)
+    vBox = QVBoxLayout()
+    self.scan_table.setLayout(vBox)
+    vBox.addWidget(temp)
+    vBox.addWidget(self.scan_table_parameters)
+
 
 
 # DIGITAL TAB
@@ -380,8 +400,8 @@ def dds_tab_build(self):
         self.dds_dummy_header.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
         self.dds_dummy_header.item(0,i).setTextAlignment(Qt.AlignCenter)
 
-    #self.dds_dummy_header.setItemDelegateForRow(1, delegate)
-    self.dds_table.setItemDelegateForRow(2, delegate)
+    self.dds_dummy_header.setItemDelegateForRow(1, delegate)
+    #self.dds_table.setItemDelegateForRow(2, delegate)
 
     self.dds_dummy_header.setColumnWidth(0,50)
     self.dds_dummy_header.setColumnWidth(1,180)

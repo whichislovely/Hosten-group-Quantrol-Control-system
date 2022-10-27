@@ -6,7 +6,8 @@ def build(self):
     self.experiment.sequence = [self.Edge("Default", 0, 0, 0)]
     self.experiment.variables['id0'] = self.Variable(name = "id0", value = 0.0, for_python = 0.0)
     self.experiment.variables[''] = self.Variable(name = '', value = 0.0, for_python = 0.0)   #in order to be able to process expressions like -5 we need to have it as first item in decode will be "" that should be 0
-    self.current_dict = [{} for i in range(12)] # this dict is used in filling the DDS channels
+    #self.experiment.variables['None'] = self.Variable(name = 'None', value = 0.0, for_python = 0.0)   #in order to be able to make a variable "none"
+    self.current_dict = [{} for i in range(12)] # this dict is used in filling the DDS channels 
     #INITIAL PARAMETERS
     for i in range(16):
         exec("self.experiment.sequence[0].digital[%d].changed = True" %i)
@@ -52,6 +53,10 @@ def build(self):
 
     self.variables_table_row_count = 0
 
+    #assigning default values to channel values of a digital tab
+    self.experiment.sequence[0].digital[8].value = 1
+    self.experiment.sequence[0].digital[8].expression = 1
+    self.experiment.sequence[0].digital[8].evaluation = 1
 
     #assigning default values to channel names and values that won't change much
     self.experiment.title_digital_tab[0+4] += "\nX shutter"
@@ -62,15 +67,19 @@ def build(self):
     self.experiment.title_digital_tab[5+4] += "\nZbot shutter"
     self.experiment.title_digital_tab[6+4] += "\nRepump shutter"
     self.experiment.title_digital_tab[7+4] += "\nMOT B-fld switch"
-    self.experiment.title_digital_tab[8+4] += "\nCamera trig"
+    self.experiment.title_digital_tab[8+4] += "\nZ camera trig"
+    self.experiment.title_digital_tab[9+4] += "\nX-Y camera trig"
     self.experiment.title_dds_tab[0+4] += "Repump offset"
     self.experiment.title_dds_tab[1+4] += "Cooling offset"
-    self.experiment.title_dds_tab[4+4] += "Repump AOM"
+    self.experiment.title_dds_tab[2+4] += "RF offset for 3.6GHz (SSB1)"
+    self.experiment.title_dds_tab[3+4] += "Seeded laser 5 AOM"
     self.experiment.title_dds_tab[4+4] += "Repump AOM"
     self.experiment.title_dds_tab[5+4] += "3D-XY MOT AOM"
     self.experiment.title_dds_tab[6+4] += "3D-Z MOT AOM"
     self.experiment.title_dds_tab[7+4] += "2D MOT AOM"
     self.experiment.title_dds_tab[8+4] += "2D PUSH AOM"
+    self.experiment.title_dds_tab[9+4] += "Raman 1 AOM"
+    self.experiment.title_dds_tab[10+4] += "Raman 2 AOM"
     #DDS0
     self.experiment.sequence[0].dds[0].frequency.value = 226.73083
     self.experiment.sequence[0].dds[0].frequency.evaluation = 226.73083
@@ -94,6 +103,32 @@ def build(self):
     self.experiment.sequence[0].dds[1].state.value = 1.0
     self.experiment.sequence[0].dds[1].state.evaluation = 1.0
     self.experiment.sequence[0].dds[1].state.expression = 1.0
+    #DDS2
+    self.experiment.sequence[0].dds[2].frequency.value = 182.65869
+    self.experiment.sequence[0].dds[2].frequency.evaluation = 182.65869
+    self.experiment.sequence[0].dds[2].frequency.expression = 182.65869
+    self.experiment.sequence[0].dds[2].amplitude.value = 0.3
+    self.experiment.sequence[0].dds[2].amplitude.evaluation = 0.3
+    self.experiment.sequence[0].dds[2].amplitude.expression = 0.3
+    self.experiment.sequence[0].dds[2].attenuation.value = 0.5
+    self.experiment.sequence[0].dds[2].attenuation.evaluation = 0.5
+    self.experiment.sequence[0].dds[2].attenuation.expression = 0.5
+    self.experiment.sequence[0].dds[2].state.value = 1.0
+    self.experiment.sequence[0].dds[2].state.evaluation = 1.0
+    self.experiment.sequence[0].dds[2].state.expression = 1.0
+    #DDS3
+    self.experiment.sequence[0].dds[3].frequency.value = 80.0
+    self.experiment.sequence[0].dds[3].frequency.evaluation = 80.0
+    self.experiment.sequence[0].dds[3].frequency.expression = 80.0
+    self.experiment.sequence[0].dds[3].amplitude.value = 0.2
+    self.experiment.sequence[0].dds[3].amplitude.evaluation = 0.2
+    self.experiment.sequence[0].dds[3].amplitude.expression = 0.2
+    self.experiment.sequence[0].dds[3].attenuation.value = 0.0
+    self.experiment.sequence[0].dds[3].attenuation.evaluation = 0.0
+    self.experiment.sequence[0].dds[3].attenuation.expression = 0.0
+    self.experiment.sequence[0].dds[3].state.value = 1.0
+    self.experiment.sequence[0].dds[3].state.evaluation = 1.0
+    self.experiment.sequence[0].dds[3].state.expression = 1.0
     #DDS4
     self.experiment.sequence[0].dds[4].frequency.value = 80.0
     self.experiment.sequence[0].dds[4].frequency.evaluation = 80.0
