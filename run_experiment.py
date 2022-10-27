@@ -37,7 +37,7 @@ class run_experiment(EnvExperiment):
         self.setattr_device('ttl14')
         self.setattr_device('ttl15')
         self.setattr_device('zotino0')
-        self.d = linspace(100.000000, 200.000000, 100)
+        self.a = linspace(0.000000, 0.000000, 1)
 
     @kernel
     def run(self):
@@ -60,7 +60,7 @@ class run_experiment(EnvExperiment):
         self.urukul2_ch2.init()
         self.urukul2_ch3.init()
         delay(5*s)
-        for d in self.d:
+        for a in self.a:
             #Edge number 0 name of edge: Default
             self.ttl0.off()
             self.ttl1.off()
@@ -78,7 +78,7 @@ class run_experiment(EnvExperiment):
             self.ttl12.off()
             self.ttl13.off()
             self.ttl14.off()
-            self.ttl15.on()
+            self.ttl15.off()
             self.zotino0.write_dac(0, 0)
             self.zotino0.write_dac(1, 0)
             self.zotino0.write_dac(2, 0)
@@ -149,5 +149,6 @@ class run_experiment(EnvExperiment):
             self.urukul2_ch3.set(frequency = 0.0*MHz, amplitude = 0.0, phase = 0.0)
             self.urukul2_ch3.sw.off() 
             #Edge number 1 name of edge: 
-            delay(((d)-(0))*ms)
-            self.ttl15.off()
+            delay((1)*ms)
+            #Edge number 2 name of edge: 
+            delay((11)*ms)
