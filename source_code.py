@@ -160,10 +160,10 @@ class MainWindow(QMainWindow):
             col = item.column()
             edge = self.experiment.sequence[row]
             table_item = self.sequence_table.item(row,col)
-            if col == 3:
+            if col == 3: # edge time expression changed
                 if table_item.text() == "":
                     if row == 0:
-                        self.error_message("You can not delete initial value! Only '0' or '1' are expected", "Initial value is needed!")
+                        self.error_message("You can not delete initial value! Only positive values are expected", "Initial value is needed!")
                         self.update_off()
                         table_item.setText(str(edge.expression))
                         self.update_on()
@@ -175,20 +175,23 @@ class MainWindow(QMainWindow):
                     try:
                         expression = table_item.text()
                         (evaluation, for_python, is_scanned) = self.decode_input(expression)
-                        exec("self.value = " + str(edge.evaluation)) # this is done here to be able to assign value of the id# type variable
-                        edge.evaluation = evaluation
-                        edge.is_scanned = is_scanned
-                        edge.expression = expression
-                        if edge.is_scanned:
-                            edge.for_python = for_python
+                        exec("self.value = " + str(evaluation)) # this is done here to be able to assign value of the id# type variable
+                        if self.value < 0:
+                            self.error_message("Negative values are not allowed", "Negative time value")
                         else:
-                            exec("edge.for_python = " + for_python)
-                        edge.value = self.value
-                        variable_name = "id" + str(edge.id)
-                        self.experiment.variables[variable_name] = self.Variable(name = variable_name, value = edge.value, for_python = edge.for_python, is_scanned = edge.is_scanned)
+                            edge.value = self.value
+                            edge.evaluation = evaluation
+                            edge.is_scanned = is_scanned
+                            edge.expression = expression
+                            if edge.is_scanned:
+                                edge.for_python = for_python
+                            else:
+                                exec("edge.for_python = " + for_python)
+                            variable_name = "id" + str(edge.id)
+                            self.experiment.variables[variable_name] = self.Variable(name = variable_name, value = edge.value, for_python = edge.for_python, is_scanned = edge.is_scanned)
                     except:
                         self.error_message("Expression can not be evaluated", "Wrong entry")
-            elif col == 1:           
+            elif col == 1: # edge name changed
                 edge.name = table_item.text()
             update_evaluations.do(self)
             update_tabs.do(self)
