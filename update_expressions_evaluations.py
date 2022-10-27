@@ -9,12 +9,16 @@ def do(self):
     self.experiment.sequence = sorted(self.experiment.sequence, key = lambda edge: edge.value)
 
     for edge_index, edge in enumerate(self.experiment.sequence):
+        #UPDATING EDGE VALUES (TIME)
         try:
             exec("edge.value = " + str(edge.evaluation))
+            name = "id" + str(edge.id)
+            self.experiment.variables[name].value = edge.value
         except:
             return "time expression edge number %d"%edge_index
             
         for channel_index, sub_channel in enumerate(edge.digital):
+            #UPDATING DIGITAL CHANNELS
             try:
                 exec("sub_channel.value = " + str(sub_channel.evaluation))
             except:
@@ -23,6 +27,7 @@ def do(self):
                 return "digital channel %d, edge %d" %(channel_index, edge_index)
         
         for channel_index, sub_channel in enumerate(edge.analog):
+            #UPDATING ANALOG CHANNELS
             try:
                 exec("sub_channel.value = " + str(sub_channel.evaluation))
             except:
@@ -31,6 +36,7 @@ def do(self):
                 return "analog channel %d, edge %d" %(channel_index, edge_index)
     
         for channel_index, sub_channel in enumerate(edge.dds):
+            #UPDATING DDS CHANNELS
             try:
                 exec("sub_channel.frequency.value = " + str(sub_channel.frequency.evaluation))
             except:

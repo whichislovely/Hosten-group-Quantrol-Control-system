@@ -193,6 +193,7 @@ class MainWindow(QMainWindow):
                         self.error_message("Expression can not be evaluated", "Wrong entry")
             elif col == 1: # edge name changed
                 edge.name = table_item.text()
+            update_expressions.do(self)
             update_evaluations.do(self)
             update_tabs.do(self)
         else:
@@ -335,7 +336,7 @@ class MainWindow(QMainWindow):
             os.system("conda activate artiq_5 && artiq_run %s" %"run_experiment.py")        
 
 #            else:
-#                file_name = write_to_python.create_experiment(self)P
+#                file_name = write_to_python.create_experiment(self)
 #                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Python file generated")
 #                try:
 #                    os.system("conda activate artiq_5 && artiq_run %s" %file_name)    
@@ -349,19 +350,17 @@ class MainWindow(QMainWindow):
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
 
     def dummy_button_clicked(self):
-        print("STEP SIZE", self.experiment.number_of_steps)
         print("variables")
         for key, variable in self.experiment.variables.items():
             print(variable.name, variable.value, variable.for_python, variable.is_scanned)
-        print("scanned_variables")
-        for item in self.experiment.scanned_variables:
-            print(item.name, item.min_val, item.max_val)
-        print("new variables")
-        for item in self.experiment.new_variables:
-            print(item.name, item.value, item.is_scanned)
-        print(self.experiment.do_scan)
-        print(self.experiment.scanned_variables_count)
-        
+#        print("scanned_variables")
+#        for item in self.experiment.scanned_variables:
+#            print(item.name, item.min_val, item.max_val)
+#        print("new variables")
+#        for item in self.experiment.new_variables:
+#            print(item.name, item.value, item.is_scanned)
+        for edge in self.experiment.sequence:
+            print("edge id:", edge.id, "val:", edge.value, "evaluation", edge.evaluation)
 
 
 
