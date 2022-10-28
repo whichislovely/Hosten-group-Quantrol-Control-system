@@ -193,7 +193,7 @@ class MainWindow(QMainWindow):
                         self.error_message("Expression can not be evaluated", "Wrong entry")
             elif col == 1: # edge name changed
                 edge.name = table_item.text()
-            update_expressions.do(self)
+            #update_expressions.do(self)
             update_evaluations.do(self)
             update_tabs.do(self)
         else:
@@ -330,6 +330,7 @@ class MainWindow(QMainWindow):
     def run_experiment_button_clicked(self):
         self.count_scanned_variables()
         self.experiment.do_scan = self.experiment.scanned_variables_count > 0
+        update_expressions.do(self)
         try:
             write_to_python.create_experiment(self)
             print("python file is written")
@@ -701,13 +702,16 @@ class MainWindow(QMainWindow):
                     self.error_message('Variable name is already used', 'Invalid variable name')
             elif col == 1: #variable value was changed
                 #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
-                self.experiment.variables[variable.name].value = float(table_item.text())
-                return_value = update_evaluations.do(self)
-                if return_value != None:
-                    self.error_message("Evaluation is out of allowed range occured in %s. Variable value can not be assigned" %return_value, "Wrong entry")
-                    self.experiment.variables[variable.name].value = variable.value 
-                else:
-                    variable.value = self.experiment.variables[variable.name].value
+                try:
+                    self.experiment.variables[variable.name].value = float(table_item.text())
+                    return_value = update_evaluations.do(self)
+                    if return_value != None:
+                        self.error_message("Evaluation is out of allowed range occured in %s. Variable value can not be assigned" %return_value, "Wrong entry")
+                        self.experiment.variables[variable.name].value = variable.value 
+                    else:
+                        variable.value = self.experiment.variables[variable.name].value
+                except:
+                    self.error_message("Only integers and floating numbers are allowed.", "Wrong entry")
             update_expressions.do(self)
             update_evaluations.do(self)
             update_tabs.do(self)

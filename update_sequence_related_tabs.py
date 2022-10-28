@@ -74,7 +74,7 @@ def do(self):
         #displaying edge names and times        
         self.sequence_table.setItem(row,0, QTableWidgetItem(str(row)))
         self.sequence_table.setItem(row,1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
-        self.sequence_table.setItem(row,2, QTableWidgetItem(str(self.experiment.sequence[row].id)))
+        self.sequence_table.setItem(row,2, QTableWidgetItem("id" + str(self.experiment.sequence[row].id)))
         self.sequence_table.setItem(row,3, QTableWidgetItem(str(self.experiment.sequence[row].expression)))
         self.sequence_table.setItem(row,4, QTableWidgetItem(str(self.experiment.sequence[row].value)))
 
