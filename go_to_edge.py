@@ -65,6 +65,7 @@ class go_to_edge(EnvExperiment):
         self.ttl5.off()
         self.ttl6.off()
         self.ttl7.off()
+        delay(5*ms)
         self.ttl8.on()
         self.ttl9.off()
         self.ttl10.off()

@@ -30,7 +30,7 @@ def create_experiment(self):
         for_zipping = ""
         for variable in self.experiment.scanned_variables:
             if variable.name != "None":
-                file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.step_number))
+                file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.number_of_steps))
                 var_names += variable.name + ", "
                 for_zipping += "self." + variable.name + ", "
 
@@ -76,15 +76,13 @@ def create_experiment(self):
     flag_init = 0
     for edge in range(self.sequence_num_rows):
         file.write(indentation + "#Edge number " + str(edge) + " name of edge: " + self.experiment.sequence[edge].name + "\n")
-        if flag_init == 0:
+        if flag_init == 0: # in the first iteration it does not need to do anything as delta_t is assigned to 0
             flag_init = 1
         else:
+            #Brackets are needed to take into account that for_python can be a mathematical expression with signs
             self.delta_t = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
             try: #this try is used to try evaluating the expression. It will only be able to do so in case it is scanned
-                print(self.delta_t)
                 exec("self.delta_t = " + self.delta_t)
-                print("Done")
-                print(self.delta_t)
             except:
                 pass
         #ADDING A DELAY
