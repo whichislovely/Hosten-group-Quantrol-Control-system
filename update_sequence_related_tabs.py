@@ -35,12 +35,12 @@ def do(self):
 
 
     #additional assignment for the DDS table title of columns
-    for i in range(3):
-        self.dds_table.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
-        self.dds_table.item(0,i).setTextAlignment(Qt.AlignCenter)
-    for i in range(3):
-        self.dds_dummy.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
-        self.dds_dummy.item(0,i).setTextAlignment(Qt.AlignCenter)
+#    for i in range(3):
+#        self.dds_table.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
+#        self.dds_table.item(0,i).setTextAlignment(Qt.AlignCenter)
+#    for i in range(3):
+#        self.dds_dummy.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
+#        self.dds_dummy.item(0,i).setTextAlignment(Qt.AlignCenter)
 
     # gray coloured separating line
     self.digital_table.setSpan(0,3, self.sequence_num_rows , 1)
@@ -162,41 +162,33 @@ def do(self):
                 dummy_item = QTableWidgetItem(str(channel.frequency.expression))
                 dummy_item.setToolTip(str(channel.frequency.value))
                 self.dds_table.setItem(row+2, col, dummy_item)
-                if channel.state.value == 0:
-                    self.dds_table.item(row+2,col).setBackground(QColor(247,120,120))
-                else:
-                    self.dds_table.item(row+2,col).setBackground(QColor(37,211,102))
                 #amplitude
                 dummy_item = QTableWidgetItem(str(channel.amplitude.expression))
                 dummy_item.setToolTip(str(channel.amplitude.value))
                 self.dds_table.setItem(row+2, col+1, dummy_item)
-                if channel.state.value == 0:
-                    self.dds_table.item(row+2,col+1).setBackground(QColor(247,120,120))
-                else:
-                    self.dds_table.item(row+2,col+1).setBackground(QColor(37,211,102))
                 #attenuation
                 dummy_item = QTableWidgetItem(str(channel.attenuation.expression))
                 dummy_item.setToolTip(str(channel.attenuation.value))
                 self.dds_table.setItem(row+2, col+2, dummy_item)
-                if channel.state.value == 0:
-                    self.dds_table.item(row+2,col+2).setBackground(QColor(247,120,120))
-                else:
-                    self.dds_table.item(row+2,col+2).setBackground(QColor(37,211,102))
                 #phase
                 dummy_item = QTableWidgetItem(str(channel.phase.expression))
                 dummy_item.setToolTip(str(channel.phase.value))
                 self.dds_table.setItem(row+2, col+3, dummy_item)
-                if channel.state.value == 0:
-                    self.dds_table.item(row+2,col+3).setBackground(QColor(247,120,120))
-                else:
-                    self.dds_table.item(row+2,col+3).setBackground(QColor(37,211,102))
                 #state
                 dummy_item = QTableWidgetItem(str(channel.state.expression))
                 dummy_item.setToolTip(str(channel.state.value))
                 self.dds_table.setItem(row+2, col+4, dummy_item)
                 if channel.state.value == 0:
+                    self.dds_table.item(row+2,col).setBackground(QColor(247,120,120))
+                    self.dds_table.item(row+2,col+1).setBackground(QColor(247,120,120))
+                    self.dds_table.item(row+2,col+2).setBackground(QColor(247,120,120))
+                    self.dds_table.item(row+2,col+3).setBackground(QColor(247,120,120))
                     self.dds_table.item(row+2,col+4).setBackground(QColor(247,120,120))
                 else:
+                    self.dds_table.item(row+2,col).setBackground(QColor(37,211,102))
+                    self.dds_table.item(row+2,col+1).setBackground(QColor(37,211,102))
+                    self.dds_table.item(row+2,col+2).setBackground(QColor(37,211,102))
+                    self.dds_table.item(row+2,col+3).setBackground(QColor(37,211,102))
                     self.dds_table.item(row+2,col+4).setBackground(QColor(37,211,102))
             else:
                 #frequency
@@ -235,12 +227,11 @@ def do(self):
                 dummy_item.setToolTip(str(channel.state.value))
                 self.dds_table.setItem(row+2, col+4, dummy_item)
 
+    # displaying scan parameters
     self.scan_table_parameters.setRowCount(len(self.experiment.scanned_variables))
     for row, variable in enumerate(self.experiment.scanned_variables):
         self.scan_table_parameters.setItem(row,0, QTableWidgetItem(str(variable.name)))
         self.scan_table_parameters.setItem(row,1, QTableWidgetItem(str(variable.min_val)))
         self.scan_table_parameters.setItem(row,2, QTableWidgetItem(str(variable.max_val)))
         
-        
-
     self.update_on()

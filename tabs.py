@@ -210,21 +210,9 @@ def digital_tab_build(self):
     delegate = ReadOnlyDelegate(self)
     for _ in range(3):
         exec("self.digital_dummy.setItemDelegateForColumn(%d,delegate)" %_)
-
-    self.digital_tables = [self.digital_table,self.digital_dummy]
-
-    def move_other_scrollbars(idx,bar):
-        scrollbars = {tbl.verticalScrollBar() for tbl in self.digital_tables}
-        scrollbars.remove(bar)
-        for bar in scrollbars:
-            bar.setValue(idx)
         
     self.digital_dummy.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     self.digital_dummy.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    for tbl in self.digital_tables:
-        scrollbar = tbl.verticalScrollBar()
-        scrollbar.valueChanged.connect(lambda idx,bar=scrollbar: move_other_scrollbars(idx, bar))
-
 
 #ANALOG TAB
 def analog_tab_build(self):
@@ -278,29 +266,20 @@ def analog_tab_build(self):
     for _ in range(3):
         exec("self.analog_dummy.setItemDelegateForColumn(%d,delegate)" %_)
 
-    self.analog_tables = [self.analog_table,self.analog_dummy]
-
-    def move_other_scrollbars(idx,bar):
-        scrollbars = {tbl.verticalScrollBar() for tbl in self.analog_tables}
-        scrollbars.remove(bar)
-        for bar in scrollbars:
-            bar.setValue(idx)
-        
     self.analog_dummy.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     self.analog_dummy.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    for tbl in self.analog_tables:
-        scrollbar = tbl.verticalScrollBar()
-        scrollbar.valueChanged.connect(lambda idx,bar=scrollbar: move_other_scrollbars(idx, bar))
 
 def dds_tab_build(self):
     self.dds_tab_widget = QWidget()
+
+    #DDS LABLE
     dds_lable = QLabel(self.dds_tab_widget)
     dds_lable.setText("Dds channels")
     dds_lable.setFont(QFont('Arial', 14))
     dds_lable.setGeometry(85, 0, 400, 30)
     self.sequence_num_rows = len(self.experiment.sequence)
     
-    #dds TAB LAYOUT
+    #DDS TAB LAYOUT
     self.dds_table = QTableWidget(self.dds_tab_widget)
     self.dds_table.setGeometry(QRect(0.5, 30, 1905, 1070))
     self.dds_table.setColumnCount(self.dds_tab_num_cols)
@@ -309,28 +288,31 @@ def dds_tab_build(self):
     self.dds_table.horizontalHeader().setVisible(False)
     self.dds_table.setRowCount(5) # 5 is an arbitrary number we just need to have rows in order to span them
     self.dds_table.horizontalHeader().setMinimumSectionSize(0)
+    self.dds_table.setFont(QFont('Arial', 12))
     self.dds_table.setFrameStyle(QFrame.NoFrame)
+    #SHAPING THE FIRST 3 COLUMNS 
+    self.dds_table.setColumnWidth(0,50)
+    self.dds_table.setColumnWidth(1,180)
+    self.dds_table.setColumnWidth(2,100)
+    self.dds_table.setColumnWidth(3,5)
+
     delegate = ReadOnlyDelegate(self)
-    #self.dds_table.setSpan(row,col, rowspan, colspan)
+    #SHAPING THE TABLE
     for i in range(12):
-        self.dds_table.setSpan(0,4 + 6*i, 1, 5)
-        self.dds_table.setColumnWidth(3 + 6*i, 5)
-        self.dds_table.setColumnWidth(8 + 6*i, 45)
-        self.dds_table.setItemDelegateForColumn(3 + 6*i,delegate)
-    #making first three columns wider to fit with header 
+        self.dds_table.setSpan(0,4 + 6*i, 1, 5) # stretching the title of the channel
+        self.dds_table.setColumnWidth(3 + 6*i, 5) # making separation line thin
+        self.dds_table.setColumnWidth(8 + 6*i, 45) # making state column smaller
+        self.dds_table.setItemDelegateForColumn(3 + 6*i,delegate) #making separation line uneditable
+    
+    #making first three columns verticaly wider to fit with header 
     for i in range(3):
         self.dds_table.setSpan(0, i, 2, 1)
         self.dds_table.setItemDelegateForColumn(i,delegate)
 
-    self.dds_table.setFont(QFont('Arial', 12))
-    self.dds_table.setColumnWidth(0,50)
-    self.dds_table.setColumnWidth(1,180)
-    self.dds_table.setColumnWidth(2,100)
 
     self.dds_table.itemChanged.connect(self.dds_table_changed)
-    #self.dds_table.horizontalHeader().sectionClicked.connect(self.dds_table_header_clicked)
 
-    #Dummy table that will display edge number, name and time and will be fixed
+    #Dummy table that will display edge number, name and time and will be fixed (LEFT SIDE OF THE TABLE)
     self.dds_dummy = QTableWidget(self.dds_tab_widget)
     self.dds_dummy.setGeometry(QRect(0.5,30,335,1053))
     self.dds_dummy.setColumnCount(4)
@@ -346,19 +328,89 @@ def dds_tab_build(self):
     self.dds_dummy.setColumnWidth(1,180)
     self.dds_dummy.setColumnWidth(2,100)
     self.dds_dummy.setColumnWidth(3,5)
-
-    #self.dds_table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    #self.dds_table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
     self.dds_dummy.setFrameStyle(QFrame.NoFrame)
-    delegate = ReadOnlyDelegate(self)
-    #making first three columns wider to fit with header 
-    #self.dds_dummy.setSpan(row,col, rowspan, colspan)
+
+    #making first three columns vertically wider to fit with header 
     for i in range(3):
         self.dds_dummy.setSpan(0, i, 2, 1)
         self.dds_dummy.setItemDelegateForColumn(i,delegate)
 
-    self.dds_tables = [self.dds_table,self.dds_dummy]
+    #Dummy horizontal header (TOP SIDE OF THE TABLE)
+    self.dds_dummy_header = QTableWidget(self.dds_tab_widget)
+    self.dds_dummy_header.setGeometry(QRect(0.5,30,1905,60))
+    self.dds_dummy_header.setColumnCount(self.dds_tab_num_cols)
+    self.dds_dummy_header.horizontalHeader().setMinimumHeight(50)
+    self.dds_dummy_header.verticalHeader().setVisible(False)
+    self.dds_dummy_header.horizontalHeader().setVisible(False)
+    self.dds_dummy_header.setRowCount(2) 
+    self.dds_dummy_header.horizontalHeader().setMinimumSectionSize(0)
+    self.dds_dummy_header.horizontalHeader().setFont(QFont('Arial', 12))
+    self.dds_dummy_header.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+    self.dds_dummy_header.setFont(QFont('Arial', 12))
+    self.dds_dummy_header.setFrameStyle(QFrame.NoFrame)
+    #SHAPING THE FIRST 3 COLUMNS 
+    self.dds_dummy_header.setColumnWidth(0,50) 
+    self.dds_dummy_header.setColumnWidth(1,180)
+    self.dds_dummy_header.setColumnWidth(2,100)
+
+    #SHAPING THE TABLE
+    for i in range(12):
+        self.dds_dummy_header.setSpan(0,4 + 6*i, 1, 5) # stretching the title of the channel
+        self.dds_dummy_header.setColumnWidth(3 + 6*i, 5) # making separation line thin
+        self.dds_dummy_header.setColumnWidth(8 + 6*i, 45) # making state column smaller
+        self.dds_dummy_header.setItemDelegateForColumn(3 + 6*i,delegate) #making separation line uneditable
+
+    self.dds_dummy_header.setItemDelegateForRow(1, delegate) #making row number 2 uneditable
+
+    #populating headers and separators
+    for i in range(12):
+        #separator
+        self.dds_dummy_header.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
+        self.dds_dummy_header.setItem(0,6*i + 3, QTableWidgetItem())
+        self.dds_dummy_header.item(0, 6*i + 3).setBackground(QColor(100,100,100))
+        #headers Channel
+        self.dds_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_dds_tab[i+4])))
+        self.dds_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
+        #headers Channel attributes (f, Amp, att, phase, state)
+        self.dds_dummy_header.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
+        self.dds_dummy_header.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
+        self.dds_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
+        self.dds_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
+        self.dds_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
+
+    self.dds_dummy_header.itemChanged.connect(self.dds_dummy_header_changed)
+
+    #Making fixed corner (TOP LEFT SIDE OF THE TABLE)
+    self.dds_fixed = QTableWidget(self.dds_tab_widget)
+    self.dds_fixed.setGeometry(QRect(0.5,30, 335,60))
+    self.dds_fixed.setColumnCount(4)
+    self.dds_fixed.horizontalHeader().setMinimumHeight(50)
+    self.dds_fixed.verticalHeader().setVisible(False)
+    self.dds_fixed.horizontalHeader().setVisible(False)
+    self.dds_fixed.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+    self.dds_fixed.horizontalHeader().setMinimumSectionSize(0)
+    self.dds_fixed.setRowCount(2) 
+    self.dds_fixed.setFont(QFont('Arial', 12))
+    self.dds_fixed.setFrameStyle(QFrame.NoFrame)
+    #SHAPING THE FIRST 3 COLUMNS
+    self.dds_fixed.setColumnWidth(0,50)
+    self.dds_fixed.setColumnWidth(1,180)
+    self.dds_fixed.setColumnWidth(2,100)
+    self.dds_fixed.setColumnWidth(3,5)
+    #making first three columns vertically wider to fit with header 
+    for i in range(4):
+        self.dds_fixed.setSpan(0, i, 2, 1)
+        self.dds_fixed.setItemDelegateForColumn(i,delegate)
+    #Separator
+    self.dds_fixed.setItem(0,3, QTableWidgetItem())
+    self.dds_fixed.item(0,3).setBackground(QColor(100,100,100))
+    #populating edge number, name and time
+    for i in range(3):
+        self.dds_fixed.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
+        self.dds_fixed.item(0,i).setTextAlignment(Qt.AlignCenter)
+
+    #MAKING VERTICAL SCROLL BARS COMMON FOR DDS TABLE
+    self.dds_tables = [self.dds_table,self.dds_dummy,self.analog_table,self.analog_dummy, self.digital_table, self.digital_dummy, self.sequence_table]
 
     def move_other_scrollbars_vertical(idx,bar):
         scrollbars = {tbl.verticalScrollBar() for tbl in self.dds_tables}
@@ -372,58 +424,7 @@ def dds_tab_build(self):
         scrollbar = tbl.verticalScrollBar()
         scrollbar.valueChanged.connect(lambda idx,bar=scrollbar: move_other_scrollbars_vertical(idx, bar))
 
-    #Dummy horizontal header 
-    self.dds_dummy_header = QTableWidget(self.dds_tab_widget)
-    self.dds_dummy_header.setGeometry(QRect(0.5,30,1905,60))
-    self.dds_dummy_header.setColumnCount(self.dds_tab_num_cols)
-    self.dds_dummy_header.horizontalHeader().setMinimumHeight(50)
-    self.dds_dummy_header.verticalHeader().setVisible(False)
-    self.dds_dummy_header.horizontalHeader().setVisible(False)
-    self.dds_dummy_header.setRowCount(2) 
-    self.dds_dummy_header.horizontalHeader().setMinimumSectionSize(0)
-    self.dds_dummy_header.horizontalHeader().setFont(QFont('Arial', 12))
-    self.dds_dummy_header.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
-    self.dds_dummy_header.setFont(QFont('Arial', 12))
-    self.dds_dummy_header.setFrameStyle(QFrame.NoFrame)
-    #self.dds_table.setSpan(row,col, rowspan, colspan)
-    for i in range(12):
-        self.dds_dummy_header.setSpan(0,4 + 6*i, 1, 5)
-        self.dds_dummy_header.setColumnWidth(3 + 6*i, 5)
-        self.dds_dummy_header.setColumnWidth(8 + 6*i, 45)
-        self.dds_dummy_header.setItemDelegateForColumn(3 + 6*i,delegate)
-    #making first three columns wider to fit with header 
-    for i in range(3):
-        self.dds_dummy_header.setSpan(0, i, 2, 1)
-        self.dds_dummy_header.setItemDelegateForColumn(i,delegate)
-    #populating edge number, name and time
-    for i in range(3):
-        self.dds_dummy_header.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
-        self.dds_dummy_header.item(0,i).setTextAlignment(Qt.AlignCenter)
-
-    self.dds_dummy_header.setItemDelegateForRow(1, delegate)
-    #self.dds_table.setItemDelegateForRow(2, delegate)
-
-    self.dds_dummy_header.setColumnWidth(0,50)
-    self.dds_dummy_header.setColumnWidth(1,180)
-    self.dds_dummy_header.setColumnWidth(2,100)
-
-    
-
-    #populating headers and separators
-    for i in range(12):
-        self.dds_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_dds_tab[i+4])))
-        self.dds_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
-        self.dds_dummy_header.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
-        self.dds_dummy_header.setItem(0,6*i + 3, QTableWidgetItem())
-        self.dds_dummy_header.item(0, 6*i + 3).setBackground(QColor(100,100,100))
-        self.dds_dummy_header.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
-        self.dds_dummy_header.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
-        self.dds_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
-        self.dds_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
-        self.dds_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
-
-    self.dds_dummy_header.itemChanged.connect(self.dds_dummy_header_changed)
-
+    #MAKING HORIZONTAL SCROLL BARS COMMON FOR DDS TABLE
     self.dds_dummy_tables = [self.dds_table,self.dds_dummy_header]
 
     def move_other_scrollbars_horizontal(idx,bar):
@@ -438,36 +439,7 @@ def dds_tab_build(self):
         scrollbar = tbl.horizontalScrollBar()
         scrollbar.valueChanged.connect(lambda idx,bar=scrollbar: move_other_scrollbars_horizontal(idx, bar))
 
-    #Making fixed corner
-    self.dds_fixed = QTableWidget(self.dds_tab_widget)
-    self.dds_fixed.setGeometry(QRect(0.5,30, 335,60))
-    self.dds_fixed.setColumnCount(4)
-    self.dds_fixed.horizontalHeader().setMinimumHeight(50)
-    self.dds_fixed.verticalHeader().setVisible(False)
-    self.dds_fixed.horizontalHeader().setVisible(False)
-    self.dds_fixed.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
-    self.dds_fixed.horizontalHeader().setMinimumSectionSize(0)
-    self.dds_fixed.setRowCount(2) 
-    self.dds_fixed.setFont(QFont('Arial', 12))
-    self.dds_fixed.setFrameStyle(QFrame.NoFrame)
-    #making first three columns wider to fit with header 
-    for i in range(4):
-        self.dds_fixed.setSpan(0, i, 2, 1)
-        self.dds_fixed.setItemDelegateForColumn(i,delegate)
-    #populating edge number, name and time
-    for i in range(3):
-        self.dds_fixed.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
-        self.dds_fixed.item(0,i).setTextAlignment(Qt.AlignCenter)
-    
-    self.dds_fixed.setColumnWidth(0,50)
-    self.dds_fixed.setColumnWidth(1,180)
-    self.dds_fixed.setColumnWidth(2,100)
-    self.dds_fixed.setColumnWidth(3,5)
-    self.dds_fixed.setItem(0,3, QTableWidgetItem())
-    self.dds_fixed.item(0,3).setBackground(QColor(100,100,100))
 
-    self.dds_fixed.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    self.dds_fixed.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
 def variables_tab_build(self):
     #VARIABLES TAB WIDGET

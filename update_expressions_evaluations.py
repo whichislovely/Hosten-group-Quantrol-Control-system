@@ -18,7 +18,6 @@ def do(self):
             #UPDATING EDGE VALUES (TIME)
             try:
                 exec("edge.value = " + str(edge.evaluation))
-                name = "id" + str(edge.id)
             except:
                 return "time expression edge number %d"%edge_index
 
