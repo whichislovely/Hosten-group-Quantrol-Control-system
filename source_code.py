@@ -223,7 +223,6 @@ class MainWindow(QMainWindow):
                 pickle.dump(self.experiment, file)
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence saved at %s" %self.experiment.file_name)
 
-
     def load_sequence_button_clicked(self):
         temp_file_name = QFileDialog.getOpenFileName(self, "Open File")[0]
         if temp_file_name != "": #happens when no file name was given (canceled)
@@ -355,6 +354,16 @@ class MainWindow(QMainWindow):
         for edge in self.experiment.sequence:
             print("edge id:", edge.id, "val:", edge.value, "evaluation", edge.evaluation)
 
+    def save_sequence_as_button_clicked(self):
+        self.experiment.file_name = QFileDialog.getSaveFileName(self, 'Save File')[0] # always ask for filename
+        if self.experiment.file_name != "": #self.experiment.file_name = ""happens when no file name was given (canceled)
+            try:
+                with open(self.experiment.file_name, 'wb') as file:
+                    pickle.dump(self.experiment, file)
+                self.create_file_name_label()
+                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence saved at %s" %self.experiment.file_name)
+            except:
+                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Saving attempt was not successful")
 
 
     #the button is used to clear the logger         
