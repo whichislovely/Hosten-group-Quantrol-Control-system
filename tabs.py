@@ -47,11 +47,11 @@ def sequence_tab_build(self):
     #self.sequence_table.setItemDelegateForRow(0,delegate)
 
     #button to save current sequence
-    self.save_sequence_as_button = QPushButton(self.sequence_tab_widget)
-    self.save_sequence_as_button.setFont(QFont('Arial', 14))
-    self.save_sequence_as_button.setGeometry(width_of_table + 50, 50, 200, 30)
-    self.save_sequence_as_button.setText("Save sequence")
-    self.save_sequence_as_button.clicked.connect(self.save_sequence_button_clicked)
+    self.save_sequence_button = QPushButton(self.sequence_tab_widget)
+    self.save_sequence_button.setFont(QFont('Arial', 14))
+    self.save_sequence_button.setGeometry(width_of_table + 50, 50, 200, 30)
+    self.save_sequence_button.setText("Save sequence")
+    self.save_sequence_button.clicked.connect(self.save_sequence_button_clicked)
     #button to load new sequence
     self.load_sequence_button = QPushButton(self.sequence_tab_widget)
     self.load_sequence_button.setFont(QFont('Arial', 14))
@@ -89,6 +89,13 @@ def sequence_tab_build(self):
     self.dummy_button.setGeometry(width_of_table + 50, 350, 200, 30)
     self.dummy_button.setText("Dummy button")
     self.dummy_button.clicked.connect(self.dummy_button_clicked)
+
+    #button to save current sequence as
+    self.save_sequence_as_button = QPushButton(self.sequence_tab_widget)
+    self.save_sequence_as_button.setFont(QFont('Arial', 14))
+    self.save_sequence_as_button.setGeometry(width_of_table + 50, 400, 200, 30)
+    self.save_sequence_as_button.setText("Save sequence as")
+    self.save_sequence_as_button.clicked.connect(self.save_sequence_as_button_clicked)
 
     #show logger of the program
     self.logger = QPlainTextEdit(self.sequence_tab_widget)
