@@ -27,50 +27,32 @@ def do(self):
             self.variables_table.setItem(index, 1, item) 
         else:
             self.variables_table.setItem(index, 1, QTableWidgetItem(str(variable.value)))    
-    
 
-    #self.variables_table_contents = [0] * self.variables_table_row_count
-    #for row in range(self.variables_table_row_count):
-    #    self.variables_table_contents[row] = self.variables_table.item(row, 0).text()
+    #Spanning the cells to avoid colouring each cell separately
+    if self.sequence_num_rows > 1: # to avoid having a warning that single cell span won't be added
+        self.digital_table.setSpan(0,3, self.sequence_num_rows , 1)
+        self.analog_table.setSpan(0,3, self.sequence_num_rows , 1)
+    else:
+        pass
 
-
-    #additional assignment for the DDS table title of columns
-#    for i in range(3):
-#        self.dds_table.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
-#        self.dds_table.item(0,i).setTextAlignment(Qt.AlignCenter)
-#    for i in range(3):
-#        self.dds_dummy.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
-#        self.dds_dummy.item(0,i).setTextAlignment(Qt.AlignCenter)
-
-    # gray coloured separating line
-    self.digital_table.setSpan(0,3, self.sequence_num_rows , 1)
+    # gray coloured separating line digital tab
     self.digital_table.setItem(0,3, QTableWidgetItem())
     self.digital_table.item(0,3).setBackground(QColor(100,100,100))
 
-    # gray coloured separating line
-    self.analog_table.setSpan(0,3, self.sequence_num_rows , 1)
+    # gray coloured separating line analog tab
     self.analog_table.setItem(0,3, QTableWidgetItem())
     self.analog_table.item(0,3).setBackground(QColor(100,100,100))
 
-    # gray coloured separating line
+    # gray coloured separating line dds tab
     self.dds_dummy.setSpan(0,3, self.sequence_num_rows + 2, 1)
     self.dds_dummy.setItem(0,3, QTableWidgetItem())
     self.dds_dummy.item(0,3).setBackground(QColor(100,100,100))
 
+    # gray coloured separating line dds tab
     for i in range(12):
-        self.dds_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_dds_tab[i+4])))
-        self.dds_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
-        self.dds_table.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
-        self.dds_table.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
-        self.dds_table.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
-        self.dds_table.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
-        self.dds_table.setItem(1,6*i+8, QTableWidgetItem('state'))
-        # gray coloured separating line
         self.dds_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
         self.dds_table.setItem(0,6*i + 3, QTableWidgetItem())
         self.dds_table.item(0, 6*i + 3).setBackground(QColor(100,100,100))
-
-
 
     #note that in order to display numbers you first need to convert them to string
     for row in range(self.sequence_num_rows):
@@ -92,7 +74,7 @@ def do(self):
         self.dds_dummy.setItem(row+2,0, QTableWidgetItem(str(row)))
         self.dds_dummy.setItem(row+2,1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
         self.dds_dummy.setItem(row+2,2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
-        if self.experiment.go_to_edge_num == row: # in case of go to edge we need to highlight it in every tab with green
+        if row == self.experiment.go_to_edge_num : # in case of go to edge we need to highlight it in every tab with green
             self.sequence_table.item(row,0).setBackground(QColor(37,211,102))
             self.sequence_table.item(row,1).setBackground(QColor(37,211,102))
             self.sequence_table.item(row,2).setBackground(QColor(37,211,102))
@@ -109,29 +91,46 @@ def do(self):
             self.dds_dummy.item(row+2,2).setBackground(QColor(37,211,102))
 
         #displaying digital channels
-        for channel in range(16):
+        print(self.experiment.sequence[0].digital[0].expression)
+        for index, channel in enumerate(self.experiment.sequence[row].digital):
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
-            col = channel + 4
-            if self.experiment.sequence[row].digital[channel].is_scanned == False:
-                if (self.experiment.sequence[row].digital[channel].value == 0 or self.experiment.sequence[row].digital[channel].value == 1):
-                    if self.experiment.sequence[row].digital[channel].changed == False:
-                        self.experiment.sequence[row].digital[channel].expression = self.experiment.sequence[row-1].digital[channel].expression
-                    self.digital_table.setItem(row, col, QTableWidgetItem(str(self.experiment.sequence[row].digital[channel].expression) + " "))
-                    if self.experiment.sequence[row].digital[channel].changed == True:              
-                        if self.experiment.sequence[row].digital[channel].value == 1:
-                                self.digital_table.item(row, col).setBackground(QColor(37,211,102))
-                        if self.experiment.sequence[row].digital[channel].value == 0:
-                                self.digital_table.item(row, col).setBackground(QColor(247,120,120))
-                else:
-                    self.error_message("Only value '1' or '0' are expected", "Wrong variable value at Digital table row" + str(row) + "channel" + str(channel))
-                    self.update_off()
-                    try:
-                        self.digital_table.item(row,col).setText(self.experiment.sequence[row].digital[channel])
-                    except:
-                        self.digital_table.item(row,col).setText("")
-                    self.update_on()
+            col = index + 4
+            if channel.changed:
+                pass
             else:
-                self.digital_table.setItem(row, col, QTableWidgetItem(str(self.experiment.sequence[row].digital[channel].expression) + " "))
+                channel.expression = self.experiment.sequence[row-1].digital[index].expression
+                self.digital_table.item(row,col).setText(channel.expression)                
+
+            #if channel.value == 1:
+            #    self.digital_table.item(row,col).setBackground(self.green)
+            #else:
+            #    self.digital_table.item(row,col).setBackground(self.red)
+
+
+
+ #       for channel in range(16):
+ #           # plus 4 is because first 4 columns are used by number, name, time of edge and separator
+ #           col = channel + 4
+ #           if self.experiment.sequence[row].digital[channel].is_scanned == False:
+ #               if (self.experiment.sequence[row].digital[channel].value == 0 or self.experiment.sequence[row].digital[channel].value == 1):
+ #                   if self.experiment.sequence[row].digital[channel].changed == False:
+ #                       self.experiment.sequence[row].digital[channel].expression = self.experiment.sequence[row-1].digital[channel].expression
+ #                   self.digital_table.setItem(row, col, QTableWidgetItem(str(self.experiment.sequence[row].digital[channel].expression) + " "))
+ #                   if self.experiment.sequence[row].digital[channel].changed == True:              
+ #                       if self.experiment.sequence[row].digital[channel].value == 1:
+ #                               self.digital_table.item(row, col).setBackground(QColor(37,211,102))
+ #                       if self.experiment.sequence[row].digital[channel].value == 0:
+ #                               self.digital_table.item(row, col).setBackground(QColor(247,120,120))
+ #               else:
+ #                   self.error_message("Only value '1' or '0' are expected", "Wrong variable value at Digital table row" + str(row) + "channel" + str(channel))
+ #                   self.update_off()
+ #                   try:
+ #                       self.digital_table.item(row,col).setText(self.experiment.sequence[row].digital[channel])
+ #                   except:
+ #                       self.digital_table.item(row,col).setText("")
+ #                   self.update_on()
+ #           else:
+ #               self.digital_table.setItem(row, col, QTableWidgetItem(str(self.experiment.sequence[row].digital[channel].expression) + " "))
 
 
         #displaying analog channels

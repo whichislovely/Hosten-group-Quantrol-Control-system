@@ -31,7 +31,7 @@ def sequence_tab_build(self):
     self.sequence_table.setColumnCount(sequence_num_columns)
     self.sequence_table.setHorizontalHeaderLabels(["#", "Name","ID", "Time expression","Time (ms)"])
     self.sequence_table.verticalHeader().setVisible(False)
-    self.sequence_table.horizontalHeader().setFixedHeight(50)
+    self.sequence_table.horizontalHeader().setFixedHeight(60)
     self.sequence_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.sequence_table.setFont(QFont('Arial', 12))
     self.sequence_table.setColumnWidth(0,103)
@@ -162,6 +162,8 @@ def sequence_tab_build(self):
 
 # DIGITAL TAB
 def digital_tab_build(self):
+    self.digital_tab_num_cols = 16 + 4    
+    self.digital_and_analog_table_column_width = 130
     #DIGITAL TAB WIDGET
     self.digital_tab_widget = QWidget()
     digital_lable = QLabel(self.digital_tab_widget)
@@ -172,10 +174,11 @@ def digital_tab_build(self):
     #DIGITAL TAB LAYOUT
     self.digital_table = QTableWidget(self.digital_tab_widget)
     self.digital_table.setGeometry(QRect(0, 30, 1905, 1070))  
-    self.digital_table.setColumnCount(self.digital_tab_num_cols) 
+    self.digital_table.setColumnCount(self.digital_tab_num_cols)
+    self.digital_table.setRowCount(1) 
     self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
     self.digital_table.verticalHeader().setVisible(False)
-    self.digital_table.horizontalHeader().setFixedHeight(50)
+    self.digital_table.horizontalHeader().setFixedHeight(60)
     self.digital_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.digital_table.setFont(QFont('Arial', 16))
     self.digital_table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -190,16 +193,25 @@ def digital_tab_build(self):
         exec("self.digital_table.setItemDelegateForColumn(%d,delegate)" %_)
     #self.digital_table.setItemDelegateForRow(0, delegate)
     for i in range(4, self.digital_tab_num_cols):
-        exec("self.digital_table.setColumnWidth(%d,%d)" % (i, self.table_column_width))
+        exec("self.digital_table.setColumnWidth(%d,%d)" % (i, self.digital_and_analog_table_column_width))
     self.digital_table.itemChanged.connect(self.digital_table_changed)
     self.digital_table.horizontalHeader().sectionClicked.connect(self.digital_table_header_clicked)
+    for index, channel in enumerate(self.experiment.sequence[0].digital):
+        col = index + 4
+        self.digital_table.setItem(0, col, QTableWidgetItem(channel.expression))
+        if channel.value == 1:
+            self.digital_table.item(0, col).setBackground(self.green)
+        else:
+            self.digital_table.item(0, col).setBackground(self.red)
+
+
     #Dummy table that will display edge number, name and time and will be fixed
     self.digital_dummy = QTableWidget(self.digital_tab_widget)
     self.digital_dummy.setGeometry(QRect(0.5, 30, 327, 1053))
     self.digital_dummy.setColumnCount(3)
     self.digital_dummy.setHorizontalHeaderLabels(self.experiment.title_digital_tab[0:3])
     self.digital_dummy.verticalHeader().setVisible(False)
-    self.digital_dummy.horizontalHeader().setFixedHeight(50)
+    self.digital_dummy.horizontalHeader().setFixedHeight(60)
     self.digital_dummy.horizontalHeader().setFont(QFont('Arial', 12))
     self.digital_dummy.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
     self.digital_dummy.setFont(QFont('Arial', 12))
@@ -216,7 +228,10 @@ def digital_tab_build(self):
 
 #ANALOG TAB
 def analog_tab_build(self):
+    self.analog_tab_num_cols = 32 + 4    
+    #ANALOG TAB WIDGET
     self.analog_tab_widget = QWidget()
+    #ANALOG LABLE
     analog_lable = QLabel(self.analog_tab_widget)
     analog_lable.setText("Analog channels")
     analog_lable.setFont(QFont('Arial', 14))
@@ -229,7 +244,7 @@ def analog_tab_build(self):
     self.analog_table.setColumnCount(self.analog_tab_num_cols) 
     self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
     self.analog_table.verticalHeader().setVisible(False)
-    self.analog_table.horizontalHeader().setFixedHeight(50)
+    self.analog_table.horizontalHeader().setFixedHeight(60)
     self.analog_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.analog_table.setFont(QFont('Arial', 16))
     self.analog_table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -244,7 +259,7 @@ def analog_tab_build(self):
         exec("self.analog_table.setItemDelegateForColumn(%d,delegate)" %_)
     #self.analog_table.setItemDelegateForRow(0,delegate)
     for i in range(4, self.analog_tab_num_cols):
-        exec("self.analog_table.setColumnWidth(%d,%d)" % (i,self.table_column_width))
+        exec("self.analog_table.setColumnWidth(%d,%d)" % (i,self.digital_and_analog_table_column_width))
     self.analog_table.itemChanged.connect(self.analog_table_changed)
     self.analog_table.horizontalHeader().sectionClicked.connect(self.analog_table_header_clicked)
 
@@ -254,7 +269,7 @@ def analog_tab_build(self):
     self.analog_dummy.setColumnCount(3)
     self.analog_dummy.setHorizontalHeaderLabels(self.experiment.title_analog_tab[0:3])
     self.analog_dummy.verticalHeader().setVisible(False)
-    self.analog_dummy.horizontalHeader().setFixedHeight(50)
+    self.analog_dummy.horizontalHeader().setFixedHeight(60)
     self.analog_dummy.horizontalHeader().setFont(QFont('Arial', 12))
     self.analog_dummy.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
     self.analog_dummy.setFont(QFont('Arial', 12))
@@ -270,8 +285,9 @@ def analog_tab_build(self):
     self.analog_dummy.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
 def dds_tab_build(self):
+    self.dds_tab_num_cols = 6*12 + 3
+    #DDS TABLE WIDGET
     self.dds_tab_widget = QWidget()
-
     #DDS LABLE
     dds_lable = QLabel(self.dds_tab_widget)
     dds_lable.setText("Dds channels")

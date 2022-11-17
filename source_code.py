@@ -17,7 +17,7 @@ from datetime import datetime
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
     class Edge:
-        def __init__(self, name = "", id = 0, expression = 0, evaluation = 0, for_python = 0, value = 0, is_scanned = False):
+        def __init__(self, name = "", id = 0, expression = "0", evaluation = 0, for_python = 0, value = 0, is_scanned = False):
             self.is_scanned = False
             self.expression = expression
             self.evaluation = evaluation
@@ -30,9 +30,9 @@ class MainWindow(QMainWindow):
             self.digital = [self.Digital() for i in range(16)]
             self.dds = [self.DDS() for i in range(12)]
 
-        class Analog:
-            #Object is used to describe analog channels' values
-            def __init__(self, value = 0, expression = 0, evaluation = 0, for_python = "0", changed = False):
+        class Digital:
+            #Object is used to describe digital channels' values
+            def __init__(self, value = 0, expression = "0", evaluation = 0, for_python = 0, changed = False):
                 self.value = value
                 self.expression = expression
                 self.evaluation = evaluation
@@ -40,9 +40,9 @@ class MainWindow(QMainWindow):
                 self.changed = changed
                 self.is_scanned = False
 
-        class Digital:
-            #Object is used to describe digital channels' values
-            def __init__(self, value = 0, expression = 0, evaluation = 0, for_python = 0, changed = False):
+        class Analog:
+            #Object is used to describe analog channels' values
+            def __init__(self, value = 0, expression = "0", evaluation = 0, for_python = "0", changed = False):
                 self.value = value
                 self.expression = expression
                 self.evaluation = evaluation
@@ -122,6 +122,7 @@ class MainWindow(QMainWindow):
         self.main_window.addTab(self.variables_tab_widget, "Variables")
         update_evaluations.do(self) # this might be redundant
         update_tabs.do(self) # this might be redundant
+        self.to_update = True
         
 
 

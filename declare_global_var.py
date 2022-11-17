@@ -1,13 +1,23 @@
 import numpy as np
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+
 
 def build(self):
     self.experiment = self.Experiment()
-    self.experiment.go_to_edge_num = -1
-    self.experiment.sequence = [self.Edge("Default", 0, 0, 0)]
+    self.setting_dict = {0:"frequency", 1:"amplitude", 2:"attenuation", 3:"phase", 4:"state"}
+    self.max_dict = {0: 800, 1: 1, 2: 32, 3: 360, 4: 1} #max and min needs to be checked 
+    self.min_dict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}  #max and min needs to be checked 
+    self.to_update = False
+    self.green = QColor(37,211,102)
+    self.red = QColor(247,120,120)
+    
+
+    self.experiment.sequence = [self.Edge("Default")]
     self.experiment.variables['id0'] = self.Variable(name = "id0", value = 0.0, for_python = 0.0)
     self.experiment.variables[''] = self.Variable(name = '', value = 0.0, for_python = 0.0)   #in order to be able to process expressions like -5 we need to have it as first item in decode will be "" that should be 0
-    #self.experiment.variables['None'] = self.Variable(name = 'None', value = 0.0, for_python = 0.0)   #in order to be able to make a variable "none"
-    self.current_dict = [{} for i in range(12)] # this dict is used in filling the DDS channels 
+
     #INITIAL PARAMETERS
     for i in range(16):
         exec("self.experiment.sequence[0].digital[%d].changed = True" %i)
@@ -17,7 +27,7 @@ def build(self):
         exec("self.experiment.sequence[0].dds[%d].changed = True" %i)
     
 
-
+    #FROM HERE ON IT SHOULD BE MOVED TO DEFAULT
     self.experiment.title_digital_tab = ["#","Name","Time (ms)", ""]
     for _ in range(16):
         dummy_str = "D" + str(_) + "  "
@@ -38,24 +48,10 @@ def build(self):
 
 
 
-    self.setting_dict = {0:"frequency", 1:"amplitude", 2:"attenuation", 3:"phase", 4:"state"}
-    self.max_dict = {0: 800, 1: 1, 2: 32, 3: 360, 4: 1} #max and min needs to be checked 
-    self.min_dict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}  #max and min needs to be checked 
-
-
-    self.to_update = True
-    
-    self.digital_tab_num_cols = 16 + 4
-    self.analog_tab_num_cols = 32 + 4
-    self.dds_tab_num_cols = 6*12 + 3
-
-    self.table_column_width = 130
-
-    self.variables_table_row_count = 0
 
     #assigning default values to channel values of a digital tab
     self.experiment.sequence[0].digital[8].value = 1
-    self.experiment.sequence[0].digital[8].expression = 1
+    self.experiment.sequence[0].digital[8].expression = "1"
     self.experiment.sequence[0].digital[8].evaluation = 1
 
     #assigning default values to channel names and values that won't change much
