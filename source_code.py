@@ -13,6 +13,7 @@ import pickle
 import update_expressions_evaluations as update_evaluations
 import update_expressions
 from datetime import datetime
+from copy import deepcopy
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -120,8 +121,6 @@ class MainWindow(QMainWindow):
         self.main_window.addTab(self.analog_tab_widget, "Analog")
         self.main_window.addTab(self.dds_tab_widget, "DDS")
         self.main_window.addTab(self.variables_tab_widget, "Variables")
-        update_evaluations.do(self) # this might be redundant
-        update_tabs.do(self) # this might be redundant
         self.to_update = True
         
 
@@ -129,17 +128,38 @@ class MainWindow(QMainWindow):
     #FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS
     #GENERAL FUNCTIONS
 
+    def making_separator(self):
+        #Spanning the cells to avoid colouring each cell separately
+        if self.sequence_num_rows > 1: # to avoid having a warning that single cell span won't be added
+            self.digital_table.setSpan(0,3, self.sequence_num_rows , 1)
+            self.analog_table.setSpan(0,3, self.sequence_num_rows , 1)
+        else:
+            pass
+        # gray coloured separating line digital tab
+        self.digital_table.setItem(0,3, QTableWidgetItem())
+        self.digital_table.item(0,3).setBackground(self.gray)
+        # gray coloured separating line analog tab
+        self.analog_table.setItem(0,3, QTableWidgetItem())
+        self.analog_table.item(0,3).setBackground(self.gray)
+        # gray coloured separating line dds tab
+        self.dds_dummy.setSpan(0,3, self.sequence_num_rows + 2, 1)
+        self.dds_dummy.setItem(0,3, QTableWidgetItem())
+        self.dds_dummy.item(0,3).setBackground(self.gray)
+        # gray coloured separating line dds tab
+        for i in range(12):
+            self.dds_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
+            self.dds_table.setItem(0,6*i + 3, QTableWidgetItem())
+            self.dds_table.item(0, 6*i + 3).setBackground(self.gray)
+
     def setColorCol(self, col):
         #this function takes the column number and first megres all rows and then paints its background
         #it is used for separating DDS channels but can be employed elsewhere is needed
         self.dds_table.setSpan(0, col, self.sequence_num_rows+2, 1)
         self.dds_table.setItem(0,col, QTableWidgetItem())
-        self.dds_table.item(0, col).setBackground(QColor(100,100,100))
-
+        self.dds_table.item(0, col).setBackground(self.gray)
 
     def update_on(self):
         self.to_update = True
-
 
     def update_off(self):
         self.to_update = False
@@ -152,7 +172,6 @@ class MainWindow(QMainWindow):
         msg.setInformativeText(text)
         msg.setWindowTitle(title)
         msg.exec_()
-
     
     #SEQUENCE TAB RELATED
     def sequence_table_changed(self, item):
@@ -259,13 +278,70 @@ class MainWindow(QMainWindow):
                 return id
         
     def insert_edge_button_clicked(self):   
+        #appending a new edge with a unique id
         new_unique_id = self.find_unique_id()
-        edge = self.experiment.sequence[-1] #I know that on line below and 3 lines below edge is not the same as after appending edge still has the previous last edge (one before the last). But since they have the same values for simplicity I left it like this
-        self.experiment.sequence.append(self.Edge("", id = new_unique_id, expression = edge.expression, evaluation = edge.evaluation, for_python = edge.for_python, value = edge.value))
+        new_edge = deepcopy(self.experiment.sequence[-1]) #copying the last edge
+        new_edge.id = new_unique_id
+        new_edge.name = ""
+        self.experiment.sequence.append(new_edge)
+        #creating a corresponding variable so one can use id# as a variable
         name = "id" + str(new_unique_id)
-        self.experiment.variables[name] = self.Variable(name = name, value = edge.value, for_python = edge.for_python)
-        update_evaluations.do(self) # NEEDS TO BE COMPLETELY REMOVED
-        update_tabs.do(self)
+        self.experiment.variables[name] = self.Variable(name = name, value = new_edge.value, for_python = new_edge.for_python)
+        self.update_off()
+        self.sequence_num_rows = len(self.experiment.sequence)
+        #adding a new row in all tabs
+        self.sequence_table.setRowCount(self.sequence_num_rows)                     
+        self.digital_table.setRowCount(self.sequence_num_rows)
+        self.digital_dummy.setRowCount(self.sequence_num_rows)
+        self.analog_table.setRowCount(self.sequence_num_rows)
+        self.analog_dummy.setRowCount(self.sequence_num_rows)
+        self.dds_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
+        self.dds_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name         row = self.sequence_num_rows - 1
+        self.making_separator()
+        row = self.sequence_num_rows - 1
+        #Setting the left part of the SEQUENCE table (edge number, name, expression, time)
+        self.sequence_table.setItem(row, 0, QTableWidgetItem(str(row)))
+        self.sequence_table.setItem(row, 1, QTableWidgetItem(self.experiment.sequence[row].name))
+        self.sequence_table.setItem(row, 2, QTableWidgetItem("id" + str(self.experiment.sequence[row].id)))
+        self.sequence_table.setItem(row, 3, QTableWidgetItem(self.experiment.sequence[row].expression))
+        self.sequence_table.setItem(row, 4, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+        #Setting the left part of the DIGITAL table (edge number, name, time)
+        self.digital_dummy.setItem(row, 0, QTableWidgetItem(str(row)))
+        self.digital_dummy.setItem(row, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
+        self.digital_dummy.setItem(row, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+        #Setting DIGITAL table values
+        for index, channel in enumerate(self.experiment.sequence[-1].digital):
+            col = index + 4 #plus 4 is because first 4 columns are used by number, name, time of the edge and separator
+            self.digital_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
+            channel.changed = False
+        #Setting the left part of the ANALOG table (edge number, name, time)
+        self.analog_dummy.setItem(row, 0, QTableWidgetItem(str(row)))
+        self.analog_dummy.setItem(row, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
+        self.analog_dummy.setItem(row, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+        #Setting the left part of the DDS table (edge number, name, time)
+        self.dds_dummy.setItem(row+2, 0, QTableWidgetItem(str(row)))
+        self.dds_dummy.setItem(row+2, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
+        self.dds_dummy.setItem(row+2, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+
+        #Setting ANALOG table values
+        for index, channel in enumerate(self.experiment.sequence[-1].analog):
+            # plus 3 is because first 3 columns are used by number, name and time of edge
+            col = index + 4
+            self.analog_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
+            self.analog_table.item(row, col).setToolTip(str(channel.value))
+            channel.changed = False
+        #Setting DDS table values
+        for index, channel in enumerate(self.experiment.sequence[-1].dds):
+            #plus 4 is because first 4 columns are used by number, name, time and separator(dark grey line)
+            col = 4 + index * 6
+            for setting in range(5):
+                exec("self.dds_table.setItem(row+2, col + setting, QTableWidgetItem(str(channel.%s.expression) + ' '))" %self.setting_dict[setting])
+                exec("self.dds_table.item(row+2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
+            channel.changed = False
+
+        self.update_on()
+        #update_evaluations.do(self) # NEEDS TO BE COMPLETELY REMOVED
+        #update_tabs.do(self)
 
     def delete_edge_button_clicked(self):
         try:

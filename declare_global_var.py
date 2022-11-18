@@ -6,12 +6,14 @@ from PyQt5.QtGui import *
 
 def build(self):
     self.experiment = self.Experiment()
+    self.sequence_num_rows = 1
     self.setting_dict = {0:"frequency", 1:"amplitude", 2:"attenuation", 3:"phase", 4:"state"}
     self.max_dict = {0: 800, 1: 1, 2: 32, 3: 360, 4: 1} #max and min needs to be checked 
     self.min_dict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}  #max and min needs to be checked 
     self.to_update = False
     self.green = QColor(37,211,102)
     self.red = QColor(247,120,120)
+    self.gray = QColor(100,100,100)
     
 
     self.experiment.sequence = [self.Edge("Default")]
