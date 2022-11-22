@@ -1,9 +1,3 @@
-import numpy as np
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-
-
 
 def do(self):
     # checking each entry
@@ -21,11 +15,11 @@ def do(self):
         #    exec("edge.time = " + str(edge.evaluation))
 
         #digital table
-        for index in range(16):
-            channel = edge.digital[index]
+        for index, channel in enumerate(edge.digital):
             col = index + 4
-            
-            (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(self.digital_table.item(row, col).text())
+            if channel.changed:
+                (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(self.digital_table.item(row, col).text())
+
             #if channel.is_scanned == True:
             #    channel.value = channel.evaluation
             #else:

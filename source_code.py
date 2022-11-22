@@ -14,6 +14,7 @@ import update_expressions_evaluations as update_evaluations
 import update_expressions
 from datetime import datetime
 from copy import deepcopy
+import update
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -284,11 +285,11 @@ class MainWindow(QMainWindow):
         new_edge.id = new_unique_id
         new_edge.name = ""
         self.experiment.sequence.append(new_edge)
+        self.sequence_num_rows += 1
         #creating a corresponding variable so one can use id# as a variable
         name = "id" + str(new_unique_id)
         self.experiment.variables[name] = self.Variable(name = name, value = new_edge.value, for_python = new_edge.for_python)
         self.update_off()
-        self.sequence_num_rows = len(self.experiment.sequence)
         #adding a new row in all tabs
         self.sequence_table.setRowCount(self.sequence_num_rows)                     
         self.digital_table.setRowCount(self.sequence_num_rows)
@@ -398,7 +399,7 @@ class MainWindow(QMainWindow):
     def run_experiment_button_clicked(self):
         self.count_scanned_variables()
         self.experiment.do_scan = (self.experiment.scanned_variables_count > 0 and self.scan_table.isChecked())
-        #update_expressions.do(self)
+        update_expressions.do(self)
         try:
             write_to_python.create_experiment(self)
             #os.system("conda activate artiq_5 && artiq_run %s" %"run_experiment.py")        
@@ -428,8 +429,9 @@ class MainWindow(QMainWindow):
 #        print("new variables")
 #        for item in self.experiment.new_variables:
 #            print(item.name, item.value, item.is_scanned)
-        for edge in self.experiment.sequence:
-            print("edge id:", edge.id, "val:", edge.value, "evaluation", edge.evaluation)
+        for ind, edge in enumerate(self.experiment.sequence):
+            for i, channel in enumerate(edge.dds):
+                print("edge", ind, "chanel", i, channel.changed)
 
     def save_sequence_as_button_clicked(self):
         self.experiment.file_name = QFileDialog.getSaveFileName(self, 'Save File')[0] # always ask for filename
@@ -599,44 +601,32 @@ class MainWindow(QMainWindow):
             table_item = self.digital_table.item(row,col)
             channel = self.experiment.sequence[row].digital[col-4]
             if table_item.text() == "":
-                if row == 0:
+                if row == 0: #default edge 
                     self.error_message("You can not delete initial value! Only '0' or '1' are expected", "Initial value is needed!")
                     self.update_off()
-                    try:
-                        table_item.setText(channel.expression)
-                    except:
-                        table_item.setText("")
+                    table_item.setText(channel.expression)
                     self.update_on()
                 else:
-                    try: # no need for try and except
-                        channel.expression = self.experiment.sequence[row-1].digital[col-4].expression
-                        channel.evaluation = self.experiment.sequence[row-1].digital[col-4].evaluation
-                        channel.changed = False
-                    except:
-                        pass
+                    self.update_off()
+                    table_item.setBackground(self.white)
+                    self.update_on()
+                    channel.changed = False
+                    update.digital_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
             else:
-                try:
+                try: #Checking whether the expression can be evaluated and the value is within allowed range
                     expression = table_item.text()
                     (evaluation, for_python, is_scanned) = self.decode_input(expression)
                     exec("self.dummy = " + evaluation)
                     if (self.dummy == 0 or self.dummy == 1):
                         channel.expression = expression
                         channel.evaluation = evaluation
-                        channel.value = int(self.dummy)
-                        channel.is_scanned = is_scanned
-                        if channel.is_scanned: # redundant
-                            channel.for_python = for_python
-                        else:
-                            exec("channel.for_python =" + for_python)
+                        channel.value = self.dummy
                         channel.changed = True
+                        update.digital_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
                     else:
                         self.error_message("!!!Only value '1' or '0' are expected", "Wrong entry")
                 except:
                     self.error_message("Expression can not be evaluated", "Wrong entry")
-            update_tabs.do(self)
-            #update_expressions.do(self) CHECK THIS ONE
-        else:
-            pass
 
 
     #ANALOG TABLE RELATED
@@ -678,46 +668,37 @@ class MainWindow(QMainWindow):
             channel = self.experiment.sequence[row].analog[col - 4]
             table_item = self.analog_table.item(row,col)
             if table_item.text() == "":
-                if row == 0:
+                if row == 0: # default edge
                     self.error_message("You can not delete initial value! Only values from '-10' to '10' are expected", "Initial value is needed!")
                     self.update_off()
-                    try:
-                        table_item.setText(channel.expression)
-                    except: 
-                        table_item.setText("")
+                    table_item.setText(channel.expression)
                     self.update_on()
                 else:
-                    try:
-                        channel.expression = self.experiment.sequence[row-1].analog[col-4].expression
-                        channel.evaluation = self.experiment.sequence[row-1].analog[col-4].evaluation
-                        channel.changed = False
-                    except:
-                        pass
+                    channel.changed = False
+                    self.update_off()
+                    table_item.setBackground(self.white)
+                    self.update_on()
+                    update.analog_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
             else:
                 try:
                     expression = table_item.text()
                     (evaluation, for_python, is_scanned) = self.decode_input(expression)
-                    exec("self.dummy_val =" + evaluation)
-                    if (self.dummy_val <= 10 and self.dummy_val >= -10):
+                    exec("self.dummy =" + evaluation)
+                    if (self.dummy <= 10 and self.dummy >= -10):
                         channel.expression = expression
                         channel.evaluation = evaluation
+                        channel.value = self.dummy
                         channel.is_scanned = is_scanned
-                        if channel.is_scanned:
-                            channel.for_python = for_python
-                        else:
-                            exec("channel.for_python =" + for_python)
-                        channel.value = self.dummy_val
                         channel.changed = True
+                        update.analog_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
                     else:
-                        self.error_message("Only values between '+10' and '-10' are expected", "Wrong entry")
                         self.update_off()
                         table_item.setText(channel.expression)
                         self.update_on()
+                        self.error_message("Only values between '+10' and '-10' are expected", "Wrong entry")
                 except:
+                    table_item.setText(channel.expression)
                     self.error_message('Expression can not be evaluated', 'Wrong entry')
-
-            update_tabs.do(self)
-            update_expressions.do(self)
 
     #DDS TAB RELATED
     def dds_table_changed(self, item):
@@ -734,7 +715,13 @@ class MainWindow(QMainWindow):
                     exec("self.dds_table.item(row,col).setText(str(self.experiment.sequence[edge_num].dds[channel].%s.expression))" %self.setting_dict[setting])
                     self.update_on()
                 else:
+                    #Removing background color
+                    self.update_off()
+                    for index_setting in range(5):
+                        self.dds_table.item(row, channel*6 + 4 + index_setting).setBackground(self.white)
                     self.experiment.sequence[edge_num].dds[channel].changed = False
+                    self.update_on()
+                    update.dds_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
             else:   #non empty entry case (input is not "")
                 try:
                     expression = self.dds_table.item(row,col).text()
@@ -744,12 +731,15 @@ class MainWindow(QMainWindow):
                     if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.expression = expression" %self.setting_dict[setting])
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.evaluation = evaluation" %self.setting_dict[setting])
+                        #exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = for_python" %self.setting_dict[setting])
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.value = self.dummy_val" %self.setting_dict[setting])
                         self.experiment.sequence[edge_num].dds[channel].changed = True
                         if is_scanned:
                             exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = for_python" %self.setting_dict[setting])
                         else:
                             exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = "%self.setting_dict[setting] + for_python )
+                        update.dds_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
+                        print(123)
                     else:
                         self.error_message("Only values between %f and %f are expected" %(minimum, maximum), "Wrong entry")
                         self.update_off()
@@ -757,8 +747,6 @@ class MainWindow(QMainWindow):
                         self.update_on()
                 except:
                     self.error_message('Expression can not be evaluated', 'Wrong entry')            
-            update_tabs.do(self)
-            update_expressions.do(self)
 
     def dds_dummy_header_changed(self, item):
         if self.to_update:

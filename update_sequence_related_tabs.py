@@ -68,7 +68,7 @@ def do(self):
                 else:
                     self.digital_table.item(row,col).setBackground(self.red)
             else:
-                self.digital_table.item(row,col).setText(channel.expression + " ")                
+                self.digital_table.item(row,col).setText(self.digital_table.item(row-1, col).text() + " ")                
 
         #displaying analog channels
         for index, channel in enumerate(self.experiment.sequence[row].analog):
@@ -80,8 +80,8 @@ def do(self):
                 else:
                     self.analog_table.item(row, col).setBackground(self.red)
             else:
-                self.analog_table.item(row, col).setText(channel.expression + " ")
-                self.analog_table.item(row, col).setToolTip(str(channel.value))
+                self.analog_table.item(row, col).setText(self.analog_table.item(row-1, col).text() + " ")
+                self.analog_table.item(row, col).setToolTip(str(self.experiment.sequence[row].analog[index].value))
 
         #displaying dds channels
         for index, channel in enumerate(self.experiment.sequence[row].dds):
@@ -96,8 +96,8 @@ def do(self):
                         self.dds_table.item(row+2, col + setting).setBackground(self.red)
             else:
                 for setting in range(5):
-                    exec("self.dds_table.item(row+2, col + setting).setText(str(channel.%s.expression) + ' ')" %self.setting_dict[setting])
-                    exec("self.dds_table.item(row+2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])                    
+                    exec("self.dds_table.item(row+2, col + setting).setText(str(self.experiment.sequence[row].dds[index].%s.expression) + ' ')" %self.setting_dict[setting])
+                    exec("self.dds_table.item(row+2, col + setting).setToolTip(str(self.experiment.sequence[row].dds[index].%s.value))" %self.setting_dict[setting])                    
 
     # displaying scan parameters
     self.scan_table_parameters.setRowCount(len(self.experiment.scanned_variables))

@@ -14,6 +14,7 @@ def build(self):
     self.green = QColor(37,211,102)
     self.red = QColor(247,120,120)
     self.gray = QColor(100,100,100)
+    self.white = QColor(255,255,255)
     
 
     self.experiment.sequence = [self.Edge("Default")]

@@ -146,6 +146,10 @@ class run_experiment(EnvExperiment):
         self.urukul2_ch3.set(frequency = 0.0*MHz, amplitude = 0.0, phase = 0.0)
         self.urukul2_ch3.sw.off() 
         #Edge number 1 name of edge: 
-        delay((4.0)*ms)
-        self.zotino0.write_dac(0, 10.0)
-        self.zotino0.load()
+        #Edge number 2 name of edge: 
+        self.ttl0.on()
+        #Edge number 3 name of edge: 
+        #Edge number 4 name of edge: 
+        self.ttl0.off()
+        #Edge number 5 name of edge: 
+        #Edge number 6 name of edge: 
