@@ -82,102 +82,102 @@ def build(self):
     #DDS0
     self.experiment.sequence[0].dds[0].frequency.value = 226.73083
     self.experiment.sequence[0].dds[0].frequency.evaluation = 226.73083
-    self.experiment.sequence[0].dds[0].frequency.expression = 226.73083
+    self.experiment.sequence[0].dds[0].frequency.expression = "226.73083"
     self.experiment.sequence[0].dds[0].amplitude.value = 0.9
     self.experiment.sequence[0].dds[0].amplitude.evaluation = 0.9
-    self.experiment.sequence[0].dds[0].amplitude.expression = 0.9
+    self.experiment.sequence[0].dds[0].amplitude.expression = "0.9"
     self.experiment.sequence[0].dds[0].state.value = 1.0
     self.experiment.sequence[0].dds[0].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[0].state.expression = 1.0
+    self.experiment.sequence[0].dds[0].state.expression = "1.0"
     #DDS1
     self.experiment.sequence[0].dds[1].frequency.value = 386.605
     self.experiment.sequence[0].dds[1].frequency.evaluation = 386.605
-    self.experiment.sequence[0].dds[1].frequency.expression = 386.605
+    self.experiment.sequence[0].dds[1].frequency.expression = "386.605"
     self.experiment.sequence[0].dds[1].amplitude.value = 0.3
     self.experiment.sequence[0].dds[1].amplitude.evaluation = 0.3
-    self.experiment.sequence[0].dds[1].amplitude.expression = 0.3
+    self.experiment.sequence[0].dds[1].amplitude.expression = "0.3"
     self.experiment.sequence[0].dds[1].attenuation.value = 0.5
     self.experiment.sequence[0].dds[1].attenuation.evaluation = 0.5
-    self.experiment.sequence[0].dds[1].attenuation.expression = 0.5
+    self.experiment.sequence[0].dds[1].attenuation.expression = "0.5"
     self.experiment.sequence[0].dds[1].state.value = 1.0
     self.experiment.sequence[0].dds[1].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[1].state.expression = 1.0
+    self.experiment.sequence[0].dds[1].state.expression = "1.0"
     #DDS2
     self.experiment.sequence[0].dds[2].frequency.value = 182.65869
     self.experiment.sequence[0].dds[2].frequency.evaluation = 182.65869
-    self.experiment.sequence[0].dds[2].frequency.expression = 182.65869
+    self.experiment.sequence[0].dds[2].frequency.expression = "182.65869"
     self.experiment.sequence[0].dds[2].amplitude.value = 0.3
     self.experiment.sequence[0].dds[2].amplitude.evaluation = 0.3
-    self.experiment.sequence[0].dds[2].amplitude.expression = 0.3
+    self.experiment.sequence[0].dds[2].amplitude.expression = "0.3"
     self.experiment.sequence[0].dds[2].attenuation.value = 0.5
     self.experiment.sequence[0].dds[2].attenuation.evaluation = 0.5
-    self.experiment.sequence[0].dds[2].attenuation.expression = 0.5
+    self.experiment.sequence[0].dds[2].attenuation.expression = "0.5"
     self.experiment.sequence[0].dds[2].state.value = 1.0
     self.experiment.sequence[0].dds[2].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[2].state.expression = 1.0
+    self.experiment.sequence[0].dds[2].state.expression = "1.0"
     #DDS3
     self.experiment.sequence[0].dds[3].frequency.value = 80.0
     self.experiment.sequence[0].dds[3].frequency.evaluation = 80.0
-    self.experiment.sequence[0].dds[3].frequency.expression = 80.0
+    self.experiment.sequence[0].dds[3].frequency.expression = "80.0"
     self.experiment.sequence[0].dds[3].amplitude.value = 0.2
     self.experiment.sequence[0].dds[3].amplitude.evaluation = 0.2
-    self.experiment.sequence[0].dds[3].amplitude.expression = 0.2
+    self.experiment.sequence[0].dds[3].amplitude.expression = "0.2"
     self.experiment.sequence[0].dds[3].attenuation.value = 0.0
     self.experiment.sequence[0].dds[3].attenuation.evaluation = 0.0
-    self.experiment.sequence[0].dds[3].attenuation.expression = 0.0
+    self.experiment.sequence[0].dds[3].attenuation.expression = "0.0"
     self.experiment.sequence[0].dds[3].state.value = 1.0
     self.experiment.sequence[0].dds[3].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[3].state.expression = 1.0
+    self.experiment.sequence[0].dds[3].state.expression = "1.0"
     #DDS4
     self.experiment.sequence[0].dds[4].frequency.value = 80.0
     self.experiment.sequence[0].dds[4].frequency.evaluation = 80.0
-    self.experiment.sequence[0].dds[4].frequency.expression = 80.0
+    self.experiment.sequence[0].dds[4].frequency.expression = "80.0"
     self.experiment.sequence[0].dds[4].amplitude.value = 0.4
     self.experiment.sequence[0].dds[4].amplitude.evaluation = 0.4
-    self.experiment.sequence[0].dds[4].amplitude.expression = 0.4
+    self.experiment.sequence[0].dds[4].amplitude.expression = "0.4"
     self.experiment.sequence[0].dds[4].state.value = 1.0
     self.experiment.sequence[0].dds[4].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[4].state.expression = 1.0
+    self.experiment.sequence[0].dds[4].state.expression = "1.0"
     #DDS5
     self.experiment.sequence[0].dds[5].frequency.value = 80.0
     self.experiment.sequence[0].dds[5].frequency.evaluation = 80.0
-    self.experiment.sequence[0].dds[5].frequency.expression = 80.0
+    self.experiment.sequence[0].dds[5].frequency.expression = "80.0"
     self.experiment.sequence[0].dds[5].amplitude.value = 0.2
     self.experiment.sequence[0].dds[5].amplitude.evaluation = 0.2
-    self.experiment.sequence[0].dds[5].amplitude.expression = 0.2
+    self.experiment.sequence[0].dds[5].amplitude.expression = "0.2"
     self.experiment.sequence[0].dds[5].state.value = 1.0
     self.experiment.sequence[0].dds[5].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[5].state.expression = 1.0
+    self.experiment.sequence[0].dds[5].state.expression = "1.0"
     #DDS6
     self.experiment.sequence[0].dds[6].frequency.value = 80.0
     self.experiment.sequence[0].dds[6].frequency.evaluation = 80.0
-    self.experiment.sequence[0].dds[6].frequency.expression = 80.0
+    self.experiment.sequence[0].dds[6].frequency.expression = "80.0"
     self.experiment.sequence[0].dds[6].amplitude.value = 0.2
     self.experiment.sequence[0].dds[6].amplitude.evaluation = 0.2
-    self.experiment.sequence[0].dds[6].amplitude.expression = 0.2
+    self.experiment.sequence[0].dds[6].amplitude.expression = "0.2"
     self.experiment.sequence[0].dds[6].state.value = 1.0
     self.experiment.sequence[0].dds[6].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[6].state.expression = 1.0
+    self.experiment.sequence[0].dds[6].state.expression = "1.0"
     #DDS7
     self.experiment.sequence[0].dds[7].frequency.value = 80.0
     self.experiment.sequence[0].dds[7].frequency.evaluation = 80.0
-    self.experiment.sequence[0].dds[7].frequency.expression = 80.0
+    self.experiment.sequence[0].dds[7].frequency.expression = "80.0"
     self.experiment.sequence[0].dds[7].amplitude.value = 0.25
     self.experiment.sequence[0].dds[7].amplitude.evaluation = 0.25
-    self.experiment.sequence[0].dds[7].amplitude.expression = 0.25
+    self.experiment.sequence[0].dds[7].amplitude.expression = "0.25"
     self.experiment.sequence[0].dds[7].state.value = 1.0
     self.experiment.sequence[0].dds[7].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[7].state.expression = 1.0
+    self.experiment.sequence[0].dds[7].state.expression = "1.0"
     #DDS8
     self.experiment.sequence[0].dds[8].frequency.value = 80.0
     self.experiment.sequence[0].dds[8].frequency.evaluation = 80.0
-    self.experiment.sequence[0].dds[8].frequency.expression = 80.0
+    self.experiment.sequence[0].dds[8].frequency.expression = "80.0"
     self.experiment.sequence[0].dds[8].amplitude.value = 0.2
     self.experiment.sequence[0].dds[8].amplitude.evaluation = 0.2
-    self.experiment.sequence[0].dds[8].amplitude.expression = 0.2
+    self.experiment.sequence[0].dds[8].amplitude.expression = "0.2"
     self.experiment.sequence[0].dds[8].state.value = 1.0
     self.experiment.sequence[0].dds[8].state.evaluation = 1.0
-    self.experiment.sequence[0].dds[8].state.expression = 1.0
+    self.experiment.sequence[0].dds[8].state.expression = "1.0"
 
 
 

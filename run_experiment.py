@@ -146,10 +146,27 @@ class run_experiment(EnvExperiment):
         self.urukul2_ch3.set(frequency = 0.0*MHz, amplitude = 0.0, phase = 0.0)
         self.urukul2_ch3.sw.off() 
         #Edge number 1 name of edge: 
-        #Edge number 2 name of edge: 
         self.ttl0.on()
+        self.zotino0.write_dac(0, 1)
+        self.zotino0.load()
+        self.urukul0_ch0.set_att(0.0*dB) 
+        self.urukul0_ch0.set(frequency = 1*MHz, amplitude = 0.9, phase = 0.0)
+        self.urukul0_ch0.sw.on() 
+        #Edge number 2 name of edge: 
+        self.ttl1.on()
+        self.zotino0.write_dac(1, 1)
+        self.zotino0.load()
         #Edge number 3 name of edge: 
+        self.ttl3.on()
+        self.zotino0.write_dac(3, 1)
+        self.zotino0.load()
+        self.urukul0_ch0.set_att(1*dB) 
+        self.urukul0_ch0.set(frequency = 1*MHz, amplitude = 1, phase = 1)
+        self.urukul0_ch0.sw.on() 
         #Edge number 4 name of edge: 
-        self.ttl0.off()
-        #Edge number 5 name of edge: 
-        #Edge number 6 name of edge: 
+        self.ttl4.on()
+        self.zotino0.write_dac(4, 1)
+        self.zotino0.load()
+        self.urukul0_ch0.set_att(1*dB) 
+        self.urukul0_ch0.set(frequency = 1*MHz, amplitude = 1, phase = 1)
+        self.urukul0_ch0.sw.on() 

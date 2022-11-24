@@ -281,7 +281,7 @@ def analog_tab_build(self):
     #self.analog_table.setItemDelegateForRow(0,delegate)
     for i in range(4, self.analog_tab_num_cols):
         exec("self.analog_table.setColumnWidth(%d,%d)" % (i,self.digital_and_analog_table_column_width))
-    #Filling the defaul values
+    #Filling the default values
     for index, channel in enumerate(self.experiment.sequence[0].analog):
         # plus 3 is because first 3 columns are used by number, name and time of edge
         col = index + 4

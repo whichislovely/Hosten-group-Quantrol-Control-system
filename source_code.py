@@ -251,21 +251,16 @@ class MainWindow(QMainWindow):
                 with open(temp_file_name, 'rb') as file:
                     self.experiment = pickle.load(file)
                 self.sequence_num_rows = len(self.experiment.sequence)
-                self.sequence = self.experiment.sequence
-                self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
-                self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
                 self.scan_table.setChecked(self.experiment.do_scan)
                 #update the label showing the sequence that is being modified 
                 self.experiment.file_name = temp_file_name
                 self.create_file_name_label()
+                update.from_object(self)
+                print(8)
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence loaded from %s" %self.experiment.file_name)
+                print(9)
             except:
-                self.error_message('Could not load the file or the file was not chosen.', 'Error')
-
-            update_evaluations.do(self)# NEEDS TO BE REMOVED COMPLETELY
-            update_tabs.do(self)
-        else:
-            pass
+                self.error_message('Could not load the file.', 'Error')
 
     def create_file_name_label(self):
         self.file_name_lable.setText(self.experiment.file_name)
@@ -306,6 +301,7 @@ class MainWindow(QMainWindow):
         self.sequence_table.setItem(row, 2, QTableWidgetItem("id" + str(self.experiment.sequence[row].id)))
         self.sequence_table.setItem(row, 3, QTableWidgetItem(self.experiment.sequence[row].expression))
         self.sequence_table.setItem(row, 4, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+        
         #Setting the left part of the DIGITAL table (edge number, name, time)
         self.digital_dummy.setItem(row, 0, QTableWidgetItem(str(row)))
         self.digital_dummy.setItem(row, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
@@ -315,15 +311,11 @@ class MainWindow(QMainWindow):
             col = index + 4 #plus 4 is because first 4 columns are used by number, name, time of the edge and separator
             self.digital_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
             channel.changed = False
+
         #Setting the left part of the ANALOG table (edge number, name, time)
         self.analog_dummy.setItem(row, 0, QTableWidgetItem(str(row)))
         self.analog_dummy.setItem(row, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
         self.analog_dummy.setItem(row, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
-        #Setting the left part of the DDS table (edge number, name, time)
-        self.dds_dummy.setItem(row+2, 0, QTableWidgetItem(str(row)))
-        self.dds_dummy.setItem(row+2, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
-        self.dds_dummy.setItem(row+2, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
-
         #Setting ANALOG table values
         for index, channel in enumerate(self.experiment.sequence[-1].analog):
             # plus 3 is because first 3 columns are used by number, name and time of edge
@@ -331,6 +323,11 @@ class MainWindow(QMainWindow):
             self.analog_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
             self.analog_table.item(row, col).setToolTip(str(channel.value))
             channel.changed = False
+
+        #Setting the left part of the DDS table (edge number, name, time)
+        self.dds_dummy.setItem(row+2, 0, QTableWidgetItem(str(row)))
+        self.dds_dummy.setItem(row+2, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
+        self.dds_dummy.setItem(row+2, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
         #Setting DDS table values
         for index, channel in enumerate(self.experiment.sequence[-1].dds):
             #plus 4 is because first 4 columns are used by number, name, time and separator(dark grey line)
@@ -339,10 +336,7 @@ class MainWindow(QMainWindow):
                 exec("self.dds_table.setItem(row+2, col + setting, QTableWidgetItem(str(channel.%s.expression) + ' '))" %self.setting_dict[setting])
                 exec("self.dds_table.item(row+2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
             channel.changed = False
-
         self.update_on()
-        #update_evaluations.do(self) # NEEDS TO BE COMPLETELY REMOVED
-        #update_tabs.do(self)
 
     def delete_edge_button_clicked(self):
         try:
@@ -351,20 +345,23 @@ class MainWindow(QMainWindow):
             if row == 0:
                 self.error_message("You can not delete the starting edge", "Protected item")
             else:
-                temp_value = self.experiment.variables[name].value #temp is used if we are not able to evaluate expressions and need to reassign the variable
-                # here I change the value to something that can not be evaluated to see whether id# variable was used in any expression
-                # if it is used, obviously some expressions can not be evaluated and I reassign the previous value using temp_value. Otherwise the return value of 
-                # update_evaluations.do(self) will be None and I will delete the edge and corresponding id# variable
-                self.experiment.variables[name].value = "something_that_can_not_be_evaluated"
-                return_value = update_evaluations.do(self)
+                print(1)
+                backup = deepcopy(self.experiment.variables[name]) #backup is a variable copy in case we would need to restore changes and not allow deleting edge
+                print(2)
+                del self.experiment.variables[name]
+                print(3)
+                return_value = update.all_tabs(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
+                print(4)
                 if return_value == None:
+                    print(5)
                     del self.experiment.sequence[row]
-                    del self.experiment.variables[name]
+                    print(6)
                     self.sequence_table.setCurrentCell(row-1, 0)
-                    update_tabs.do(self)
+                    print(7)
+                    update.from_object(self)
+                    print(8)
                 else:
-                    self.experiment.variables[name].value = temp_value
-                    update_evaluations.do(self)
+                    self.experiment.variables[name] = backup
                     self.error_message('The edge time value is used as a variable in %s.'%return_value, 'Can not delete used edge')
         except:
             self.error_message("Select the edge you want to delete", "No edge selected")
