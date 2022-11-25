@@ -19,7 +19,7 @@ import update
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
     class Edge:
-        def __init__(self, name = "", id = 0, expression = "0", evaluation = 0, for_python = 0, value = 0, is_scanned = False):
+        def __init__(self, name = "", id = "id0", expression = "0", evaluation = 0, for_python = 0, value = 0, is_scanned = False):
             self.is_scanned = False
             self.expression = expression
             self.evaluation = evaluation
@@ -188,16 +188,24 @@ class MainWindow(QMainWindow):
                         self.update_off()
                         table_item.setText(str(edge.expression))
                         self.update_on()
-                    else: # if not defaul channel apply changes
-                        self.update_off()
+                    else: # if not defaul channel apply changes #THIS NEEDS TO BE DONE!!!!!!!!!!!!!
+                        #previous edge values
                         edge.expression = self.experiment.sequence[row-1].expression#previous edge
+                        edge.evaluation = self.experiment.sequence[row-1].evaluation#previous edge
+                        edge.value = self.experiment.sequence[row-1].value#previous edge
+                        edge.for_python = self.experiment.sequence[row-1].for_python#previous edge
+                        #updating table entry
+                        self.update_off()
+                        table_item.setText(edge.expression)
                         self.update_on()
+                        #update.sequence(self)
+                        #update.from_object(self)
                 else:                        
                     try:
                         expression = table_item.text()
                         (evaluation, for_python, is_scanned) = self.decode_input(expression)
                         exec("self.value = " + str(evaluation)) # this is done here to be able to assign value of the id# type variable
-                        if self.value < 0:
+                        if self.value < 0: #restricting negative values for time
                             self.error_message("Negative values are not allowed", "Negative time value")
                             self.update_off()
                             table_item.setText(str(edge.expression))
@@ -205,14 +213,12 @@ class MainWindow(QMainWindow):
                         else:
                             edge.value = self.value
                             edge.evaluation = evaluation
-                            edge.is_scanned = is_scanned
                             edge.expression = expression
-                            if edge.is_scanned:
-                                edge.for_python = for_python
-                            else:
-                                exec("edge.for_python = " + for_python)
-                            variable_name = "id" + str(edge.id)
-                            self.experiment.variables[variable_name] = self.Variable(name = variable_name, value = edge.value, for_python = edge.for_python, is_scanned = edge.is_scanned)
+                            edge.for_python = for_python
+                            edge.is_scanned = is_scanned
+                            self.experiment.variables[edge.id] = self.Variable(name = edge.id, value = edge.value, for_python = edge.for_python, is_scanned = edge.is_scanned)
+                            update.sequence_tab(self)
+                            update.from_object(self)
                     except:
                         self.error_message("Expression can not be evaluated", "Wrong entry")
                         self.update_off()
@@ -220,12 +226,6 @@ class MainWindow(QMainWindow):
                         self.update_on()                        
             elif col == 1: # edge name changed
                 edge.name = table_item.text()
-            #make a case dependent update. Only needed things 
-            update_expressions.do(self)
-            update_evaluations.do(self)
-            update_tabs.do(self)
-        else:
-            pass
 
     
     def save_sequence_button_clicked(self):
@@ -256,9 +256,7 @@ class MainWindow(QMainWindow):
                 self.experiment.file_name = temp_file_name
                 self.create_file_name_label()
                 update.from_object(self)
-                print(8)
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence loaded from %s" %self.experiment.file_name)
-                print(9)
             except:
                 self.error_message('Could not load the file.', 'Error')
 
@@ -269,9 +267,9 @@ class MainWindow(QMainWindow):
     def find_unique_id(self):
         #this functions finds the smallest possible id number that is not used and returns it
         for id in range(10**4):
-            dummy_name = "id" + str(id)
-            if dummy_name not in self.experiment.variables:
-                return id
+            unique_id = "id" + str(id)
+            if unique_id not in self.experiment.variables:
+                return unique_id
         
     def insert_edge_button_clicked(self):   
         #appending a new edge with a unique id
@@ -282,8 +280,7 @@ class MainWindow(QMainWindow):
         self.experiment.sequence.append(new_edge)
         self.sequence_num_rows += 1
         #creating a corresponding variable so one can use id# as a variable
-        name = "id" + str(new_unique_id)
-        self.experiment.variables[name] = self.Variable(name = name, value = new_edge.value, for_python = new_edge.for_python)
+        self.experiment.variables[new_edge.id] = self.Variable(name = new_edge.id, value = new_edge.value, for_python = new_edge.for_python)
         self.update_off()
         #adding a new row in all tabs
         self.sequence_table.setRowCount(self.sequence_num_rows)                     
@@ -295,17 +292,18 @@ class MainWindow(QMainWindow):
         self.dds_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name         row = self.sequence_num_rows - 1
         self.making_separator()
         row = self.sequence_num_rows - 1
+        edge = self.experiment.sequence[row]
         #Setting the left part of the SEQUENCE table (edge number, name, expression, time)
         self.sequence_table.setItem(row, 0, QTableWidgetItem(str(row)))
-        self.sequence_table.setItem(row, 1, QTableWidgetItem(self.experiment.sequence[row].name))
-        self.sequence_table.setItem(row, 2, QTableWidgetItem("id" + str(self.experiment.sequence[row].id)))
-        self.sequence_table.setItem(row, 3, QTableWidgetItem(self.experiment.sequence[row].expression))
-        self.sequence_table.setItem(row, 4, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+        self.sequence_table.setItem(row, 1, QTableWidgetItem(edge.name))
+        self.sequence_table.setItem(row, 2, QTableWidgetItem(edge.id))
+        self.sequence_table.setItem(row, 3, QTableWidgetItem(edge.expression))
+        self.sequence_table.setItem(row, 4, QTableWidgetItem(str(edge.value)))
         
         #Setting the left part of the DIGITAL table (edge number, name, time)
         self.digital_dummy.setItem(row, 0, QTableWidgetItem(str(row)))
-        self.digital_dummy.setItem(row, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
-        self.digital_dummy.setItem(row, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+        self.digital_dummy.setItem(row, 1, QTableWidgetItem(edge.name))
+        self.digital_dummy.setItem(row, 2, QTableWidgetItem(str(edge.value)))
         #Setting DIGITAL table values
         for index, channel in enumerate(self.experiment.sequence[-1].digital):
             col = index + 4 #plus 4 is because first 4 columns are used by number, name, time of the edge and separator
@@ -314,8 +312,8 @@ class MainWindow(QMainWindow):
 
         #Setting the left part of the ANALOG table (edge number, name, time)
         self.analog_dummy.setItem(row, 0, QTableWidgetItem(str(row)))
-        self.analog_dummy.setItem(row, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
-        self.analog_dummy.setItem(row, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+        self.analog_dummy.setItem(row, 1, QTableWidgetItem(edge.name))
+        self.analog_dummy.setItem(row, 2, QTableWidgetItem(str(edge.value)))
         #Setting ANALOG table values
         for index, channel in enumerate(self.experiment.sequence[-1].analog):
             # plus 3 is because first 3 columns are used by number, name and time of edge
@@ -326,40 +324,33 @@ class MainWindow(QMainWindow):
 
         #Setting the left part of the DDS table (edge number, name, time)
         self.dds_dummy.setItem(row+2, 0, QTableWidgetItem(str(row)))
-        self.dds_dummy.setItem(row+2, 1, QTableWidgetItem(str(self.experiment.sequence[row].name)))
-        self.dds_dummy.setItem(row+2, 2, QTableWidgetItem(str(self.experiment.sequence[row].value)))
+        self.dds_dummy.setItem(row+2, 1, QTableWidgetItem(edge.name))
+        self.dds_dummy.setItem(row+2, 2, QTableWidgetItem(str(edge.value)))
         #Setting DDS table values
         for index, channel in enumerate(self.experiment.sequence[-1].dds):
             #plus 4 is because first 4 columns are used by number, name, time and separator(dark grey line)
-            col = 4 + index * 6
             for setting in range(5):
-                exec("self.dds_table.setItem(row+2, col + setting, QTableWidgetItem(str(channel.%s.expression) + ' '))" %self.setting_dict[setting])
-                exec("self.dds_table.item(row+2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
+                col = 4 + index * 6 + setting
+                dds_row = row + 2
+                exec("self.dds_table.setItem(dds_row, col, QTableWidgetItem(str(channel.%s.expression) + ' '))" %self.setting_dict[setting])
+                exec("self.dds_table.item(dds_row, col).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
             channel.changed = False
         self.update_on()
 
     def delete_edge_button_clicked(self):
         try:
             row = self.sequence_table.selectedIndexes()[0].row()
-            name = 'id' + str(self.experiment.sequence[row].id)
+            name = self.experiment.sequence[row].id
             if row == 0:
                 self.error_message("You can not delete the starting edge", "Protected item")
             else:
-                print(1)
                 backup = deepcopy(self.experiment.variables[name]) #backup is a variable copy in case we would need to restore changes and not allow deleting edge
-                print(2)
                 del self.experiment.variables[name]
-                print(3)
-                return_value = update.all_tabs(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
-                print(4)
+                return_value = update.all_tabs(self, update_expressions_and_evaluations=True, update_values_and_tables=False)
                 if return_value == None:
-                    print(5)
                     del self.experiment.sequence[row]
-                    print(6)
                     self.sequence_table.setCurrentCell(row-1, 0)
-                    print(7)
                     update.from_object(self)
-                    print(8)
                 else:
                     self.experiment.variables[name] = backup
                     self.error_message('The edge time value is used as a variable in %s.'%return_value, 'Can not delete used edge')
@@ -427,8 +418,11 @@ class MainWindow(QMainWindow):
 #        for item in self.experiment.new_variables:
 #            print(item.name, item.value, item.is_scanned)
         for ind, edge in enumerate(self.experiment.sequence):
-            for i, channel in enumerate(edge.dds):
-                print("edge", ind, "chanel", i, channel.changed)
+            print("edge", ind)
+            for i in range(3):
+                channel = edge.digital[i]
+                print("    chanel", i,"evaluation", channel.evaluation, "value", channel.value, "Changed", channel.changed)
+        print("END")
 
     def save_sequence_as_button_clicked(self):
         self.experiment.file_name = QFileDialog.getSaveFileName(self, 'Save File')[0] # always ask for filename
@@ -608,7 +602,7 @@ class MainWindow(QMainWindow):
                     table_item.setBackground(self.white)
                     self.update_on()
                     channel.changed = False
-                    update.digital_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
+                    update.digital_tab(self)
             else:
                 try: #Checking whether the expression can be evaluated and the value is within allowed range
                     expression = table_item.text()
@@ -619,10 +613,16 @@ class MainWindow(QMainWindow):
                         channel.evaluation = evaluation
                         channel.value = self.dummy
                         channel.changed = True
-                        update.digital_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
+                        update.digital_tab(self)
                     else:
+                        self.update_off()
+                        table_item.setText(channel.expression)
+                        self.update_on()
                         self.error_message("!!!Only value '1' or '0' are expected", "Wrong entry")
                 except:
+                    self.update_off()
+                    table_item.setText(channel.expression)
+                    self.update_on()
                     self.error_message("Expression can not be evaluated", "Wrong entry")
 
 
@@ -675,7 +675,7 @@ class MainWindow(QMainWindow):
                     self.update_off()
                     table_item.setBackground(self.white)
                     self.update_on()
-                    update.analog_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
+                    update.analog_tab(self)
             else:
                 try:
                     expression = table_item.text()
@@ -687,14 +687,16 @@ class MainWindow(QMainWindow):
                         channel.value = self.dummy
                         channel.is_scanned = is_scanned
                         channel.changed = True
-                        update.analog_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
+                        update.analog_tab(self)
                     else:
                         self.update_off()
                         table_item.setText(channel.expression)
                         self.update_on()
                         self.error_message("Only values between '+10' and '-10' are expected", "Wrong entry")
                 except:
+                    self.update_off()
                     table_item.setText(channel.expression)
+                    self.update_on()
                     self.error_message('Expression can not be evaluated', 'Wrong entry')
 
     #DDS TAB RELATED
@@ -718,7 +720,7 @@ class MainWindow(QMainWindow):
                         self.dds_table.item(row, channel*6 + 4 + index_setting).setBackground(self.white)
                     self.experiment.sequence[edge_num].dds[channel].changed = False
                     self.update_on()
-                    update.dds_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
+                    update.dds_tab(self)
             else:   #non empty entry case (input is not "")
                 try:
                     expression = self.dds_table.item(row,col).text()
@@ -735,14 +737,16 @@ class MainWindow(QMainWindow):
                             exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = for_python" %self.setting_dict[setting])
                         else:
                             exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = "%self.setting_dict[setting] + for_python )
-                        update.dds_tab(self, update_expressions_and_evaluations=True, update_values=True, update_table=True)
-                        print(123)
+                        update.dds_tab(self)
                     else:
                         self.error_message("Only values between %f and %f are expected" %(minimum, maximum), "Wrong entry")
                         self.update_off()
                         exec("self.dds_table.item(row,col).setText(str(self.experiment.sequence[edge_num].dds[channel].%s.expression))" %self.setting_dict[setting])
                         self.update_on()
                 except:
+                    self.update_off()
+                    exec("self.dds_table.item(row,col).setText(str(self.experiment.sequence[edge_num].dds[channel].%s.expression))" %self.setting_dict[setting])
+                    self.update_on()
                     self.error_message('Expression can not be evaluated', 'Wrong entry')            
 
     def dds_dummy_header_changed(self, item):
