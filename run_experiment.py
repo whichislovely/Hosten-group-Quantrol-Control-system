@@ -66,7 +66,7 @@ class run_experiment(EnvExperiment):
         self.ttl4.off()
         self.ttl5.off()
         self.ttl6.off()
-        self.ttl7.off()
+        self.ttl7.on()
         delay(5*ms)
         self.ttl8.on()
         self.ttl9.off()
@@ -145,7 +145,3 @@ class run_experiment(EnvExperiment):
         self.urukul2_ch3.set_att(0.0*dB) 
         self.urukul2_ch3.set(frequency = 0.0*MHz, amplitude = 0.0, phase = 0.0)
         self.urukul2_ch3.sw.off() 
-        #Edge number 1 name of edge: 
-        delay((4.0)*ms)
-        self.zotino0.write_dac(0, 10.0)
-        self.zotino0.load()

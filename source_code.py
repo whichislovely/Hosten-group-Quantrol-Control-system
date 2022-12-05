@@ -321,10 +321,10 @@ class MainWindow(QMainWindow):
     def run_experiment_button_clicked(self):
         self.count_scanned_variables()
         self.experiment.do_scan = (self.experiment.scanned_variables_count > 0 and self.scan_table.isChecked())
-        #update_expressions.do(self)
+        update_expressions.do(self)
         try:
             write_to_python.create_experiment(self)
-            #os.system("conda activate artiq_5 && artiq_run %s" %"run_experiment.py")        
+            os.system("conda activate artiq_5 && artiq_run %s" %"run_experiment.py")        
 
 #            else:
 #                file_name = write_to_python.create_experiment(self)
