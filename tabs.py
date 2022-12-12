@@ -48,7 +48,7 @@ def sequence_tab_build(self):
     #Setting the default values 
     self.sequence_table.setItem(0, 0, QTableWidgetItem("0"))
     self.sequence_table.setItem(0, 1, QTableWidgetItem(self.experiment.sequence[0].name))
-    self.sequence_table.setItem(0, 2, QTableWidgetItem("id" + str(self.experiment.sequence[0].id)))
+    self.sequence_table.setItem(0, 2, QTableWidgetItem(self.experiment.sequence[0].id))
     self.sequence_table.setItem(0, 3, QTableWidgetItem(self.experiment.sequence[0].expression))
     self.sequence_table.setItem(0, 4, QTableWidgetItem(str(self.experiment.sequence[0].value)))
     #button to save current sequence

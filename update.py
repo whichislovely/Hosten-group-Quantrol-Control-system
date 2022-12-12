@@ -49,7 +49,10 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = self.digital_table.item(row,col).text()
-                    (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(channel.expression)
+                    try:
+                        (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(channel.expression)
+                    except:
+                        return "digital channel %d, edge %d" %(channel_index, row)
                 #Updating values and table
                 if update_values_and_table:
                     try:
@@ -97,13 +100,16 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = self.analog_table.item(row,col).text()
-                    (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(channel.expression)
+                    try:
+                        (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(channel.expression)
+                    except:
+                        return "analog channel %d, edge %d" %(channel_index, row)
                 #Updating values and table
                 if update_values_and_table:
                     try:
                         exec("channel.value = " + channel.evaluation)
                     except:
-                        return "digital channel %d, edge %d" %(channel_index, row)
+                        return "analog channel %d, edge %d" %(channel_index, row)
                     #Color coding the values
                     if channel.value != 0:
                         self.analog_table.item(row,col).setBackground(self.green)
@@ -148,13 +154,16 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                     #Updating expressions and evaluations
                     if update_expressions_and_evaluations:
                         channel_entry.expression = table_item.text()
-                        (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned) = self.decode_input(channel_entry.expression)
+                        try:
+                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned) = self.decode_input(channel_entry.expression)
+                        except:
+                            return "dds channel %d, edge %d" %(channel_index, row)
                     #Updating values
                     if update_values_and_table:
                         try:
                             exec("channel_entry.value =" + channel_entry.evaluation)
                         except:
-                            return "digital channel %d, edge %d" %(channel_index, row)
+                            return "dds channel %d, edge %d" %(channel_index, row)
                         #Color coding the values
                         if channel.state.value == 1:
                             table_item.setBackground(self.green)
@@ -186,19 +195,31 @@ def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_
     
     Development : we need to include update variables tab and include it    
     '''
-    self.update_off()
-    sequence_tab(self)
-    digital_tab(self, update_expressions_and_evaluations, update_values_and_tables)
-    analog_tab(self, update_expressions_and_evaluations, update_values_and_tables)
-    dds_tab(self, update_expressions_and_evaluations, update_values_and_tables)
-    self.update_on()   
+    
+    sequence_tab_return = sequence_tab(self)
+    if (sequence_tab_return==None):
+        digital_tab_return = digital_tab(self, update_expressions_and_evaluations, update_values_and_tables)
+        if (digital_tab_return==None):
+            analog_tab_return = analog_tab(self, update_expressions_and_evaluations, update_values_and_tables)
+            if (analog_tab_return==None):
+                self.update_on()
+                return dds_tab(self, update_expressions_and_evaluations, update_values_and_tables)        
+            else:
+                self.update_on()
+                return analog_tab_return
+        else:
+            self.update_on()
+            return digital_tab_return    
+    else:
+        self.update_on()
+        return sequence_tab_return                
 
 def from_object(self):
     '''
-    This function rebuilds all tabs by looking at the self.experiment
+    This function rebuilds all tabs by looking at the self.experiment object
     It reassigns title names, refills every table
     It is used in the following functions:
-        1) sequence_table_changed : requires rebuilding tables, reassigning of the title names if redundant
+        1) sequence_table_changed : requires rebuilding tables, reassigning of the title names is redundant
         2) load_sequence_button_clicked : when a new sequence is loaded everything should be built again
         3) delete_edge_button_clicked : after an edge has been deleted we need to rebuild the table
     Development : one can make a flag based rebuild of title names

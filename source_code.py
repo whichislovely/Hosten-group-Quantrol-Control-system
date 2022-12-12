@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import numpy as np
 import write_to_python
-import declare_global_var
+import declare_global_var  
 import tabs
 import update_sequence_related_tabs as update_tabs
 import pickle
@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
             self.is_scanned = False
             self.expression = expression
             self.evaluation = evaluation
-            self.value = value
+            self.value = value   
             self.name = name
             self.id = id
             self.is_scanned = is_scanned
@@ -346,7 +346,7 @@ class MainWindow(QMainWindow):
             else:
                 backup = deepcopy(self.experiment.variables[name]) #backup is a variable copy in case we would need to restore changes and not allow deleting edge
                 del self.experiment.variables[name]
-                return_value = update.all_tabs(self, update_expressions_and_evaluations=True, update_values_and_tables=False)
+                return_value = update.all_tabs(self)
                 if return_value == None:
                     del self.experiment.sequence[row]
                     self.sequence_table.setCurrentCell(row-1, 0)
@@ -387,7 +387,7 @@ class MainWindow(QMainWindow):
     def run_experiment_button_clicked(self):
         self.count_scanned_variables()
         self.experiment.do_scan = (self.experiment.scanned_variables_count > 0 and self.scan_table.isChecked())
-        update_expressions.do(self)
+        #update_expressions.do(self)
         try:
             write_to_python.create_experiment(self)
             #os.system("conda activate artiq_5 && artiq_run %s" %"run_experiment.py")        
@@ -407,6 +407,7 @@ class MainWindow(QMainWindow):
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
 
     def dummy_button_clicked(self):
+        print(self.experiment.sequence[0].id)
   #      print("analog channel values")
   #      for edge in self.experiment.sequence:
   #          for ind, channel in enumerate(edge.analog):
@@ -465,9 +466,10 @@ class MainWindow(QMainWindow):
                 self.experiment.new_variables[index].is_scanned = False
                 self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
             del self.experiment.scanned_variables[row]
-            update_expressions.do(self)
-            update_evaluations.do(self)
-            update_tabs.do(self)
+            #NEEDS AN update.variables_table
+            #update_expressions.do(self)
+            #update_evaluations.do(self)
+            #update_tabs.do(self)
             
             self.scan_table_parameters.setCurrentCell(row-1, 0)
         except:
@@ -764,7 +766,7 @@ class MainWindow(QMainWindow):
         variable_name = self.find_new_variable_name_unused()
         self.experiment.new_variables.append(self.Variable(variable_name, 0.0, 0.0))
         self.experiment.variables[variable_name] = self.Variable(variable_name, 0.0, 0.0)
-        update_tabs.do(self)
+        #HERE SHOULD BE UPDATE VARIABLES TABLE
 
     def decode_input(self, text):
         index = 0
@@ -824,29 +826,32 @@ class MainWindow(QMainWindow):
             variable = self.experiment.new_variables[row]
             table_item = self.variables_table.item(row,col)
             if col == 0: #variable name was changed
-                dummy_name = self.remove_restricted_characters(table_item.text())
-                if dummy_name[0:2] == "id" and dummy_name[2] in "0123456789":
+                new_name = self.remove_restricted_characters(table_item.text())
+                if new_name[0:2] == "id" and new_name[2] in "0123456789":
                     self.error_message("Variable names starting with id and following with integers are reserved for default edge time variables", "Invalid variable name")
-                elif dummy_name not in self.experiment.variables:
+                elif new_name not in self.experiment.variables:
                     not_a_number = True
                     try:
-                        float(dummy_name) #does not allow defining variable names that contains only integers without characters
+                        float(new_name) #does not allow defining variable names that contains only integers without characters
                         not_a_number = False
                     except:
                         pass
                     if not_a_number: #following block is executed when the name of the variable is kind of a valid one
                         #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
-                        self.experiment.variables[variable.name].value = "something_that_can_not_be_evaluated"
-                        return_value = update_evaluations.do(self)
-                        if return_value != None:
-                            self.experiment.variables[variable.name].value = variable.value
-                            update_evaluations.do(self)
-                            self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                        backup = deepcopy(self.experiment.variables[variable.name])
+                        del self.experiment.variables[variable.name]
+                        return_value = update.all_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
+                        if return_value == None:
+                            self.experiment.variables[new_name] = backup
+                            self.experiment.variables[new_name].name = new_name
+                            self.experiment.variables[new_name].is_scanned = False
+                            variable.name = new_name
                         else:
-                            new_variable = self.Variable(name = dummy_name, value = variable.value, for_python = variable.for_python, is_scanned=False)
-                            del self.experiment.variables[variable.name]
-                            self.experiment.variables[dummy_name] = new_variable
-                            variable.name = dummy_name
+                            self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                            self.experiment.variables[backup.name] = backup
+                            self.update_off()
+                            table_item.setText(backup.name)
+                            self.update_on()
                     else:
                         self.error_message('Variable name can not be in a form of a number', 'Invalid variable name')
                 else:
@@ -855,32 +860,30 @@ class MainWindow(QMainWindow):
                 #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
                 try:
                     self.experiment.variables[variable.name].value = float(table_item.text())
-                    return_value = update_evaluations.do(self)
-                    if return_value != None:
+                    return_value = update.all_tabs(self) # we do not need to update expressions only update values.
+                    if return_value == None:
+                        variable.value = self.experiment.variables[variable.name].value
+                    else:
                         self.error_message("Evaluation is out of allowed range occured in %s. Variable value can not be assigned" %return_value, "Wrong entry")
                         self.experiment.variables[variable.name].value = variable.value 
-                    else:
-                        variable.value = self.experiment.variables[variable.name].value
                 except:
                     self.error_message("Only integers and floating numbers are allowed.", "Wrong entry")
-            update_expressions.do(self)
-            update_evaluations.do(self)
-            update_tabs.do(self)
+
 
     def delete_new_variable_clicked(self):
         try:
             row = self.variables_table.selectedIndexes()[0].row()
             name = self.variables_table.item(row,0).text()
-            temp = self.experiment.variables[name] #used to be able to revert the process of deletion
+            backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
             del self.experiment.variables[name]
             self.variables_table.setCurrentCell(row-1,0)
-            return_value = update_evaluations.do(self)
+            return_value = update.all_tabs(self) #we need to update only values not expressions
             if return_value == None:
                 del self.experiment.new_variables[row]
-                update_tabs.do(self)
+                #HERE NEEDS TO BE AN UPDATE OF VARIABLES TABLE
             else:
-                self.experiment.variables[name] = temp
-                update_evaluations.do(self)
+                self.experiment.variables[name] = backup
+                update.all_tabs(self)
                 self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
         except:
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
