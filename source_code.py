@@ -407,7 +407,7 @@ class MainWindow(QMainWindow):
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
 
     def dummy_button_clicked(self):
-        print(self.experiment.sequence[0].id)
+        
   #      print("analog channel values")
   #      for edge in self.experiment.sequence:
   #          for ind, channel in enumerate(edge.analog):
@@ -418,11 +418,11 @@ class MainWindow(QMainWindow):
 #        print("new variables")
 #        for item in self.experiment.new_variables:
 #            print(item.name, item.value, item.is_scanned)
+        for key, item in self.experiment.variables.items():
+            print("var", item.name, "is_scanned", item.is_scanned, "for_python", item.for_python)
         for ind, edge in enumerate(self.experiment.sequence):
             print("edge", ind)
-            for i in range(3):
-                channel = edge.digital[i]
-                print("    chanel", i,"evaluation", channel.evaluation, "value", channel.value, "Changed", channel.changed)
+            print("    chanel", ind,"evaluation", edge.evaluation, "for_python", edge.for_python, "scanned", edge.is_scanned)
         print("END")
 
     def save_sequence_as_button_clicked(self):
@@ -442,23 +442,29 @@ class MainWindow(QMainWindow):
         self.logger.clear()
 
     def scan_table_checked(self):
+        #NEED TO LOOK INTO THIS
         self.experiment.do_scan = self.scan_table.isChecked()
         if self.experiment.do_scan == False:
             #reassign the variables to the pre scanning values using self.experiment.new_variables
             for item in self.experiment.new_variables:
                 self.experiment.variables[item.name].value = item.value
-            update_evaluations.do(self)
-            update_tabs.do(self)
+#            update_evaluations.do(self)
+#            update_tabs.do(self)
 
     def add_scanned_variable_button_pressed(self):
         self.experiment.scanned_variables.append(self.Scanned_variable("None", 0, 0))
-        update_tabs.do(self)
+        update.scan_table(self)
+        #update_tabs.do(self)
 
     def delete_scanned_variable_button_pressed(self):
         try:
+            print(10)
             row = self.scan_table_parameters.selectedIndexes()[0].row()
+            print(11)
             variable = self.experiment.scanned_variables[row]
+            print(12)
             index = self.index_of_a_new_variable(variable.name)
+            print(13)
             if index != None: #this is done to avoid trying to access "None" variable
                 #reverting the value and scanning state of the variable that is not scanned anymore
                 self.experiment.variables[variable.name].is_scanned = False
@@ -466,12 +472,18 @@ class MainWindow(QMainWindow):
                 self.experiment.new_variables[index].is_scanned = False
                 self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
             del self.experiment.scanned_variables[row]
+            print(0)
+            update.variables_tab(self)
+            print(1)
+            update.scan_table(self)
+            print(2)
             #NEEDS AN update.variables_table
             #update_expressions.do(self)
             #update_evaluations.do(self)
             #update_tabs.do(self)
             
-            self.scan_table_parameters.setCurrentCell(row-1, 0)
+            if row != 0:
+                self.scan_table.setCurrentCell(row-1, 0)
         except:
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
 
@@ -547,8 +559,8 @@ class MainWindow(QMainWindow):
             elif col == 2: #max_val of the scanned variable changed
                 variable.max_val = float(table_item.text())
             self.count_scanned_variables()
-            update_evaluations.do(self)
-            update_tabs.do(self)        
+            update.all_tabs(self)
+            update.scan_table(self)       
         else:
             pass
 
@@ -767,6 +779,7 @@ class MainWindow(QMainWindow):
         self.experiment.new_variables.append(self.Variable(variable_name, 0.0, 0.0))
         self.experiment.variables[variable_name] = self.Variable(variable_name, 0.0, 0.0)
         #HERE SHOULD BE UPDATE VARIABLES TABLE
+        update.variables_tab(self)
 
     def decode_input(self, text):
         index = 0

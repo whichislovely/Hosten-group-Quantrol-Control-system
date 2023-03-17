@@ -4,6 +4,17 @@ from PyQt5.QtGui import *
 
 def sequence_tab(self):
     self.update_off()
+    #updating expressions and evaluations
+    print("updating sequence expressions")
+    for row, edge in enumerate(self.experiment.sequence):
+        expression = self.sequence_table.item(row,3).text()
+        try:
+            (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(expression)
+            self.experiment.variables[edge.id].is_scanned = edge.is_scanned
+        except:
+            return "sequence table col 3, edge %d" %row
+
+
     #Update values
     #this while loop is done to accomodate all mutual dependencies. It may happen that user will crash the program by introducing closed loops.
     something_changed = True
@@ -189,6 +200,32 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
 
     self.update_on()
 
+def variables_tab(self):
+    #filling variables table
+    self.update_off()
+    self.variables_table_row_count = len(self.experiment.new_variables)
+    self.variables_table.setRowCount(self.variables_table_row_count)
+    for row, variable in enumerate(self.experiment.new_variables):
+        self.variables_table.setItem(row, 0, QTableWidgetItem(variable.name))
+        if self.experiment.do_scan and variable.is_scanned:
+            item = QTableWidgetItem("scanned")
+            item.setFlags(Qt.NoItemFlags)
+            self.variables_table.setItem(row, 1, item) 
+        else:
+            self.variables_table.setItem(row, 1, QTableWidgetItem(str(variable.value)))  
+    self.update_on()
+
+def scan_table(self):
+    self.update_off()
+    self.scan_table_parameters.setRowCount(len(self.experiment.scanned_variables))
+    self.number_of_steps_input.setText(str(self.experiment.number_of_steps))
+    for row, variable in enumerate(self.experiment.scanned_variables):
+        self.scan_table_parameters.setItem(row,0, QTableWidgetItem(str(variable.name)))
+        self.scan_table_parameters.setItem(row,1, QTableWidgetItem(str(variable.min_val)))
+        self.scan_table_parameters.setItem(row,2, QTableWidgetItem(str(variable.max_val)))
+    self.update_on()
+
+
 def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_tables = True):
     '''
     This function updates all tabs. It just calls an update of each tab one by one
@@ -211,6 +248,7 @@ def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_
             self.update_on()
             return digital_tab_return    
     else:
+        variables_tab(self)
         self.update_on()
         return sequence_tab_return                
 
@@ -342,5 +380,7 @@ def from_object(self):
                     channel_entry.evaluation = current_evaluation
                     channel_entry.for_python = current_for_python
                     channel_entry.value = current_value
+    #building variables table from the self.experiment.new_variables array
+    variables_tab(self)
     self.update_on()                
               

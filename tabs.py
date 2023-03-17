@@ -42,6 +42,7 @@ def sequence_tab_build(self):
     self.sequence_table.setColumnWidth(4,200)
     self.sequence_table.itemChanged.connect(self.sequence_table_changed)
     delegate = ReadOnlyDelegate(self)
+    self.sequence_table.setItemDelegateForRow(0,delegate)
     self.sequence_table.setItemDelegateForColumn(0,delegate)
     self.sequence_table.setItemDelegateForColumn(2,delegate)
     self.sequence_table.setItemDelegateForColumn(4,delegate)
