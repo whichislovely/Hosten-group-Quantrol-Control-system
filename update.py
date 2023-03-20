@@ -4,13 +4,13 @@ from PyQt5.QtGui import *
 
 def sequence_tab(self):
     self.update_off()
-    #updating expressions and evaluations
-    print("updating sequence expressions")
+    #Update expressions and evaluations
     for row, edge in enumerate(self.experiment.sequence):
         expression = self.sequence_table.item(row,3).text()
         try:
             (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(expression)
-            self.experiment.variables[edge.id].is_scanned = edge.is_scanned
+            if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
+                self.experiment.variables[edge.id].is_scanned = edge.is_scanned
         except:
             return "sequence table col 3, edge %d" %row
 
@@ -18,8 +18,8 @@ def sequence_tab(self):
     #Update values
     #this while loop is done to accomodate all mutual dependencies. It may happen that user will crash the program by introducing closed loops.
     something_changed = True
-    iterations = 0 #after the maximum number of iterations it will throw a warning message
-    iterations_limit = 100
+    iterations = 0 
+    iterations_limit = 100 #after the maximum number of iterations it will throw a warning message
     while something_changed and iterations < iterations_limit:
         iterations += 1
         something_changed = False
@@ -28,14 +28,13 @@ def sequence_tab(self):
             #UPDATING EDGE VALUES (TIME)
             try:
                 exec("edge.value = " + str(edge.evaluation))
+                #check if any value has been changed
+                if self.experiment.variables[edge.id].value != edge.value:
+                    something_changed = True
+                    self.experiment.variables[edge.id].value = edge.value
             except:
                 return "time expression edge number %d"%edge_index
-
-        for edge in self.experiment.sequence:
-            if self.experiment.variables[edge.id].value != edge.value:
-                something_changed = True
-                self.experiment.variables[edge.id].value = edge.value
-
+  
     self.experiment.sequence = sorted(self.experiment.sequence, key = lambda edge: edge.value)
     if iterations == iterations_limit:
         self.error_message("100 Iterations exceeded. Please check for potential loops when the time edge depends on itself.", "Warning!")
@@ -98,7 +97,7 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
 def analog_tab(self, update_expressions_and_evaluations = True, update_values_and_table = True):
     '''
     This function updates expressions, evaluations, values and entries of analog table
-    Used in dds_table_changed()
+    Used in analog_table_changed()
     '''
     self.update_off()
     #note that in order to display numbers you first need to convert them to string
@@ -201,7 +200,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
     self.update_on()
 
 def variables_tab(self):
-    #filling variables table
+    #creating the variables tab from self.experiment.new_variables object
     self.update_off()
     self.variables_table_row_count = len(self.experiment.new_variables)
     self.variables_table.setRowCount(self.variables_table_row_count)
@@ -232,15 +231,19 @@ def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_
     
     Development : we need to include update variables tab and include it    
     '''
-    
     sequence_tab_return = sequence_tab(self)
     if (sequence_tab_return==None):
+        print("sequence done")
         digital_tab_return = digital_tab(self, update_expressions_and_evaluations, update_values_and_tables)
         if (digital_tab_return==None):
+            print("digital done")
             analog_tab_return = analog_tab(self, update_expressions_and_evaluations, update_values_and_tables)
             if (analog_tab_return==None):
+                print("analog done")
+                dds_tab_return = dds_tab(self, update_expressions_and_evaluations, update_values_and_tables)        
+                print("dds done")
                 self.update_on()
-                return dds_tab(self, update_expressions_and_evaluations, update_values_and_tables)        
+                return dds_tab_return
             else:
                 self.update_on()
                 return analog_tab_return

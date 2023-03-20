@@ -188,7 +188,7 @@ class MainWindow(QMainWindow):
                         self.update_off()
                         table_item.setText(str(edge.expression))
                         self.update_on()
-                    else: # if not defaul channel apply changes #THIS NEEDS TO BE DONE!!!!!!!!!!!!!
+                    else: # if not default channel apply changes 
                         #previous edge values
                         edge.expression = self.experiment.sequence[row-1].expression#previous edge
                         edge.evaluation = self.experiment.sequence[row-1].evaluation#previous edge
@@ -198,8 +198,6 @@ class MainWindow(QMainWindow):
                         self.update_off()
                         table_item.setText(edge.expression)
                         self.update_on()
-                        #update.sequence(self)
-                        #update.from_object(self)
                 else:                        
                     try:
                         expression = table_item.text()
@@ -345,6 +343,7 @@ class MainWindow(QMainWindow):
                 self.error_message("You can not delete the starting edge", "Protected item")
             else:
                 backup = deepcopy(self.experiment.variables[name]) #backup is a variable copy in case we would need to restore changes and not allow deleting edge
+                #the following is a check whether the edge has been used somewhere. First we delete a corresponding variable and then try to evaluate all the entries
                 del self.experiment.variables[name]
                 return_value = update.all_tabs(self)
                 if return_value == None:
@@ -370,13 +369,13 @@ class MainWindow(QMainWindow):
                 os.system("conda activate artiq_5 && artiq_run go_to_edge.py") 
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Went to edge")
             except:
-                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Couldnt go to edge")    
+                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Couldn't go to edge")    
             update_tabs.do(self)
         except:
             self.error_message("Chose the edge you want the system to go","No edge selected")
 
     def count_scanned_variables(self):
-        #this function iterates over all scanned variables that are not "None" and assigns its value to 
+        #this function iterates over all scanned variables that are not "None" and assigns the total count to 
         #self.experiment.scanned_variables_count. The function does not return anything
         count = 0
         for variable in self.experiment.scanned_variables:
@@ -390,19 +389,16 @@ class MainWindow(QMainWindow):
         #update_expressions.do(self)
         try:
             write_to_python.create_experiment(self)
-            #os.system("conda activate artiq_5 && artiq_run %s" %"run_experiment.py")        
-
-#            else:
-#                file_name = write_to_python.create_experiment(self)
-#                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Python file generated")
-#                try:
-#                    os.system("conda activate artiq_5 && artiq_run %s" %file_name)    
-#                    if self.experiment.go_to_edge_num != -1: #undoing highlighting of the edge
-#                        self.experiment.go_to_edge_num = -1 
-#                        update_tabs.do(self)
-#                    self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Experiment started")
-#                except:
-#                    self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to start experiment")
+            self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Python file generated")
+            try:
+                os.system("conda activate artiq_5 && artiq_run %s" %"run_experiment.py")        
+                # needs to be done. Unhighlight the go to edge 
+                # if self.experiment.go_to_edge_num != -1: #undoing highlighting of the edge
+                #     self.experiment.go_to_edge_num = -1 
+                #     update_tabs.do(self)
+                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Experiment started")
+            except:
+                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to start experiment")
         except:
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
 
@@ -420,10 +416,10 @@ class MainWindow(QMainWindow):
 #            print(item.name, item.value, item.is_scanned)
         for key, item in self.experiment.variables.items():
             print("var", item.name, "is_scanned", item.is_scanned, "for_python", item.for_python)
-        for ind, edge in enumerate(self.experiment.sequence):
-            print("edge", ind)
-            print("    chanel", ind,"evaluation", edge.evaluation, "for_python", edge.for_python, "scanned", edge.is_scanned)
-        print("END")
+        # for ind, edge in enumerate(self.experiment.sequence):
+        #     print("edge", ind)
+        #     print("    chanel", ind,"evaluation", edge.evaluation, "for_python", edge.for_python, "scanned", edge.is_scanned)
+        # print("END")
 
     def save_sequence_as_button_clicked(self):
         self.experiment.file_name = QFileDialog.getSaveFileName(self, 'Save File')[0] # always ask for filename
@@ -435,7 +431,8 @@ class MainWindow(QMainWindow):
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence saved at %s" %self.experiment.file_name)
             except:
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Saving attempt was not successful")
-
+        else:
+            self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "No file name was given. Saving unsuccessful")
 
     #the button is used to clear the logger         
     def clear_logger_button_clicked(self):
@@ -443,6 +440,7 @@ class MainWindow(QMainWindow):
 
     def scan_table_checked(self):
         #NEED TO LOOK INTO THIS
+        #check the scanned states of variables
         self.experiment.do_scan = self.scan_table.isChecked()
         if self.experiment.do_scan == False:
             #reassign the variables to the pre scanning values using self.experiment.new_variables
@@ -450,6 +448,13 @@ class MainWindow(QMainWindow):
                 self.experiment.variables[item.name].value = item.value
 #            update_evaluations.do(self)
 #            update_tabs.do(self)
+        else:
+            #needs to be done
+            pass
+            # assign the values from the scan table
+            # for variable in self.experiment.scanned_variables:
+            #     self.experiment.variables[variable.name].value = variable.value
+        #update from object is needed
 
     def add_scanned_variable_button_pressed(self):
         self.experiment.scanned_variables.append(self.Scanned_variable("None", 0, 0))
@@ -458,13 +463,9 @@ class MainWindow(QMainWindow):
 
     def delete_scanned_variable_button_pressed(self):
         try:
-            print(10)
             row = self.scan_table_parameters.selectedIndexes()[0].row()
-            print(11)
             variable = self.experiment.scanned_variables[row]
-            print(12)
             index = self.index_of_a_new_variable(variable.name)
-            print(13)
             if index != None: #this is done to avoid trying to access "None" variable
                 #reverting the value and scanning state of the variable that is not scanned anymore
                 self.experiment.variables[variable.name].is_scanned = False
@@ -472,11 +473,8 @@ class MainWindow(QMainWindow):
                 self.experiment.new_variables[index].is_scanned = False
                 self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
             del self.experiment.scanned_variables[row]
-            print(0)
             update.variables_tab(self)
-            print(1)
             update.scan_table(self)
-            print(2)
             #NEEDS AN update.variables_table
             #update_expressions.do(self)
             #update_evaluations.do(self)
@@ -497,7 +495,7 @@ class MainWindow(QMainWindow):
                 exec("self.value = " + str(evaluation))
                 if isinstance(self.value, int): #check whether it is an integer
                     if self.value > 0: #check whether it is a positive integer
-                        self.experiment.number_of_steps = int(self.value)
+                        self.experiment.number_of_steps = self.value
                     else:
                         self.error_message("Only positive integers larger than 0 are allowed", "Wrong entry")    
                 else:
@@ -519,7 +517,7 @@ class MainWindow(QMainWindow):
         return index
 
     def already_scanned(self, name):
-        '''Takes a varible name as an input and checks whether there exists a scanned variable with the same name.
+        '''Takes a variable name as an input and checks whether there exists a scanned variable with the same name.
             Returns True is case of dublicates and False otherwise'''
         for variable in self.experiment.scanned_variables:
             if variable.name == name:
@@ -533,32 +531,37 @@ class MainWindow(QMainWindow):
             table_item = self.scan_table_parameters.item(row, col)
             variable = self.experiment.scanned_variables[row]
             if col == 0: #name of the scanned variable changed
-                if self.already_scanned(table_item.text()): #check if the given variable is defined previously or not
+                new_variable_name = self.remove_restricted_characters(table_item.text())
+                table_item.set_text(new_variable_name)
+                if self.already_scanned(new_variable_name): #check if the given variable is defined previously or not
                     self.error_message("The variable name you entered was already used for scanning.", "Scanning variable dublicate")
                 else: # if entered name does not have dublicates then we proceed on checking whether the varible name is defined in Variables tab
-                    index = self.index_of_a_new_variable(table_item.text())
+                    index = self.index_of_a_new_variable(new_variable_name)
                     if index != None:
                         prev_index = self.index_of_a_new_variable(variable.name)
-                        if prev_index != None: #make the value of variable to the previous before being scanned. Try is used to avoid accessing "None" variable
-                            #reverting the values and scanning states of the previous variable
+                        if prev_index != None: #make the value of variable to the previous before being scanned.
+                            #reverting the values to before scanning values and scanning states of the previous variable
                             self.experiment.variables[variable.name].value = self.experiment.new_variables[prev_index].value 
                             self.experiment.new_variables[prev_index].is_scanned = False
                             self.experiment.variables[variable.name].is_scanned = False 
                             self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
                         #updating the values and scanning states of the new scanning  variable
-                        variable.name = table_item.text()
+                        variable.name = new_variable_name
                         self.experiment.variables[variable.name] = self.Variable(variable.name, variable.min_val, variable.min_val, True) #add a new variable with updated name
                         self.experiment.variables[variable.name].for_python = variable.name
                         self.experiment.new_variables[index].is_scanned = True
                     else: # if index == None it means that the variable name entered is not defined in a variables tab
                         self.error_message("The variable name you entered was not defined in variables tab", "Not defined variable")
+                        table_item.set_text(variable.name)
+                self.count_scanned_variables()
             elif col == 1: #min_val of the scanned variable changed
                 variable.min_val = float(table_item.text())
                 if self.scan_table_parameters.item(row, 0).text() != "None": # this makes sure that we do not have to deal with "None" named variable
+                    # we use the min values in order to use in sorting of the sequence tab
                     self.experiment.variables[variable.name].value = float(table_item.text())
             elif col == 2: #max_val of the scanned variable changed
                 variable.max_val = float(table_item.text())
-            self.count_scanned_variables()
+            
             update.all_tabs(self)
             update.scan_table(self)       
         else:
@@ -612,6 +615,7 @@ class MainWindow(QMainWindow):
                     table_item.setText(channel.expression)
                     self.update_on()
                 else:
+                    #this can be removed as it is done in update.digital_tab(self)
                     self.update_off()
                     table_item.setBackground(self.white)
                     self.update_on()
@@ -686,6 +690,7 @@ class MainWindow(QMainWindow):
                     self.update_on()
                 else:
                     channel.changed = False
+                    #this could be removed as it is being done in the update.analog_tab(self)
                     self.update_off()
                     table_item.setBackground(self.white)
                     self.update_on()
@@ -700,6 +705,7 @@ class MainWindow(QMainWindow):
                         channel.evaluation = evaluation
                         channel.value = self.dummy
                         channel.is_scanned = is_scanned
+                        channel.for_python = for_python 
                         channel.changed = True
                         update.analog_tab(self)
                     else:
@@ -730,6 +736,7 @@ class MainWindow(QMainWindow):
                 else:
                     #Removing background color
                     self.update_off()
+                    #this can be removes as it is done in update.dds_tab(self)
                     for index_setting in range(5):
                         self.dds_table.item(row, channel*6 + 4 + index_setting).setBackground(self.white)
                     self.experiment.sequence[edge_num].dds[channel].changed = False
@@ -744,13 +751,10 @@ class MainWindow(QMainWindow):
                     if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.expression = expression" %self.setting_dict[setting])
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.evaluation = evaluation" %self.setting_dict[setting])
-                        #exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = for_python" %self.setting_dict[setting])
+                        exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = for_python" %self.setting_dict[setting])
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.value = self.dummy_val" %self.setting_dict[setting])
+                        exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = for_python" %self.setting_dict[setting])
                         self.experiment.sequence[edge_num].dds[channel].changed = True
-                        if is_scanned:
-                            exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = for_python" %self.setting_dict[setting])
-                        else:
-                            exec("self.experiment.sequence[edge_num].dds[channel].%s.for_python = "%self.setting_dict[setting] + for_python )
                         update.dds_tab(self)
                     else:
                         self.error_message("Only values between %f and %f are expected" %(minimum, maximum), "Wrong entry")
@@ -873,7 +877,7 @@ class MainWindow(QMainWindow):
                 #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
                 try:
                     self.experiment.variables[variable.name].value = float(table_item.text())
-                    return_value = update.all_tabs(self) # we do not need to update expressions only update values.
+                    return_value = update.all_tabs(self, update_expressions_and_evaluations=False) # we do not need to update expressions only update values.
                     if return_value == None:
                         variable.value = self.experiment.variables[variable.name].value
                     else:
@@ -890,13 +894,13 @@ class MainWindow(QMainWindow):
             backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
             del self.experiment.variables[name]
             self.variables_table.setCurrentCell(row-1,0)
-            return_value = update.all_tabs(self) #we need to update only values not expressions
+            return_value = update.all_tabs(self, update_expressions_and_evaluations=False) #we need to update only values not expressions
             if return_value == None:
                 del self.experiment.new_variables[row]
-                #HERE NEEDS TO BE AN UPDATE OF VARIABLES TABLE
+                update.variables_tab(self)
             else:
                 self.experiment.variables[name] = backup
-                update.all_tabs(self)
+                update.all_tabs(self) # May be not needed. Check this later
                 self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
         except:
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
