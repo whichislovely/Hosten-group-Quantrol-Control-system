@@ -249,6 +249,7 @@ class MainWindow(QMainWindow):
                 with open(temp_file_name, 'rb') as file:
                     self.experiment = pickle.load(file)
                 self.sequence_num_rows = len(self.experiment.sequence)
+                self.update_off()
                 self.scan_table.setChecked(self.experiment.do_scan)
                 #update the label showing the sequence that is being modified 
                 self.experiment.file_name = temp_file_name
@@ -257,6 +258,7 @@ class MainWindow(QMainWindow):
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence loaded from %s" %self.experiment.file_name)
             except:
                 self.error_message('Could not load the file.', 'Error')
+            self.update_on()
 
     def create_file_name_label(self):
         self.file_name_lable.setText(self.experiment.file_name)
@@ -385,7 +387,6 @@ class MainWindow(QMainWindow):
 
     def run_experiment_button_clicked(self):
         self.count_scanned_variables()
-        self.experiment.do_scan = (self.experiment.scanned_variables_count > 0 and self.scan_table.isChecked())
         #update_expressions.do(self)
         try:
             write_to_python.create_experiment(self)
@@ -441,25 +442,23 @@ class MainWindow(QMainWindow):
     def scan_table_checked(self):
         #NEED TO LOOK INTO THIS
         #check the scanned states of variables
-        self.experiment.do_scan = self.scan_table.isChecked()
-        if self.experiment.do_scan == False:
-            #reassign the variables to the pre scanning values using self.experiment.new_variables
-            for item in self.experiment.new_variables:
-                self.experiment.variables[item.name].value = item.value
-#            update_evaluations.do(self)
-#            update_tabs.do(self)
-        else:
-            #needs to be done
-            pass
-            # assign the values from the scan table
-            # for variable in self.experiment.scanned_variables:
-            #     self.experiment.variables[variable.name].value = variable.value
-        #update from object is needed
+        if self.to_update:
+            self.experiment.do_scan = self.scan_table.isChecked()
+            if self.experiment.do_scan == False:
+                #reassign the variables to the pre scanning values using self.experiment.new_variables
+                for item in self.experiment.new_variables:
+                    self.experiment.variables[item.name].value = item.value
+                    #there is no need to manually making the variables is_scanned attribute False since it is done in decode_input as self.experiment.do_scan is false
+            else:
+                for variable in self.experiment.scanned_variables:
+                    self.experiment.variables[variable.name].value = variable.min_val
+            update.all_tabs(self)
+            update.variables_tab(self)
+        
 
     def add_scanned_variable_button_pressed(self):
         self.experiment.scanned_variables.append(self.Scanned_variable("None", 0, 0))
         update.scan_table(self)
-        #update_tabs.do(self)
 
     def delete_scanned_variable_button_pressed(self):
         try:
@@ -475,20 +474,15 @@ class MainWindow(QMainWindow):
             del self.experiment.scanned_variables[row]
             update.variables_tab(self)
             update.scan_table(self)
-            #NEEDS AN update.variables_table
-            #update_expressions.do(self)
-            #update_evaluations.do(self)
-            #update_tabs.do(self)
-            
+            update.all_tabs(self)
             if row != 0:
-                self.scan_table.setCurrentCell(row-1, 0)
+                self.scan_table_parameters.setCurrentCell(row-1, 0)
         except:
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
 
     def number_of_steps_input_changed(self):
         #a check whether the text can be evaluated
-        
-        if self.to_update: # THIS PART SHOULD BE UPDATED. IT DOESN'T WORK
+        if self.to_update: 
             try:
                 expression = self.number_of_steps_input.text()
                 (evaluation, for_python, is_scanned) = self.decode_input(expression)
@@ -532,7 +526,7 @@ class MainWindow(QMainWindow):
             variable = self.experiment.scanned_variables[row]
             if col == 0: #name of the scanned variable changed
                 new_variable_name = self.remove_restricted_characters(table_item.text())
-                table_item.set_text(new_variable_name)
+                table_item.setText(new_variable_name)
                 if self.already_scanned(new_variable_name): #check if the given variable is defined previously or not
                     self.error_message("The variable name you entered was already used for scanning.", "Scanning variable dublicate")
                 else: # if entered name does not have dublicates then we proceed on checking whether the varible name is defined in Variables tab
@@ -542,9 +536,9 @@ class MainWindow(QMainWindow):
                         if prev_index != None: #make the value of variable to the previous before being scanned.
                             #reverting the values to before scanning values and scanning states of the previous variable
                             self.experiment.variables[variable.name].value = self.experiment.new_variables[prev_index].value 
-                            self.experiment.new_variables[prev_index].is_scanned = False
                             self.experiment.variables[variable.name].is_scanned = False 
                             self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
+                            self.experiment.new_variables[prev_index].is_scanned = False
                         #updating the values and scanning states of the new scanning  variable
                         variable.name = new_variable_name
                         self.experiment.variables[variable.name] = self.Variable(variable.name, variable.min_val, variable.min_val, True) #add a new variable with updated name
@@ -552,7 +546,9 @@ class MainWindow(QMainWindow):
                         self.experiment.new_variables[index].is_scanned = True
                     else: # if index == None it means that the variable name entered is not defined in a variables tab
                         self.error_message("The variable name you entered was not defined in variables tab", "Not defined variable")
-                        table_item.set_text(variable.name)
+                        self.update_off()
+                        table_item.setText(variable.name)
+                        self.update_on()
                 self.count_scanned_variables()
             elif col == 1: #min_val of the scanned variable changed
                 variable.min_val = float(table_item.text())
@@ -563,6 +559,7 @@ class MainWindow(QMainWindow):
                 variable.max_val = float(table_item.text())
             
             update.all_tabs(self)
+            update.variables_tab(self)
             update.scan_table(self)       
         else:
             pass
@@ -883,6 +880,10 @@ class MainWindow(QMainWindow):
                     else:
                         self.error_message("Evaluation is out of allowed range occured in %s. Variable value can not be assigned" %return_value, "Wrong entry")
                         self.experiment.variables[variable.name].value = variable.value 
+                        self.update_off()
+                        table_item.setText(str(variable.value))
+                        self.update_on()
+                        update.all_tabs(self, update_expressions_and_evaluations=False)
                 except:
                     self.error_message("Only integers and floating numbers are allowed.", "Wrong entry")
 

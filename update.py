@@ -29,7 +29,7 @@ def sequence_tab(self):
             try:
                 exec("edge.value = " + str(edge.evaluation))
                 #check if any value has been changed
-                if self.experiment.variables[edge.id].value != edge.value:
+                if edge.id in self.experiment.variables and self.experiment.variables[edge.id].value != edge.value:
                     something_changed = True
                     self.experiment.variables[edge.id].value = edge.value
             except:
@@ -72,8 +72,10 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                     #Color coding the values
                     if channel.value == 1:
                         self.digital_table.item(row,col).setBackground(self.green)
-                    else:
+                    elif channel.value == 0:
                         self.digital_table.item(row,col).setBackground(self.red)
+                    else: # the value is out of the allowed range
+                        return "digital channel %d, edge %d" %(channel_index, row)
                 #Saving the current state of the channel
                 current_expression = channel.expression
                 current_evaluation = channel.evaluation
@@ -121,10 +123,13 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                     except:
                         return "analog channel %d, edge %d" %(channel_index, row)
                     #Color coding the values
-                    if channel.value != 0:
-                        self.analog_table.item(row,col).setBackground(self.green)
+                    if channel.value >= -10 and channel.value <= 10:
+                        if channel.value != 0:
+                            self.analog_table.item(row,col).setBackground(self.green)
+                        else:
+                            self.analog_table.item(row,col).setBackground(self.red)
                     else:
-                        self.analog_table.item(row,col).setBackground(self.red)
+                        return "analog channel %d, edge %d" %(channel_index, row)
                 #Saving the current state of the channel
                 current_expression = channel.expression
                 current_evaluation = channel.evaluation
@@ -174,11 +179,14 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                             exec("channel_entry.value =" + channel_entry.evaluation)
                         except:
                             return "dds channel %d, edge %d" %(channel_index, row)
-                        #Color coding the values
-                        if channel.state.value == 1:
-                            table_item.setBackground(self.green)
+                        if channel_entry.value >= self.min_dict[setting] and channel_entry.value <= self.max_dict[setting]:
+                            #Color coding the values
+                            if channel.state.value == 1:
+                                table_item.setBackground(self.green)
+                            else:
+                                table_item.setBackground(self.red)
                         else:
-                            table_item.setBackground(self.red)
+                            return "dds channel %d, edge %d" %(channel_index, row)
                     #Saving the current state of the channel
                     current_expression = channel_entry.expression
                     current_evaluation = channel_entry.evaluation
@@ -233,15 +241,11 @@ def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_
     '''
     sequence_tab_return = sequence_tab(self)
     if (sequence_tab_return==None):
-        print("sequence done")
         digital_tab_return = digital_tab(self, update_expressions_and_evaluations, update_values_and_tables)
         if (digital_tab_return==None):
-            print("digital done")
             analog_tab_return = analog_tab(self, update_expressions_and_evaluations, update_values_and_tables)
             if (analog_tab_return==None):
-                print("analog done")
                 dds_tab_return = dds_tab(self, update_expressions_and_evaluations, update_values_and_tables)        
-                print("dds done")
                 self.update_on()
                 return dds_tab_return
             else:
@@ -385,5 +389,7 @@ def from_object(self):
                     channel_entry.value = current_value
     #building variables table from the self.experiment.new_variables array
     variables_tab(self)
+    # building scanned variables table from the self.experiment.scanned_variables array
+    scan_table(self)
     self.update_on()                
               
