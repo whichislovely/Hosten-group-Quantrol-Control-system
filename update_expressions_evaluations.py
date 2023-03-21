@@ -81,7 +81,7 @@ def do(self):
                 
         self.experiment.sequence = sorted(self.experiment.sequence, key = lambda edge: edge.value)
         for row in range(len(self.experiment.sequence)):
-            key = "id" + str(self.experiment.sequence[row].id)
+            key = self.experiment.sequence[row].id
             if self.experiment.variables[key].value != self.experiment.sequence[row].value:
                 something_changed = True
                 self.experiment.variables[key].value = self.experiment.sequence[row].value

@@ -29,9 +29,10 @@ def sequence_tab_build(self):
     self.sequence_table.setGeometry(QRect(0, 30, width_of_table, 1070))                                                #size of the table
     sequence_num_columns = 5
     self.sequence_table.setColumnCount(sequence_num_columns)
+    self.sequence_table.setRowCount(1)
     self.sequence_table.setHorizontalHeaderLabels(["#", "Name","ID", "Time expression","Time (ms)"])
     self.sequence_table.verticalHeader().setVisible(False)
-    self.sequence_table.horizontalHeader().setFixedHeight(50)
+    self.sequence_table.horizontalHeader().setFixedHeight(60)
     self.sequence_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.sequence_table.setFont(QFont('Arial', 12))
     self.sequence_table.setColumnWidth(0,103)
@@ -41,11 +42,16 @@ def sequence_tab_build(self):
     self.sequence_table.setColumnWidth(4,200)
     self.sequence_table.itemChanged.connect(self.sequence_table_changed)
     delegate = ReadOnlyDelegate(self)
+    self.sequence_table.setItemDelegateForRow(0,delegate)
     self.sequence_table.setItemDelegateForColumn(0,delegate)
     self.sequence_table.setItemDelegateForColumn(2,delegate)
     self.sequence_table.setItemDelegateForColumn(4,delegate)
-    #self.sequence_table.setItemDelegateForRow(0,delegate)
-
+    #Setting the default values 
+    self.sequence_table.setItem(0, 0, QTableWidgetItem("0"))
+    self.sequence_table.setItem(0, 1, QTableWidgetItem(self.experiment.sequence[0].name))
+    self.sequence_table.setItem(0, 2, QTableWidgetItem(self.experiment.sequence[0].id))
+    self.sequence_table.setItem(0, 3, QTableWidgetItem(self.experiment.sequence[0].expression))
+    self.sequence_table.setItem(0, 4, QTableWidgetItem(str(self.experiment.sequence[0].value)))
     #button to save current sequence
     self.save_sequence_button = QPushButton(self.sequence_tab_widget)
     self.save_sequence_button.setFont(QFont('Arial', 14))
@@ -169,6 +175,8 @@ def sequence_tab_build(self):
 
 # DIGITAL TAB
 def digital_tab_build(self):
+    self.digital_tab_num_cols = 16 + 4    
+    self.digital_and_analog_table_column_width = 130
     #DIGITAL TAB WIDGET
     self.digital_tab_widget = QWidget()
     digital_lable = QLabel(self.digital_tab_widget)
@@ -179,10 +187,11 @@ def digital_tab_build(self):
     #DIGITAL TAB LAYOUT
     self.digital_table = QTableWidget(self.digital_tab_widget)
     self.digital_table.setGeometry(QRect(0, 30, 1905, 1070))  
-    self.digital_table.setColumnCount(self.digital_tab_num_cols) 
+    self.digital_table.setColumnCount(self.digital_tab_num_cols)
+    self.digital_table.setRowCount(1) 
     self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
     self.digital_table.verticalHeader().setVisible(False)
-    self.digital_table.horizontalHeader().setFixedHeight(50)
+    self.digital_table.horizontalHeader().setFixedHeight(60)
     self.digital_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.digital_table.setFont(QFont('Arial', 16))
     self.digital_table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -197,16 +206,29 @@ def digital_tab_build(self):
         exec("self.digital_table.setItemDelegateForColumn(%d,delegate)" %_)
     #self.digital_table.setItemDelegateForRow(0, delegate)
     for i in range(4, self.digital_tab_num_cols):
-        exec("self.digital_table.setColumnWidth(%d,%d)" % (i, self.table_column_width))
+        exec("self.digital_table.setColumnWidth(%d,%d)" % (i, self.digital_and_analog_table_column_width))
+    #Filling the DIGITAL table
+    for index, channel in enumerate(self.experiment.sequence[0].digital):
+        col = index + 4
+        self.digital_table.setItem(0, col, QTableWidgetItem(channel.expression))
+        if channel.value == 1:
+            self.digital_table.item(0, col).setBackground(self.green)
+        else:
+            self.digital_table.item(0, col).setBackground(self.red)
+    #Binding functions
     self.digital_table.itemChanged.connect(self.digital_table_changed)
     self.digital_table.horizontalHeader().sectionClicked.connect(self.digital_table_header_clicked)
+
+
+
     #Dummy table that will display edge number, name and time and will be fixed
     self.digital_dummy = QTableWidget(self.digital_tab_widget)
     self.digital_dummy.setGeometry(QRect(0.5, 30, 327, 1053))
     self.digital_dummy.setColumnCount(3)
+    self.digital_dummy.setRowCount(1)
     self.digital_dummy.setHorizontalHeaderLabels(self.experiment.title_digital_tab[0:3])
     self.digital_dummy.verticalHeader().setVisible(False)
-    self.digital_dummy.horizontalHeader().setFixedHeight(50)
+    self.digital_dummy.horizontalHeader().setFixedHeight(60)
     self.digital_dummy.horizontalHeader().setFont(QFont('Arial', 12))
     self.digital_dummy.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
     self.digital_dummy.setFont(QFont('Arial', 12))
@@ -214,6 +236,10 @@ def digital_tab_build(self):
     self.digital_dummy.setColumnWidth(1,180)
     self.digital_dummy.setColumnWidth(2,100)
     self.digital_dummy.setFrameStyle(QFrame.NoFrame)
+    #Setting the left part of the DIGITAL table (edge number, name, time)
+    self.digital_dummy.setItem(0, 0, QTableWidgetItem("0"))
+    self.digital_dummy.setItem(0, 1, QTableWidgetItem(self.experiment.sequence[0].name))
+    self.digital_dummy.setItem(0, 2, QTableWidgetItem(str(self.experiment.sequence[0].value)))
     delegate = ReadOnlyDelegate(self)
     for _ in range(3):
         exec("self.digital_dummy.setItemDelegateForColumn(%d,delegate)" %_)
@@ -223,7 +249,10 @@ def digital_tab_build(self):
 
 #ANALOG TAB
 def analog_tab_build(self):
+    self.analog_tab_num_cols = 32 + 4    
+    #ANALOG TAB WIDGET
     self.analog_tab_widget = QWidget()
+    #ANALOG LABLE
     analog_lable = QLabel(self.analog_tab_widget)
     analog_lable.setText("Analog channels")
     analog_lable.setFont(QFont('Arial', 14))
@@ -234,9 +263,10 @@ def analog_tab_build(self):
     self.analog_table = QTableWidget(self.analog_tab_widget)
     self.analog_table.setGeometry(QRect(0, 30, 1905, 1070))  
     self.analog_table.setColumnCount(self.analog_tab_num_cols) 
+    self.analog_table.setRowCount(1)
     self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
     self.analog_table.verticalHeader().setVisible(False)
-    self.analog_table.horizontalHeader().setFixedHeight(50)
+    self.analog_table.horizontalHeader().setFixedHeight(60)
     self.analog_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.analog_table.setFont(QFont('Arial', 16))
     self.analog_table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -251,7 +281,18 @@ def analog_tab_build(self):
         exec("self.analog_table.setItemDelegateForColumn(%d,delegate)" %_)
     #self.analog_table.setItemDelegateForRow(0,delegate)
     for i in range(4, self.analog_tab_num_cols):
-        exec("self.analog_table.setColumnWidth(%d,%d)" % (i,self.table_column_width))
+        exec("self.analog_table.setColumnWidth(%d,%d)" % (i,self.digital_and_analog_table_column_width))
+    #Filling the default values
+    for index, channel in enumerate(self.experiment.sequence[0].analog):
+        # plus 3 is because first 3 columns are used by number, name and time of edge
+        col = index + 4
+        self.analog_table.setItem(0, col, QTableWidgetItem(channel.expression))
+        self.analog_table.item(0, col).setToolTip(str(channel.value))
+        if channel.value == 1:
+            self.analog_table.item(0, col).setBackground(self.green)
+        else:
+            self.analog_table.item(0, col).setBackground(self.red)
+    
     self.analog_table.itemChanged.connect(self.analog_table_changed)
     self.analog_table.horizontalHeader().sectionClicked.connect(self.analog_table_header_clicked)
 
@@ -259,9 +300,10 @@ def analog_tab_build(self):
     self.analog_dummy = QTableWidget(self.analog_tab_widget)
     self.analog_dummy.setGeometry(QRect(0.5,30, 327,1053))
     self.analog_dummy.setColumnCount(3)
+    self.analog_dummy.setRowCount(1)
     self.analog_dummy.setHorizontalHeaderLabels(self.experiment.title_analog_tab[0:3])
     self.analog_dummy.verticalHeader().setVisible(False)
-    self.analog_dummy.horizontalHeader().setFixedHeight(50)
+    self.analog_dummy.horizontalHeader().setFixedHeight(60)
     self.analog_dummy.horizontalHeader().setFont(QFont('Arial', 12))
     self.analog_dummy.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
     self.analog_dummy.setFont(QFont('Arial', 12))
@@ -269,6 +311,11 @@ def analog_tab_build(self):
     self.analog_dummy.setColumnWidth(1,180)
     self.analog_dummy.setColumnWidth(2,100)
     self.analog_dummy.setFrameStyle(QFrame.NoFrame)
+    #Setting the left part of the analog table
+    self.analog_dummy.setItem(0, 0, QTableWidgetItem("0"))
+    self.analog_dummy.setItem(0, 1, QTableWidgetItem(self.experiment.sequence[0].name))
+    self.analog_dummy.setItem(0, 2, QTableWidgetItem(str(self.experiment.sequence[0].value)))    
+
     delegate = ReadOnlyDelegate(self)
     for _ in range(3):
         exec("self.analog_dummy.setItemDelegateForColumn(%d,delegate)" %_)
@@ -277,8 +324,9 @@ def analog_tab_build(self):
     self.analog_dummy.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
 def dds_tab_build(self):
+    self.dds_tab_num_cols = 6*12 + 3
+    #DDS TABLE WIDGET
     self.dds_tab_widget = QWidget()
-
     #DDS LABLE
     dds_lable = QLabel(self.dds_tab_widget)
     dds_lable.setText("Dds channels")
@@ -293,7 +341,7 @@ def dds_tab_build(self):
     self.dds_table.horizontalHeader().setMinimumHeight(50)
     self.dds_table.verticalHeader().setVisible(False)
     self.dds_table.horizontalHeader().setVisible(False)
-    self.dds_table.setRowCount(5) # 5 is an arbitrary number we just need to have rows in order to span them
+    self.dds_table.setRowCount(3) # 5 is an arbitrary number we just need to have rows in order to span them
     self.dds_table.horizontalHeader().setMinimumSectionSize(0)
     self.dds_table.setFont(QFont('Arial', 12))
     self.dds_table.setFrameStyle(QFrame.NoFrame)
@@ -315,6 +363,14 @@ def dds_tab_build(self):
     for i in range(3):
         self.dds_table.setSpan(0, i, 2, 1)
         self.dds_table.setItemDelegateForColumn(i,delegate)
+    #Filling the default values of DDS table
+    for index, channel in enumerate(self.experiment.sequence[0].dds):
+        #plus 4 is because first 4 columns are used by number, name, time and separator(dark grey line)
+        col = 4 + index * 6  
+        for setting in range(5):
+            exec("self.dds_table.setItem(2, col + setting, QTableWidgetItem(str(channel.%s.expression)))" %self.setting_dict[setting])
+            exec("self.dds_table.item(2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
+            self.dds_table.item(2, col + setting).setBackground(self.green)
 
 
     self.dds_table.itemChanged.connect(self.dds_table_changed)
@@ -323,10 +379,10 @@ def dds_tab_build(self):
     self.dds_dummy = QTableWidget(self.dds_tab_widget)
     self.dds_dummy.setGeometry(QRect(0.5,30,335,1053))
     self.dds_dummy.setColumnCount(4)
+    self.dds_dummy.setRowCount(3)
     self.dds_dummy.horizontalHeader().setMinimumHeight(50)
     self.dds_dummy.verticalHeader().setVisible(False)
     self.dds_dummy.horizontalHeader().setVisible(False)
-    self.dds_dummy.setRowCount(5) # 5 is an arbitrary number we just need to have rows in order to span them
     self.dds_dummy.horizontalHeader().setMinimumSectionSize(0)
     self.dds_dummy.horizontalHeader().setFont(QFont('Arial', 12))
     self.dds_dummy.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -341,6 +397,11 @@ def dds_tab_build(self):
     for i in range(3):
         self.dds_dummy.setSpan(0, i, 2, 1)
         self.dds_dummy.setItemDelegateForColumn(i,delegate)
+    #Filling the left part of the DDS table
+    self.dds_dummy.setItem(2, 0, QTableWidgetItem("0"))
+    self.dds_dummy.setItem(2, 1, QTableWidgetItem(self.experiment.sequence[0].name))
+    self.dds_dummy.setItem(2, 2, QTableWidgetItem(str(self.experiment.sequence[0].value)))
+
 
     #Dummy horizontal header (TOP SIDE OF THE TABLE)
     self.dds_dummy_header = QTableWidget(self.dds_tab_widget)
@@ -446,6 +507,7 @@ def dds_tab_build(self):
         scrollbar = tbl.horizontalScrollBar()
         scrollbar.valueChanged.connect(lambda idx,bar=scrollbar: move_other_scrollbars_horizontal(idx, bar))
 
+    self.making_separator()
 
 
 def variables_tab_build(self):

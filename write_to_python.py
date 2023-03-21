@@ -24,7 +24,7 @@ def create_experiment(self):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
     file.write(indentation + "self.setattr_device('zotino0')\n")
 
-    if self.experiment.do_scan:
+    if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #iterating over valid (not "None") scanned variables and creating an array to be used as a collection of names
         var_names = ""
         for_zipping = ""
@@ -58,7 +58,7 @@ def create_experiment(self):
     file.write(indentation + "self.urukul2_ch2.init()\n")
     file.write(indentation + "self.urukul2_ch3.init()\n")
 
-    if self.experiment.do_scan == True:
+    if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         # this delay needs to be optimized. It may depend on scanning parameters as well
         file.write(indentation + "delay(5*s)\n") 
         #making a scanning loop 
