@@ -66,7 +66,7 @@ class run_experiment(EnvExperiment):
         self.ttl4.off()
         self.ttl5.off()
         self.ttl6.off()
-        self.ttl7.off()
+        self.ttl7.on()
         delay(5*ms)
         self.ttl8.on()
         self.ttl9.off()

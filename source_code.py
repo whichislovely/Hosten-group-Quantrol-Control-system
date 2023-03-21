@@ -387,7 +387,7 @@ class MainWindow(QMainWindow):
 
     def run_experiment_button_clicked(self):
         self.count_scanned_variables()
-        #update_expressions.do(self)
+
         try:
             write_to_python.create_experiment(self)
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Python file generated")
