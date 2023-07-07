@@ -103,6 +103,20 @@ def sequence_tab_build(self):
     self.save_sequence_as_button.setText("Save sequence as")
     self.save_sequence_as_button.clicked.connect(self.save_sequence_as_button_clicked)
 
+    #button to start continuous run
+    self.continuous_run_button = QPushButton(self.sequence_tab_widget)
+    self.continuous_run_button.setFont(QFont('Arial', 14))
+    self.continuous_run_button.setGeometry(width_of_table + 50, 450, 200, 30)
+    self.continuous_run_button.setText("Continuous run")
+    self.continuous_run_button.clicked.connect(self.continuous_run_button_clicked)
+
+    #button to stop continuous run
+    self.stop_continuous_run_button = QPushButton(self.sequence_tab_widget)
+    self.stop_continuous_run_button.setFont(QFont('Arial', 14))
+    self.stop_continuous_run_button.setGeometry(width_of_table + 50, 500, 200, 30)
+    self.stop_continuous_run_button.setText("Stop continuous run")
+    self.stop_continuous_run_button.clicked.connect(self.stop_continuous_run_button_clicked)
+
     #show logger of the program
     self.logger = QPlainTextEdit(self.sequence_tab_widget)
     self.logger.setFont(QFont("Arial", 12))

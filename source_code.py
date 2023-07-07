@@ -15,6 +15,8 @@ import update_expressions
 from datetime import datetime
 from copy import deepcopy
 import update
+import time
+import threading
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -434,6 +436,26 @@ class MainWindow(QMainWindow):
                 self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Saving attempt was not successful")
         else:
             self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "No file name was given. Saving unsuccessful")
+
+    def some_test_function(self):
+        for i in range(3):
+            time.sleep(5)
+            print("Am I on the way")
+        
+
+    def continuous_run_button_clicked(self):
+        #initializes environment and runs the experiment continuously unless it is stopped
+        t = threading.Thread(name='child process', target=self.some_test_function)
+        t.start()
+
+
+        print("No it's fine")
+        pass
+
+    def stop_continuous_run_button_clicked(self):
+        #stops continuous run
+        print("Continuous run stopped")
+        pass
 
     #the button is used to clear the logger         
     def clear_logger_button_clicked(self):
@@ -905,6 +927,7 @@ class MainWindow(QMainWindow):
                 self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
         except:
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
+
 
 
 def run():
