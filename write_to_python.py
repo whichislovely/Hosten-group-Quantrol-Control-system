@@ -23,6 +23,7 @@ def create_experiment(self):
     for _ in range(16):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
     file.write(indentation + "self.setattr_device('zotino0')\n")
+    file.write(indentation + "self.setattr_device('scheduler')\n")
 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #iterating over valid (not "None") scanned variables and creating an array to be used as a collection of names
@@ -57,6 +58,12 @@ def create_experiment(self):
     file.write(indentation + "self.urukul2_ch1.init()\n")
     file.write(indentation + "self.urukul2_ch2.init()\n")
     file.write(indentation + "self.urukul2_ch3.init()\n")
+    file.write(indentation + "while True:\n")
+    indentation += "    "
+    file.write(indentation + "if self.scheduler.check_pause():\n")
+    file.write(indentation + "    break\n")
+    file.write(indentation + "else:\n")
+    indentation += "    "
 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         # this delay needs to be optimized. It may depend on scanning parameters as well
@@ -71,6 +78,7 @@ def create_experiment(self):
 
  
     self.delta_t = 0
+    file.write(indentation + "delay(10*ms)\n")
 
     #flag_init is used to indicate that there is no need for a delay calculation for the first row
     flag_init = 0
@@ -121,6 +129,8 @@ def create_experiment(self):
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
                 else:
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
+        
+        file.write(indentation + "self.core.wait_until_mu(now_mu())\n")
                 
     file.close()
 
