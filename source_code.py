@@ -1,8 +1,6 @@
-from collections.abc import Callable, Iterable, Mapping
 from os import error
 import os
 import sys
-from typing import Any
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -135,7 +133,7 @@ class MainWindow(QMainWindow):
         
         
         #ADDING TABS TO MAIN WINDOW
-        self.main_window.addTab(self.sequence_tab_widget, "Main")
+        self.main_window.addTab(self.sequence_tab_widget, "Sequence")
         self.main_window.addTab(self.digital_tab_widget, "Digital")
         self.main_window.addTab(self.analog_tab_widget, "Analog")
         self.main_window.addTab(self.dds_tab_widget, "DDS")
@@ -144,7 +142,7 @@ class MainWindow(QMainWindow):
         
         #starting artiq server (artiq_master)
 
-        self.server_thread = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artiq_master > output.txt"])
+        self.server_thread = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artiq_master"])
         self.server_thread.start()  
         # server_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_master"])
         # server_thread.start()  
