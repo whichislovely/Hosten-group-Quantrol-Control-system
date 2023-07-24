@@ -1,6 +1,6 @@
 import os
    
-def create_experiment(self):
+def create_experiment(self, run_continuous = False):
     #CREATING A FILE
     file_name = "run_experiment.py"
     if not os.path.exists(file_name):
@@ -23,7 +23,9 @@ def create_experiment(self):
     for _ in range(16):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
     file.write(indentation + "self.setattr_device('zotino0')\n")
-    file.write(indentation + "self.setattr_device('scheduler')\n")
+    
+    if run_continuous:
+        file.write(indentation + "self.setattr_device('scheduler')\n")
 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #iterating over valid (not "None") scanned variables and creating an array to be used as a collection of names
@@ -42,6 +44,12 @@ def create_experiment(self):
     indentation += "    "
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
+    if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
+        # this delay needs to be optimized. It may depend on scanning parameters as well
+        file.write(indentation + "delay(5*s)\n") 
+    else:
+        file.write(indentation + "delay(10*ms)\n") # this delay is added since our reference clock is 1GHz and self.core.break_realtime moves it forward by 15000 clock cycles
+    
     file.write(indentation + "self.zotino0.init()\n")
     file.write(indentation + "self.urukul0_cpld.init()\n")
     file.write(indentation + "self.urukul0_ch0.init()\n")
@@ -58,16 +66,16 @@ def create_experiment(self):
     file.write(indentation + "self.urukul2_ch1.init()\n")
     file.write(indentation + "self.urukul2_ch2.init()\n")
     file.write(indentation + "self.urukul2_ch3.init()\n")
-    file.write(indentation + "while True:\n")
-    indentation += "    "
-    file.write(indentation + "if self.scheduler.check_pause():\n")
-    file.write(indentation + "    break\n")
-    file.write(indentation + "else:\n")
-    indentation += "    "
+    
+    if run_continuous:
+        file.write(indentation + "while True:\n")
+        indentation += "    "
+        file.write(indentation + "if self.scheduler.check_pause():\n")
+        file.write(indentation + "    break\n")
+        file.write(indentation + "else:\n")
+        indentation += "    "
 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
-        # this delay needs to be optimized. It may depend on scanning parameters as well
-        file.write(indentation + "delay(5*s)\n") 
         #making a scanning loop 
         #introduce a flag for multi and single variable scan
         if self.experiment.scanned_variables_count > 1:
@@ -78,7 +86,6 @@ def create_experiment(self):
 
  
     self.delta_t = 0
-    file.write(indentation + "delay(10*ms)\n")
 
     #flag_init is used to indicate that there is no need for a delay calculation for the first row
     flag_init = 0
@@ -130,6 +137,7 @@ def create_experiment(self):
                 else:
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
         
+    if run_continuous:
         file.write(indentation + "self.core.wait_until_mu(now_mu())\n")
                 
     file.close()

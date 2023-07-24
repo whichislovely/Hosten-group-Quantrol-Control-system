@@ -1,6 +1,8 @@
+from collections.abc import Callable, Iterable, Mapping
 from os import error
 import os
 import sys
+from typing import Any
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -9,8 +11,6 @@ import write_to_python
 import declare_global_var  
 import tabs
 import pickle
-import update_expressions_evaluations as update_evaluations
-import update_expressions
 from datetime import datetime
 from copy import deepcopy
 import update
@@ -100,6 +100,23 @@ class MainWindow(QMainWindow):
             self.value = value
             self.is_scanned = is_scanned
             self.for_python = for_python
+            
+    class CustomThread(threading.Thread):
+        def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, *, daemon=None):
+            super().__init__(group, target, name, args, kwargs, daemon=daemon)        
+            self._return = None
+
+            
+        def run(self):
+            try:
+                if self._target:
+                    self._return = self._target(*self._args, **self._kwargs)
+            finally:
+                # Avoid a refcycle if the thread is running a function with
+                # an argument that has a member that points to the thread.
+                del self._target, self._args, self._kwargs                
+            
+        
 
     def __init__(self):
         super().__init__()
@@ -127,15 +144,21 @@ class MainWindow(QMainWindow):
         
         #starting artiq server (artiq_master)
 
-        server_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_master"])
-        server_thread.start()  
+        self.server_thread = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artiq_master > output.txt"])
+        self.server_thread.start()  
+        # server_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_master"])
+        # server_thread.start()  
 
         
 
 
     #FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS
     #GENERAL FUNCTIONS
-
+    
+    def message_to_logger(self, message):
+        #this function receives a message and then displays it with date and time 
+        self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + message)
+        
     def making_separator(self):
         #Spanning the cells to avoid colouring each cell separately
         if self.sequence_num_rows > 1: # to avoid having a warning that single cell span won't be added
@@ -241,13 +264,13 @@ class MainWindow(QMainWindow):
                     with open(self.experiment.file_name, 'wb') as file:
                         pickle.dump(self.experiment, file)
                     self.create_file_name_label()
-                    self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence saved at %s" %self.experiment.file_name)
+                    self.message_to_logger("Sequence saved at %s" %self.experiment.file_name)
                 except:
-                    self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Saving attempt was not successful")                
+                    self.message_to_logger("Saving attempt was not successful")                
         else:
             with open(self.experiment.file_name, 'wb') as file:
                 pickle.dump(self.experiment, file)
-            self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence saved at %s" %self.experiment.file_name)
+            self.message_to_logger("Sequence saved at %s" %self.experiment.file_name)
 
     def load_sequence_button_clicked(self):
         temp_file_name = QFileDialog.getOpenFileName(self, "Open File")[0]
@@ -262,7 +285,7 @@ class MainWindow(QMainWindow):
                 self.experiment.file_name = temp_file_name
                 self.create_file_name_label()
                 update.from_object(self)
-                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence loaded from %s" %self.experiment.file_name)
+                self.message_to_logger("Sequence loaded from %s" %self.experiment.file_name)
             except:
                 self.error_message('Could not load the file.', 'Error')
             self.update_on()
@@ -392,25 +415,21 @@ class MainWindow(QMainWindow):
         # all channels parameters are being set (DDS, ANALOG, DIGITAL).
         try:                
             write_to_python.create_go_to_edge(self)
-            self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Go to edge file generated")
+            self.message_to_logger("Go to edge file generated")
             try:
                 if os.system("conda activate artiq_5 && artiq_client submit go_to_edge.py") == 0:
-                    self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Went to edge")
+                    self.message_to_logger("Went to edge")
                     edge_num = self.sequence_table.selectedIndexes()[0].row()
-                    if self.experiment.go_to_edge_num == -1: # this means that it is the first time we are highlighting the edge and there is no need to unhighlight anything
-                        pass
-                    else:
-                        #unhighlighting the previously highlighted edge
+                    #unhighlighting the previously highlighted edge if it was previously highlighted
+                    if self.experiment.go_to_edge_num != -1:
                         self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
                     #highlighting newly selected edge to go
                     self.set_color_of_the_edge(self.green, edge_num)
                     self.experiment.go_to_edge_num = edge_num
-                    
                 else:
-                    self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Couldn't go to edge")        
+                    self.message_to_logger("Couldn't go to edge")        
             except:
-                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Couldn't go to edge")    
-
+                self.message_to_logger("Couldn't go to edge")    
         except:
             self.error_message("Chose the edge you want the system to go","No edge selected")
 
@@ -428,29 +447,27 @@ class MainWindow(QMainWindow):
 
         try:
             write_to_python.create_experiment(self)
-            self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Python file generated")
+            self.message_to_logger("Python file generated")
             try:
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit run_experiment.py >output.txt"])
+                #initialize environment and submit the experiment to the scheduler
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit run_experiment.py"])
                 submit_experiment_thread.start()
-                #needs to be done ---> logging the start of the experiment only if it was started without errors. Checking experiment stages
                 #unhighlighting the previously highlighted edge
-                self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
-                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Experiment started")
+                if self.experiment.go_to_edge_num != -1:
+                    self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                    self.experiment.go_to_edge_num = -1
+
+                #needs to be done ---> logging the start of the experiment only if it was started without errors. Checking experiment stages
+                self.message_to_logger("Experiment started")
             except:
-                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to start experiment")
+                self.message_to_logger("Was not able to start experiment")
         except:
-            self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Was not able to generate python file")
+            self.message_to_logger("Was not able to generate python file")
 
 
     def dummy_button_clicked(self):
-
-        server_thread = threading.Thread(name='starting server', target=self.starting_artiq_server)
-        server_thread.start()    
-
-
-
-
-
+        print(self.server_thread.is_alive())
+        print(self.server_thread._return)
     #    print("analog channel values")
     #    for edge in self.experiment.sequence:
     #        for ind, channel in enumerate(edge.analog):
@@ -475,26 +492,49 @@ class MainWindow(QMainWindow):
                 with open(self.experiment.file_name, 'wb') as file:
                     pickle.dump(self.experiment, file)
                 self.create_file_name_label()
-                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Sequence saved at %s" %self.experiment.file_name)
+                self.message_to_logger("Sequence saved at %s" %self.experiment.file_name)
             except:
-                self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Saving attempt was not successful")
+                self.message_to_logger("Saving attempt was not successful")
         else:
-            self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "No file name was given. Saving unsuccessful")
+            self.message_to_logger("No file name was given. Saving unsuccessful")
 
 
     def continuous_run_button_clicked(self):
-        #initializes environment and runs the experiment continuously unless it is stopped
-        t = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit run_experiment.py"])
-        t.start()
-
+        self.count_scanned_variables()
+        
+        try:
+            write_to_python.create_experiment(self, run_continuous=True)
+            self.message_to_logger("Python file generated")
+            try:
+                #initialize environment and submit the experiment to run continuously unless it is stopped
+                submit_run_continuously_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit run_experiment.py"])
+                submit_run_continuously_thread.start()
+                #unhighlighting the previously highlighted edge
+                if self.experiment.go_to_edge_num != -1:
+                    self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                    self.experiment.go_to_egde_num = -1
+                
+                #needs to be done ---> logging the start of the experiment only if it was started without errors. Checking experiment stages
+                self.message_to_logger("Experiment started")
+            except:
+                self.message_to_logger("Was not able to start experiment")
+        except:
+            self.message_to_logger("Was not able to generate python file")
+        
+        
         
     def stop_continuous_run_button_clicked(self):
         #stops continuous run
-        with open('last_rid.pyon', 'r') as file:
-            rid_of_the_last_scheduled_experiment = file.read()
-       
-        thread_stop_continuous_run = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client delete %s -g" %rid_of_the_last_scheduled_experiment])
-        thread_stop_continuous_run.start()
+        #maybe try to find out the current experiment rid instead of using the last one? scheduler.rid might do the job
+        try:
+            with open('last_rid.pyon', 'r') as file:
+                rid_of_the_last_scheduled_experiment = file.read()
+        
+            thread_stop_continuous_run = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client delete %s -g" %rid_of_the_last_scheduled_experiment])
+            thread_stop_continuous_run.start()
+            self.message_to_logger("Continuous run stopped")
+        except:
+            self.message_to_logger("Could not stop the continuous run")
 
     #the button is used to clear the logger         
     def clear_logger_button_clicked(self):
