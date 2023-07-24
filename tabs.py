@@ -103,6 +103,20 @@ def sequence_tab_build(self):
     self.save_sequence_as_button.setText("Save sequence as")
     self.save_sequence_as_button.clicked.connect(self.save_sequence_as_button_clicked)
 
+    #button to start continuous run
+    self.continuous_run_button = QPushButton(self.sequence_tab_widget)
+    self.continuous_run_button.setFont(QFont('Arial', 14))
+    self.continuous_run_button.setGeometry(width_of_table + 50, 450, 200, 30)
+    self.continuous_run_button.setText("Continuous run")
+    self.continuous_run_button.clicked.connect(self.continuous_run_button_clicked)
+
+    #button to stop continuous run
+    self.stop_continuous_run_button = QPushButton(self.sequence_tab_widget)
+    self.stop_continuous_run_button.setFont(QFont('Arial', 14))
+    self.stop_continuous_run_button.setGeometry(width_of_table + 50, 500, 200, 30)
+    self.stop_continuous_run_button.setText("Stop continuous run")
+    self.stop_continuous_run_button.clicked.connect(self.stop_continuous_run_button_clicked)
+
     #show logger of the program
     self.logger = QPlainTextEdit(self.sequence_tab_widget)
     self.logger.setFont(QFont("Arial", 12))
@@ -198,7 +212,7 @@ def digital_tab_build(self):
     self.digital_table.horizontalHeader().setMinimumSectionSize(0)
     self.digital_table.setColumnWidth(0,50)
     self.digital_table.setColumnWidth(1,180)
-    self.digital_table.setColumnWidth(2,105)
+    self.digital_table.setColumnWidth(2,100)
     self.digital_table.setColumnWidth(3,5)
     self.digital_table.setFrameStyle(QFrame.NoFrame)
     delegate = ReadOnlyDelegate(self)
@@ -223,7 +237,7 @@ def digital_tab_build(self):
 
     #Dummy table that will display edge number, name and time and will be fixed
     self.digital_dummy = QTableWidget(self.digital_tab_widget)
-    self.digital_dummy.setGeometry(QRect(0.5, 30, 327, 1053))
+    self.digital_dummy.setGeometry(QRect(0, 30, 330, 1070))
     self.digital_dummy.setColumnCount(3)
     self.digital_dummy.setRowCount(1)
     self.digital_dummy.setHorizontalHeaderLabels(self.experiment.title_digital_tab[0:3])
@@ -273,7 +287,7 @@ def analog_tab_build(self):
     self.analog_table.horizontalHeader().setMinimumSectionSize(0)
     self.analog_table.setColumnWidth(0,50)
     self.analog_table.setColumnWidth(1,180)
-    self.analog_table.setColumnWidth(2,105)
+    self.analog_table.setColumnWidth(2,100)
     self.analog_table.setColumnWidth(3,5)
     self.analog_table.setFrameStyle(QFrame.NoFrame)
     delegate = ReadOnlyDelegate(self)
@@ -298,7 +312,7 @@ def analog_tab_build(self):
 
     #Dummy table that will display edge number, name and time and will be fixed
     self.analog_dummy = QTableWidget(self.analog_tab_widget)
-    self.analog_dummy.setGeometry(QRect(0.5,30, 327,1053))
+    self.analog_dummy.setGeometry(QRect(0, 30, 330, 1070))
     self.analog_dummy.setColumnCount(3)
     self.analog_dummy.setRowCount(1)
     self.analog_dummy.setHorizontalHeaderLabels(self.experiment.title_analog_tab[0:3])
