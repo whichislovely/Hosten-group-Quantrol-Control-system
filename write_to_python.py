@@ -74,6 +74,7 @@ def create_experiment(self, run_continuous = False):
         file.write(indentation + "    break\n")
         file.write(indentation + "else:\n")
         indentation += "    "
+        file.write(indentation + "delay(10*ms)\n")
 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #making a scanning loop 
