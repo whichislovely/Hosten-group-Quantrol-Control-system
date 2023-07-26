@@ -1,5 +1,4 @@
 __pycache__/
-results/*
 go_to_edge.py
 run_experiment.py
 last_rid.pyon
