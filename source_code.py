@@ -464,8 +464,11 @@ class MainWindow(QMainWindow):
 
 
     def dummy_button_clicked(self):
-        print(self.server_thread.is_alive())
-        print(self.server_thread._return)
+        # print(self.server_thread.is_alive())
+        # print(self.server_thread._return)
+        current_experiment = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artic_client scheduler.rid"])
+
+
     #    print("analog channel values")
     #    for edge in self.experiment.sequence:
     #        for ind, channel in enumerate(edge.analog):

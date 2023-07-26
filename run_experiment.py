@@ -64,6 +64,7 @@ class run_experiment(EnvExperiment):
             if self.scheduler.check_pause():
                 break
             else:
+                delay(10*ms)
                 #Edge number 0 name of edge: Default
                 self.ttl0.off()
                 self.ttl1.off()
@@ -153,7 +154,7 @@ class run_experiment(EnvExperiment):
                 self.urukul2_ch3.sw.off() 
                 #Edge number 1 name of edge: 
                 delay((100)*ms)
-                self.zotino0.write_dac(0, 0.0)
+                self.zotino0.write_dac(0, 0)
                 self.zotino0.write_dac(15, 1)
                 self.zotino0.load()
                 #Edge number 2 name of edge: 
