@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import numpy as np
 import write_to_python
-import declare_global_var  
 import tabs
 import pickle
 from datetime import datetime
@@ -75,7 +74,7 @@ class MainWindow(QMainWindow):
             self.title_digital_tab = []
             self.title_analog_tab = []
             self.title_dds_tab = []
-            self.sequence = None #list of edges
+            self.sequence = [] #list of edges
             self.go_to_edge_num = -1
             self.new_variables = [] #this was decided to be a list in order to display the human defined variables
             self.variables = {}
@@ -124,7 +123,22 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_window)
         self.setGeometry(0,30,1920,1200)
         
-        declare_global_var.build(self)
+        #declaring global variables
+        self.experiment = self.Experiment()
+        self.sequence_num_rows = 1
+        self.setting_dict = {0:"frequency", 1:"amplitude", 2:"attenuation", 3:"phase", 4:"state"}
+        self.max_dict = {0: 800, 1: 1, 2: 32, 3: 360, 4: 1} #max and min needs to be checked 
+        self.min_dict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}  #max and min needs to be checked 
+        self.to_update = False
+        self.green = QColor(37,211,102)
+        self.red = QColor(247,120,120)
+        self.gray = QColor(100,100,100)
+        self.white = QColor(255,255,255)
+        self.experiment.variables['id0'] = self.Variable(name = "id0", value = 0.0, for_python = 0.0)
+        self.experiment.variables[''] = self.Variable(name = '', value = 0.0, for_python = 0.0)   #in order to be able to process expressions like -5 we need to have it as first item in decode will be "" that should be 0    
+        self.experiment.sequence = [self.Edge("Default")]
+        
+        self.init_default_values()
         tabs.sequence_tab_build(self)
         tabs.digital_tab_build(self)
         tabs.analog_tab_build(self)
@@ -152,6 +166,18 @@ class MainWindow(QMainWindow):
 
     #FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS
     #GENERAL FUNCTIONS
+    
+    def init_default_values(self):
+        try:
+            with open("./default/default", 'rb') as file:
+                default_experiment = pickle.load(file)
+            #reassign the default values to the current self.experiment object
+            self.experiment.sequence[0] = deepcopy(default_experiment.sequence[0])
+            self.experiment.title_digital_tab = deepcopy(default_experiment.title_digital_tab)
+            self.experiment.title_analog_tab = deepcopy(default_experiment.title_analog_tab)
+            self.experiment.title_dds_tab = deepcopy(default_experiment.title_dds_tab)
+        except:
+            self.error_message('No default file was found.', 'Error')
     
     def message_to_logger(self, message):
         #this function receives a message and then displays it with date and time 
@@ -537,6 +563,50 @@ class MainWindow(QMainWindow):
         except:
             self.message_to_logger("Could not stop the continuous run")
 
+
+    def save_default_button_clicked(self):
+        self.dialog = QDialog()
+        self.dialog.setGeometry(710, 435, 400, 120)
+        self.dialog.setFont(QFont('Arial', 14))
+        value_input = QLabel("Are you sure that you want to overwrite the default settings?")
+        dialog_layout = QVBoxLayout()
+        button_update = QPushButton("Yes")
+        button_cancel = QPushButton("No")
+        dialog_layout.addWidget(value_input)
+        dialog_buttons_layout = QHBoxLayout()
+        dialog_buttons_layout.addWidget(button_update)
+        dialog_buttons_layout.addWidget(button_cancel)
+        dialog_layout.addLayout(dialog_buttons_layout)
+        self.dialog.setLayout(dialog_layout)
+        button_update.clicked.connect(lambda:self.dialog.accept())
+        button_cancel.clicked.connect(lambda:self.dialog.reject())
+        self.dialog.setWindowTitle("Custom name for the channel") 
+        self.dialog.exec_()
+        if self.dialog.accepted:
+            try:
+                with open("./default/default", 'wb') as file:
+                    pickle.dump(self.experiment, file)
+                self.message_to_logger("Default saved at %s" %self.experiment.file_name)
+            except:
+                self.message_to_logger("Saving attempt was not successful")
+ 
+    
+    def load_default_button_clicked(self):
+        self.update_off()
+        try:
+            with open("./default/default", 'rb') as file:
+                default_experiment = pickle.load(file)
+            #reassign the default values to the current self.experiment object
+            self.experiment.sequence[0] = deepcopy(default_experiment.sequence[0])
+            self.experiment.title_digital_tab = deepcopy(default_experiment.title_digital_tab)
+            self.experiment.title_analog_tab = deepcopy(default_experiment.title_analog_tab)
+            self.experiment.title_dds_tab = deepcopy(default_experiment.title_dds_tab)
+            update.from_object(self)
+            self.message_to_logger("Default values loaded from %s" %self.experiment.file_name)
+        except:
+            self.error_message('Could not load the file.', 'Error')
+        self.update_on()
+
     #the button is used to clear the logger         
     def clear_logger_button_clicked(self):
         self.logger.clear()
@@ -694,7 +764,7 @@ class MainWindow(QMainWindow):
             dialog_layout.addLayout(dialog_buttons_layout)
             self.dialog.setLayout(dialog_layout)
             button_update.clicked.connect(lambda:self.update_digital_table_header(index, value_input.text()))
-            button_cancel.clicked.connect(lambda: self.dialog.reject())
+            button_cancel.clicked.connect(lambda:self.dialog.reject())
             self.dialog.setWindowTitle("Custom name for the channel") 
             self.dialog.exec_()
         else:
