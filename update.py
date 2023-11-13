@@ -5,14 +5,24 @@ from PyQt5.QtGui import *
 def sequence_tab(self):
     self.update_off()
     #Update expressions and evaluations
-    for row, edge in enumerate(self.experiment.sequence):
-        expression = self.sequence_table.item(row,3).text()
-        try:
-            (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(expression)
-            if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
-                self.experiment.variables[edge.id].is_scanned = edge.is_scanned
-        except:
-            return "sequence table col 3, edge %d" %row
+    something_changed = True
+    iterations = 0 
+    iterations_limit = 100 #after the maximum number of iterations it will throw a warning message
+    while something_changed and iterations < iterations_limit:
+        iterations += 1
+        something_changed = False    
+
+        for row, edge in enumerate(self.experiment.sequence):
+            expression = self.sequence_table.item(row,3).text()
+            try:
+                (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(expression)
+                if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
+                    if self.experiment.variables[edge.id].is_scanned != edge.is_scanned:
+                        something_changed = True
+                        self.experiment.variables[edge.id].is_scanned = edge.is_scanned
+                        self.experiment.variables[edge.id].for_python = edge.for_python
+            except:
+                return "sequence table col 3, edge %d" %row
 
 
     #Update values
