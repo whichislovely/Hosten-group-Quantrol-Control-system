@@ -13,6 +13,7 @@ from copy import deepcopy
 import update
 import time
 import threading
+from sympy import simplify
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -1015,6 +1016,7 @@ class MainWindow(QMainWindow):
             output_for_python = str(self.temp)
         except:
             pass
+        # output_for_python = str(simplify(output_for_python))
         return (output_eval, output_for_python, is_scanned) 
 
     def remove_restricted_characters(self, text):
