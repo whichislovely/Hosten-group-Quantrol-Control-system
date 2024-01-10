@@ -978,7 +978,6 @@ class MainWindow(QMainWindow):
         output_for_python = ""
         current = ""
         is_scanned = False
-        print("checking input:", text)
         while index < len(text):
             if text[index] == "-" or text[index] == "+" or text[index] == "/" or text[index] == "*":
                 current.replace(" ", "")
@@ -989,7 +988,6 @@ class MainWindow(QMainWindow):
                 except:
                     output_eval += "self.experiment.variables['" + current + "'].value" + text[index]
                     variable = self.experiment.variables[current]
-                    print("current variable:", variable.name, variable.is_scanned)
                     if self.experiment.do_scan and variable.is_scanned:#if scanned assign the python form else assign the value
                         is_scanned = True
                         output_for_python += str(self.experiment.variables[current].for_python) + text[index]
@@ -1017,7 +1015,6 @@ class MainWindow(QMainWindow):
             output_for_python = str(self.temp)
         except:
             pass
-        print("is scanned:", is_scanned, "for_python:", output_for_python)
         return (output_eval, output_for_python, is_scanned) 
 
     def remove_restricted_characters(self, text):
