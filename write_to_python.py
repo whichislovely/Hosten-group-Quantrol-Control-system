@@ -1,4 +1,5 @@
 import os
+from sympy import simplify
    
 def create_experiment(self, run_continuous = False):
     #CREATING A FILE
@@ -96,7 +97,8 @@ def create_experiment(self, run_continuous = False):
             flag_init = 1
         else:
             #Brackets are needed to take into account that for_python can be a mathematical expression with signs
-            self.delta_t = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
+            self.delta_t = str(simplify("(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"))
+            # self.delta_t = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
             try: #this try is used to try evaluating the expression. It will only be able to do so in case it is scanned
                 exec("self.delta_t = " + self.delta_t)
             except:

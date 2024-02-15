@@ -13,6 +13,7 @@ from copy import deepcopy
 import update
 import time
 import threading
+from sympy import simplify
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
