@@ -121,8 +121,12 @@ def create_experiment(self, run_continuous = False):
         for index, channel in enumerate(self.experiment.sequence[edge].analog):
             if channel.changed == True:
                 flag_zotino_change_needed = True
-                file.write(indentation + "self.zotino0.write_dac(%d, " %index)
-                file.write(channel.for_python + ")\n")
+                if channel.is_scanned:
+                    file.write(indentation + "self.zotino0.write_dac(%d, channel.for_python)\n" %index)
+                else:
+                    file.write(indentation + "self.zotino0.write_dac(%d, %.4f)\n" %(index, channel.value))
+                
+                # file.write(channel.for_python + ")\n")
         if flag_zotino_change_needed:
             file.write(indentation + "self.zotino0.load()\n")
 

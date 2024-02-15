@@ -494,11 +494,11 @@ class MainWindow(QMainWindow):
         # print(self.server_thread._return)
         #current_experiment = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artic_client scheduler.rid"])
 
-
-    #    print("analog channel values")
-    #    for edge in self.experiment.sequence:
-    #        for ind, channel in enumerate(edge.analog):
-    #            print("Channel", ind, "val", channel.value, "evaluation", channel.evaluation)
+        print(self.experiment.sequence[0].dds[9].phase.for_python, self.experiment.sequence[0].dds[9].phase.value)
+        # print("analog channel values")
+        # for edge in self.experiment.sequence:
+        #     for ind, channel in enumerate(edge.analog):
+        #         print("Channel", ind, "val", channel.value, "evaluation", channel.evaluation, "for_python", channel.for_python)
     #    print("scanned_variables")
     #    for item in self.experiment.scanned_variables:
     #        print(item.name, item.min_val, item.max_val)
@@ -522,13 +522,13 @@ class MainWindow(QMainWindow):
 #        print("new variables")
 #        for item in self.experiment.new_variables:
 #            print(item.name, item.value, item.is_scanned)
-        for edge in self.experiment.sequence:
-            print("edge id:", edge.id, "val:", edge.value, "evaluation:", edge.evaluation, "for_python:", edge.for_python, "is scanned:", edge.is_scanned)
+        # for edge in self.experiment.sequence:
+        #     print("edge id:", edge.id, "val:", edge.value, "evaluation:", edge.evaluation, "for_python:", edge.for_python, "is scanned:", edge.is_scanned)
             
-        print(11111)
-        print("id1 is scanned:",self.experiment.variables["id1"].is_scanned)
-        print("id2 is scanned:",self.experiment.variables["id2"].is_scanned)
-        print("id3 is scanned:",self.experiment.variables["id3"].is_scanned)
+        # print(11111)
+        # print("id1 is scanned:",self.experiment.variables["id1"].is_scanned)
+        # print("id2 is scanned:",self.experiment.variables["id2"].is_scanned)
+        # print("id3 is scanned:",self.experiment.variables["id3"].is_scanned)
 
     def save_sequence_as_button_clicked(self):
         self.experiment.file_name = QFileDialog.getSaveFileName(self, 'Save File')[0] # always ask for filename
@@ -978,7 +978,6 @@ class MainWindow(QMainWindow):
         output_for_python = ""
         current = ""
         is_scanned = False
-        print("checking input:", text)
         while index < len(text):
             if text[index] == "-" or text[index] == "+" or text[index] == "/" or text[index] == "*":
                 current.replace(" ", "")
@@ -989,7 +988,6 @@ class MainWindow(QMainWindow):
                 except:
                     output_eval += "self.experiment.variables['" + current + "'].value" + text[index]
                     variable = self.experiment.variables[current]
-                    print("current variable:", variable.name, variable.is_scanned)
                     if self.experiment.do_scan and variable.is_scanned:#if scanned assign the python form else assign the value
                         is_scanned = True
                         output_for_python += str(self.experiment.variables[current].for_python) + text[index]
@@ -1014,10 +1012,13 @@ class MainWindow(QMainWindow):
                 output_for_python += str(variable.value)
         try:
             exec("self.temp =" + output_for_python)
-            output_for_python = str(self.temp)
+            output_for_python = str(float(self.temp))
         except:
             pass
-        print("is scanned:", is_scanned, "for_python:", output_for_python)
+        try:
+            output_eval = str(float(output_eval))
+        except:
+            pass
         return (output_eval, output_for_python, is_scanned) 
 
     def remove_restricted_characters(self, text):
