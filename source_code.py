@@ -4,16 +4,13 @@ import sys
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-import numpy as np
 import write_to_python
 import tabs
 import pickle
 from datetime import datetime
 from copy import deepcopy
 import update
-import time
 import threading
-from sympy import simplify
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
