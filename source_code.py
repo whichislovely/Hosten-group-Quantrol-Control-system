@@ -675,13 +675,10 @@ class MainWindow(QMainWindow):
                 expression = self.number_of_steps_input.text()
                 (evaluation, for_python, is_scanned) = self.decode_input(expression)
                 exec("self.value = " + str(evaluation))
-                if isinstance(self.value, int): #check whether it is an integer
-                    if self.value > 0: #check whether it is a positive integer
-                        self.experiment.number_of_steps = self.value
-                    else:
-                        self.error_message("Only positive integers larger than 0 are allowed", "Wrong entry")    
+                if self.value > 0: #check whether it is a positive integer
+                    self.experiment.number_of_steps = self.value
                 else:
-                    self.error_message("Only integer values for number of steps are allowed", "Wrong entry")
+                    self.error_message("Only positive integers larger than 0 are allowed", "Wrong entry")    
             except:
                 self.error_message("Expression can not be evaluated", "Wrong entry")
             self.update_off()
