@@ -676,7 +676,7 @@ class MainWindow(QMainWindow):
                 (evaluation, for_python, is_scanned) = self.decode_input(expression)
                 exec("self.value = " + str(evaluation))
                 if self.value > 0: #check whether it is a positive integer
-                    self.experiment.number_of_steps = self.value
+                    self.experiment.number_of_steps = int(self.value)
                 else:
                     self.error_message("Only positive integers larger than 0 are allowed", "Wrong entry")    
             except:
