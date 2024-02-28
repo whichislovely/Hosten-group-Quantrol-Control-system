@@ -300,6 +300,16 @@ class MainWindow(QMainWindow):
             try:
                 with open(temp_file_name, 'rb') as file:
                     self.experiment = pickle.load(file)
+
+                #this part of code was only created to avoid crushing when the old versions of experiments are loaded
+                if hasattr(self.experiment, 'skip_images'):
+                    
+                    pass
+                else:
+                    self.experiment.skip_images = False
+                    self.skip_images_button.setStyleSheet("background-color : red; color : white")
+
+
                 self.sequence_num_rows = len(self.experiment.sequence)
                 self.update_off()
                 self.scan_table.setChecked(self.experiment.do_scan)
