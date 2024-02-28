@@ -11,13 +11,11 @@ def sequence_tab(self):
     while something_changed and iterations < iterations_limit:
         iterations += 1
         something_changed = False    
-        print("hey")
         for row, edge in enumerate(self.experiment.sequence):
             expression = self.sequence_table.item(row,3).text()
             try:
                 (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(expression)
                 if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
-                    print(1, self.experiment.variables[edge.id].for_python)
                     if self.experiment.variables[edge.id].is_scanned != edge.is_scanned or self.experiment.variables[edge.id].for_python != edge.for_python:
                         something_changed = True
                         self.experiment.variables[edge.id].is_scanned = edge.is_scanned

@@ -749,6 +749,15 @@ class MainWindow(QMainWindow):
         else:
             pass
 
+    def skip_images_button_clicked(self):
+        self.experiment.skip_images = not self.experiment.skip_images
+        if self.experiment.skip_images:
+            #set the color of the button to green
+            self.skip_images_button.setStyleSheet("background-color: green; color: white")
+        else:
+            #set the color of the button to red
+            self.skip_images_button.setStyleSheet("background-color: red; color: white")
+
         
     #DIGITAL TAB RELATED
     def update_digital_table_header(self, index, name):

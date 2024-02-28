@@ -199,6 +199,20 @@ def sequence_tab_build(self):
     vBox.addWidget(temp)
     vBox.addWidget(self.scan_table_parameters)
 
+    #TRIGGER CAMERA 10 TIMES
+    self.skip_images_button = QPushButton(self.sequence_tab_widget)
+    self.skip_images_button.setFont(QFont('Arial', 14))
+    self.skip_images_button.setGeometry(1100, 350, 200, 30)
+    self.skip_images_button.setText("Skip images")
+    self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
+    self.skip_images_button.setStyleSheet("background-color : red; color : white") 
+    self.experiment.skip_images = False
+
+
+
+
+
+
 
 
 # DIGITAL TAB
