@@ -501,7 +501,7 @@ class MainWindow(QMainWindow):
         # print(self.server_thread.is_alive())
         # print(self.server_thread._return)
         #current_experiment = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artic_client scheduler.rid"])
-
+        write_to_python.create_experiment(self, run_continuous=True)
         print(self.experiment.sequence[0].dds[9].phase.for_python, self.experiment.sequence[0].dds[9].phase.value)
         # print("analog channel values")
         # for edge in self.experiment.sequence:

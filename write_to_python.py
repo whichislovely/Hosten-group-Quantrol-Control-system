@@ -78,6 +78,19 @@ def create_experiment(self, run_continuous = False):
         indentation += "    "
         file.write(indentation + "delay(10*ms)\n")
 
+    if self.experiment.skip_images:
+        file.write(indentation + "for _ in range(10):\n")
+        indentation += "    "
+        file.write(indentation + "delay(100*ms)\n")
+        file.write(indentation + "self.ttl8.off()\n")
+        file.write(indentation + "self.ttl9.off()\n")
+        file.write(indentation + "delay(100*ms)\n")
+        file.write(indentation + "self.ttl8.on()\n")
+        file.write(indentation + "self.ttl9.on()\n")
+        file.write(indentation + "delay(100*ms)\n")
+        
+        indentation = indentation[:-4]
+
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #making a scanning loop 
         #introduce a flag for multi and single variable scan
@@ -91,17 +104,6 @@ def create_experiment(self, run_continuous = False):
     self.delta_t = 0
 
 
-    if self.experiment.skip_images:
-        file.write(indentation + "for _ in range(10):\n")
-        indentation += "    "
-        file.write(indentation + "self.ttl8.off()\n")
-        file.write(indentation + "self.ttl9.off()\n")
-        file.write(indentation + "delay(10*ms)\n")
-        file.write(indentation + "self.ttl8.on()\n")
-        file.write(indentation + "self.ttl9.on()\n")
-        file.write(indentation + "delay(20*ms)\n")
-        
-        indentation = indentation[:-4]
 
     #flag_init is used to indicate that there is no need for a delay calculation for the first row
     flag_init = 0
