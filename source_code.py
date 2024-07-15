@@ -441,7 +441,10 @@ class MainWindow(QMainWindow):
        
         self.to_update = True        
 
+    def test_function(self):
+        print(self.main_window.currentIndex())
 
+        
     def go_to_edge_button_clicked(self):
         # this function is called to put the control system into a particular edge state. 
         # all channels parameters are being set (DDS, ANALOG, DIGITAL).
@@ -451,7 +454,15 @@ class MainWindow(QMainWindow):
             try:
                 if os.system("conda activate artiq_5 && artiq_client submit go_to_edge.py") == 0:
                     self.message_to_logger("Went to edge")
-                    edge_num = self.sequence_table.selectedIndexes()[0].row()
+                    if self.main_window.currentIndex() == 0:
+                        edge_num = self.sequence_table.selectedIndexes()[0].row()
+                    elif self.main_window.currentIndex() == 1:
+                        edge_num = self.digital_dummy.selectedIndexes()[0].row()    
+                    elif self.main_window.currentIndex() == 2:
+                        edge_num = self.analog_dummy.selectedIndexes()[0].row()    
+                    elif self.main_window.currentIndex() == 3:
+                        edge_num = self.dds_dummy.selectedIndexes()[0].row()    
+                    print('went to', edge_num)
                     #unhighlighting the previously highlighted edge if it was previously highlighted
                     if self.experiment.go_to_edge_num != -1:
                         self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)

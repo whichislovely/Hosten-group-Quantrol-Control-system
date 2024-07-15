@@ -25,8 +25,8 @@ def sequence_tab_build(self):
     self.file_name_lable.setGeometry(275, 2, 600, 30)
     #SEQUENCE TAB LAYOUT
     self.sequence_table = QTableWidget(self.sequence_tab_widget)
-    width_of_table = 805
-    self.sequence_table.setGeometry(QRect(0, 30, width_of_table, 1070))                                                #size of the table
+    width_of_table = 825
+    self.sequence_table.setGeometry(QRect(10, 30, width_of_table, 1020))                                                #size of the table
     sequence_num_columns = 5
     self.sequence_table.setColumnCount(sequence_num_columns)
     self.sequence_table.setRowCount(1)
@@ -35,11 +35,11 @@ def sequence_tab_build(self):
     self.sequence_table.horizontalHeader().setFixedHeight(60)
     self.sequence_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.sequence_table.setFont(QFont('Arial', 12))
-    self.sequence_table.setColumnWidth(0,103)
-    self.sequence_table.setColumnWidth(1,200)
+    self.sequence_table.setColumnWidth(0,50)
+    self.sequence_table.setColumnWidth(1,180)
     self.sequence_table.setColumnWidth(2,100)
-    self.sequence_table.setColumnWidth(3,200)
-    self.sequence_table.setColumnWidth(4,200)
+    self.sequence_table.setColumnWidth(3,246.5)
+    self.sequence_table.setColumnWidth(4,246.5)
     self.sequence_table.itemChanged.connect(self.sequence_table_changed)
     delegate = ReadOnlyDelegate(self)
     self.sequence_table.setItemDelegateForRow(0,delegate)
@@ -52,101 +52,100 @@ def sequence_tab_build(self):
     self.sequence_table.setItem(0, 2, QTableWidgetItem(self.experiment.sequence[0].id))
     self.sequence_table.setItem(0, 3, QTableWidgetItem(self.experiment.sequence[0].expression))
     self.sequence_table.setItem(0, 4, QTableWidgetItem(str(self.experiment.sequence[0].value)))
+    
+    #BUTTONS
     #button to save current sequence
     self.save_sequence_button = QPushButton(self.sequence_tab_widget)
     self.save_sequence_button.setFont(QFont('Arial', 14))
-    self.save_sequence_button.setGeometry(width_of_table + 50, 50, 200, 30)
+    self.save_sequence_button.setGeometry(width_of_table + 50, 30, 200, 30)
     self.save_sequence_button.setText("Save sequence")
     self.save_sequence_button.clicked.connect(self.save_sequence_button_clicked)
     #button to load new sequence
     self.load_sequence_button = QPushButton(self.sequence_tab_widget)
     self.load_sequence_button.setFont(QFont('Arial', 14))
-    self.load_sequence_button.setGeometry(width_of_table + 50, 100, 200, 30)
+    self.load_sequence_button.setGeometry(width_of_table + 50, 80, 200, 30)
     self.load_sequence_button.setText("Load sequence")
     self.load_sequence_button.clicked.connect(self.load_sequence_button_clicked)
     #button to insert edge
     self.insert_edge_button = QPushButton(self.sequence_tab_widget)
     self.insert_edge_button.setFont(QFont('Arial', 14))
-    self.insert_edge_button.setGeometry(width_of_table + 50, 150, 200, 30)
+    self.insert_edge_button.setGeometry(width_of_table + 50, 180, 200, 30)
     self.insert_edge_button.setText("Insert Edge")
     self.insert_edge_button.clicked.connect(self.insert_edge_button_clicked)
     #button to delete edge
     self.delete_edge_button = QPushButton(self.sequence_tab_widget)
     self.delete_edge_button.setFont(QFont('Arial', 14))
-    self.delete_edge_button.setGeometry(width_of_table + 50, 200, 200, 30)
+    self.delete_edge_button.setGeometry(width_of_table + 50, 230, 200, 30)
     self.delete_edge_button.setText("Delete Edge")
     self.delete_edge_button.clicked.connect(self.delete_edge_button_clicked)
-    #go to edge
-    self.go_to_edge_button = QPushButton(self.sequence_tab_widget)
-    self.go_to_edge_button.setFont(QFont('Arial', 14))
-    self.go_to_edge_button.setGeometry(width_of_table + 50, 250, 200, 30)
-    self.go_to_edge_button.setText("Go to Edge")
-    self.go_to_edge_button.clicked.connect(self.go_to_edge_button_clicked)
-    #run experiment
-    self.run_experiment_button = QPushButton(self.sequence_tab_widget)
-    self.run_experiment_button.setFont(QFont('Arial', 14))
-    self.run_experiment_button.setGeometry(width_of_table + 50, 300, 200, 30)
-    self.run_experiment_button.setText("Run experiment")
-    self.run_experiment_button.clicked.connect(self.run_experiment_button_clicked)
 
-    #dummy button for checking 
-    self.dummy_button = QPushButton(self.sequence_tab_widget)
-    self.dummy_button.setFont(QFont('Arial', 14))
-    self.dummy_button.setGeometry(width_of_table + 50, 350, 200, 30)
-    self.dummy_button.setText("Dummy button")
-    self.dummy_button.clicked.connect(self.dummy_button_clicked)
+    #trigger camera 10 times
+    self.skip_images_button = QPushButton(self.sequence_tab_widget)
+    self.skip_images_button.setFont(QFont('Arial', 14))
+    self.skip_images_button.setGeometry(width_of_table + 50, 330, 200, 30)
+    self.skip_images_button.setText("Skip images")
+    self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
+    self.skip_images_button.setStyleSheet("background-color : green; color : white") 
+    self.experiment.skip_images = True
 
     #button to save current sequence as
     self.save_sequence_as_button = QPushButton(self.sequence_tab_widget)
     self.save_sequence_as_button.setFont(QFont('Arial', 14))
-    self.save_sequence_as_button.setGeometry(width_of_table + 50, 400, 200, 30)
+    self.save_sequence_as_button.setGeometry(width_of_table + 50, 380, 200, 30)
     self.save_sequence_as_button.setText("Save sequence as")
     self.save_sequence_as_button.clicked.connect(self.save_sequence_as_button_clicked)
-
-    #button to start continuous run
-    self.continuous_run_button = QPushButton(self.sequence_tab_widget)
-    self.continuous_run_button.setFont(QFont('Arial', 14))
-    self.continuous_run_button.setGeometry(width_of_table + 50, 450, 200, 30)
-    self.continuous_run_button.setText("Continuous run")
-    self.continuous_run_button.clicked.connect(self.continuous_run_button_clicked)
-
-    #button to stop continuous run
-    self.stop_continuous_run_button = QPushButton(self.sequence_tab_widget)
-    self.stop_continuous_run_button.setFont(QFont('Arial', 14))
-    self.stop_continuous_run_button.setGeometry(width_of_table + 50, 500, 200, 30)
-    self.stop_continuous_run_button.setText("Stop continuous run")
-    self.stop_continuous_run_button.clicked.connect(self.stop_continuous_run_button_clicked)
 
     #button to save default
     self.save_default = QPushButton(self.sequence_tab_widget)
     self.save_default.setFont(QFont('Arial', 14))
-    self.save_default.setGeometry(width_of_table + 50, 550, 200, 30)
+    self.save_default.setGeometry(width_of_table + 50, 480, 200, 30)
     self.save_default.setText("Save default")
     self.save_default.clicked.connect(self.save_default_button_clicked)
 
     #button to load default
     self.load_default = QPushButton(self.sequence_tab_widget)
     self.load_default.setFont(QFont('Arial', 14))
-    self.load_default.setGeometry(width_of_table + 50, 600, 200, 30)
+    self.load_default.setGeometry(width_of_table + 50, 530, 200, 30)
     self.load_default.setText("Load default")
     self.load_default.clicked.connect(self.load_default_button_clicked)
 
-    #show logger of the program
-    self.logger = QPlainTextEdit(self.sequence_tab_widget)
-    self.logger.setFont(QFont("Arial", 12))
-    self.logger.setGeometry(width_of_table + 50, 800, 1000, 300)
-    self.logger.setReadOnly(True)
-    self.logger.appendPlainText("Welcome to the Hosten lab! Hope you enjoy your stay here :)")
-    self.logger.appendPlainText("")
-    self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Program initialized")
-    #clear logger button
-    self.clear_logger_button = QPushButton(self.sequence_tab_widget)
-    self.clear_logger_button.setFont(QFont("Arial", 14))
-    self.clear_logger_button.setGeometry(width_of_table + 50, 750, 200, 30)
-    self.clear_logger_button.setText("Clear logger")
-    self.clear_logger_button.clicked.connect(self.clear_logger_button_clicked)
-
-    #Table of parameters
+    #dummy button for checking 
+    self.dummy_button = QPushButton(self.sequence_tab_widget)
+    self.dummy_button.setFont(QFont('Arial', 14))
+    self.dummy_button.setGeometry(width_of_table + 50, 580, 200, 30)
+    self.dummy_button.setText("Dummy button")
+    self.dummy_button.clicked.connect(self.dummy_button_clicked)
+        
+    #BUTTONS AT THE BOTTOM
+    #button to stop continuous run
+    self.stop_continuous_run_button_sequence = QPushButton(self.sequence_tab_widget)
+    self.stop_continuous_run_button_sequence.setFont(QFont('Arial', 14))
+    self.stop_continuous_run_button_sequence.setGeometry(10, 1060, 200, 30)
+    self.stop_continuous_run_button_sequence.setText("Stop continuous run")
+    self.stop_continuous_run_button_sequence.clicked.connect(self.stop_continuous_run_button_clicked)
+   
+    #button to start continuous run
+    self.continuous_run_button_sequence = QPushButton(self.sequence_tab_widget)
+    self.continuous_run_button_sequence.setFont(QFont('Arial', 14))
+    self.continuous_run_button_sequence.setGeometry(220, 1060, 200, 30)
+    self.continuous_run_button_sequence.setText("Continuous run")
+    self.continuous_run_button_sequence.clicked.connect(self.continuous_run_button_clicked)
+ 
+    #run experiment
+    self.run_experiment_button_sequence = QPushButton(self.sequence_tab_widget)
+    self.run_experiment_button_sequence.setFont(QFont('Arial', 14))
+    self.run_experiment_button_sequence.setGeometry(430, 1060, 200, 30)
+    self.run_experiment_button_sequence.setText("Run experiment")
+    self.run_experiment_button_sequence.clicked.connect(self.run_experiment_button_clicked) 
+    
+    #go to edge
+    self.go_to_edge_button_sequence = QPushButton(self.sequence_tab_widget)
+    self.go_to_edge_button_sequence.setFont(QFont('Arial', 14))
+    self.go_to_edge_button_sequence.setGeometry(640, 1060, 200, 30)
+    self.go_to_edge_button_sequence.setText("Go to Edge")
+    self.go_to_edge_button_sequence.clicked.connect(self.go_to_edge_button_clicked)
+    
+    #TABLE OF SCANNING PARAMETERS
     self.scan_table_parameters = QTableWidget()
     self.scan_table_parameters.setColumnCount(3)
     self.scan_table_parameters.setRowCount(0)
@@ -157,27 +156,27 @@ def sequence_tab_build(self):
     self.scan_table_parameters.setColumnWidth(1,200)
     self.scan_table_parameters.setColumnWidth(2,200)
     self.scan_table_parameters.itemChanged.connect(self.scan_table_parameters_changed)
-    #ADD SCANNED VARIABLE BUTTON
+    #Add scanned variable button
     self.add_scanned_variable_button = QPushButton()
     self.add_scanned_variable_button.setFont(QFont('Arial', 14))
     self.add_scanned_variable_button.resize(200, 50)
     self.add_scanned_variable_button.setText("Add scanned variable")
     self.add_scanned_variable_button.clicked.connect(self.add_scanned_variable_button_pressed)#this should be modified
 
-    #DELETE SCANNED VARIABLE BUTTON
+    #Delete scanned variable button
     self.delete_scanned_variable_button = QPushButton()
     self.delete_scanned_variable_button.setFont(QFont('Arial', 14))
     self.delete_scanned_variable_button.setText("Delete scanned variable")
     self.delete_scanned_variable_button.clicked.connect(self.delete_scanned_variable_button_pressed)#this should be modified
 
-    #STEP SIZE INPUT
+    #Step size input
     self.number_of_steps_label = QLabel()
     self.number_of_steps_label.setText("Number of steps")
     self.number_of_steps_input = QLineEdit()
     self.number_of_steps_input.editingFinished.connect(self.number_of_steps_input_changed)
     self.number_of_steps_input.setText("1")
 
-    #HORIZONTAL LAYOUT
+    #Horizontal layout
     hBox = QHBoxLayout()
     temp = QWidget()
     hBox.addWidget(self.add_scanned_variable_button)
@@ -185,7 +184,8 @@ def sequence_tab_build(self):
     hBox.addWidget(self.number_of_steps_label)
     hBox.addWidget(self.number_of_steps_input)
     temp.setLayout(hBox)
-    #SCAN PARAMETERS
+
+    #Scan parameters
     self.scan_table = QGroupBox(self.sequence_tab_widget)
     self.scan_table.setTitle("Scan")
     self.scan_table.setCheckable(True)
@@ -199,21 +199,20 @@ def sequence_tab_build(self):
     vBox.addWidget(temp)
     vBox.addWidget(self.scan_table_parameters)
 
-    #TRIGGER CAMERA 10 TIMES
-    self.skip_images_button = QPushButton(self.sequence_tab_widget)
-    self.skip_images_button.setFont(QFont('Arial', 14))
-    self.skip_images_button.setGeometry(1100, 350, 200, 30)
-    self.skip_images_button.setText("Skip images")
-    self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
-    self.skip_images_button.setStyleSheet("background-color : red; color : white") 
-    self.experiment.skip_images = False
-
-
-
-
-
-
-
+    #show logger of the program
+    self.logger = QPlainTextEdit(self.sequence_tab_widget)
+    self.logger.setFont(QFont("Arial", 12))
+    self.logger.setGeometry(width_of_table + 50, 790, 1000, 300)
+    self.logger.setReadOnly(True)
+    self.logger.appendPlainText("Welcome to the Hosten lab! Hope you enjoy your stay here :)")
+    self.logger.appendPlainText("")
+    self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Program initialized")
+    #clear logger button
+    self.clear_logger_button = QPushButton(self.sequence_tab_widget)
+    self.clear_logger_button.setFont(QFont("Arial", 14))
+    self.clear_logger_button.setGeometry(width_of_table + 50, 740, 200, 30)
+    self.clear_logger_button.setText("Clear logger")
+    self.clear_logger_button.clicked.connect(self.clear_logger_button_clicked)
 
 # DIGITAL TAB
 def digital_tab_build(self):
@@ -228,7 +227,7 @@ def digital_tab_build(self):
     
     #DIGITAL TAB LAYOUT
     self.digital_table = QTableWidget(self.digital_tab_widget)
-    self.digital_table.setGeometry(QRect(0, 30, 1905, 1070))  
+    self.digital_table.setGeometry(QRect(10, 30, 1905, 1020))  
     self.digital_table.setColumnCount(self.digital_tab_num_cols)
     self.digital_table.setRowCount(1) 
     self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
@@ -265,7 +264,7 @@ def digital_tab_build(self):
 
     #Dummy table that will display edge number, name and time and will be fixed
     self.digital_dummy = QTableWidget(self.digital_tab_widget)
-    self.digital_dummy.setGeometry(QRect(0, 30, 330, 1070))
+    self.digital_dummy.setGeometry(QRect(10, 30, 330, 1003))
     self.digital_dummy.setColumnCount(3)
     self.digital_dummy.setRowCount(1)
     self.digital_dummy.setHorizontalHeaderLabels(self.experiment.title_digital_tab[0:3])
@@ -289,6 +288,37 @@ def digital_tab_build(self):
     self.digital_dummy.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     self.digital_dummy.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
+    #BUTTONS AT THE BOTTOM
+    #button to stop continuous run
+    self.stop_continuous_run_button_digital = QPushButton(self.digital_tab_widget)
+    self.stop_continuous_run_button_digital.setFont(QFont('Arial', 14))
+    self.stop_continuous_run_button_digital.setGeometry(10, 1060, 200, 30)
+    self.stop_continuous_run_button_digital.setText("Stop continuous run")
+    self.stop_continuous_run_button_digital.clicked.connect(self.stop_continuous_run_button_clicked)
+   
+    #button to start continuous run
+    self.continuous_run_button_digital = QPushButton(self.digital_tab_widget)
+    self.continuous_run_button_digital.setFont(QFont('Arial', 14))
+    self.continuous_run_button_digital.setGeometry(220, 1060, 200, 30)
+    self.continuous_run_button_digital.setText("Continuous run")
+    self.continuous_run_button_digital.clicked.connect(self.continuous_run_button_clicked)
+ 
+    #run experiment
+    self.run_experiment_button_digital = QPushButton(self.digital_tab_widget)
+    self.run_experiment_button_digital.setFont(QFont('Arial', 14))
+    self.run_experiment_button_digital.setGeometry(430, 1060, 200, 30)
+    self.run_experiment_button_digital.setText("Run experiment")
+    self.run_experiment_button_digital.clicked.connect(self.run_experiment_button_clicked) 
+    
+    #go to edge
+    self.go_to_edge_button_digital = QPushButton(self.digital_tab_widget)
+    self.go_to_edge_button_digital.setFont(QFont('Arial', 14))
+    self.go_to_edge_button_digital.setGeometry(640, 1060, 200, 30)
+    self.go_to_edge_button_digital.setText("Go to Edge")
+    # self.go_to_edge_button_digital.clicked.connect(self.go_to_edge_button_clicked)
+    self.go_to_edge_button_digital.clicked.connect(self.go_to_edge_button_clicked)
+
+
 #ANALOG TAB
 def analog_tab_build(self):
     self.analog_tab_num_cols = 32 + 4    
@@ -303,7 +333,7 @@ def analog_tab_build(self):
 
     #ANALOG TAB LAYOUT
     self.analog_table = QTableWidget(self.analog_tab_widget)
-    self.analog_table.setGeometry(QRect(0, 30, 1905, 1070))  
+    self.analog_table.setGeometry(QRect(10, 30, 1905, 1020))  
     self.analog_table.setColumnCount(self.analog_tab_num_cols) 
     self.analog_table.setRowCount(1)
     self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
@@ -330,7 +360,7 @@ def analog_tab_build(self):
         col = index + 4
         self.analog_table.setItem(0, col, QTableWidgetItem(channel.expression))
         self.analog_table.item(0, col).setToolTip(str(channel.value))
-        if channel.value == 1:
+        if channel.value != 0:
             self.analog_table.item(0, col).setBackground(self.green)
         else:
             self.analog_table.item(0, col).setBackground(self.red)
@@ -340,7 +370,7 @@ def analog_tab_build(self):
 
     #Dummy table that will display edge number, name and time and will be fixed
     self.analog_dummy = QTableWidget(self.analog_tab_widget)
-    self.analog_dummy.setGeometry(QRect(0, 30, 330, 1070))
+    self.analog_dummy.setGeometry(QRect(10, 30, 330, 1003))
     self.analog_dummy.setColumnCount(3)
     self.analog_dummy.setRowCount(1)
     self.analog_dummy.setHorizontalHeaderLabels(self.experiment.title_analog_tab[0:3])
@@ -365,6 +395,36 @@ def analog_tab_build(self):
     self.analog_dummy.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     self.analog_dummy.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
+    #BUTTONS AT THE BOTTOM
+    #button to stop continuous run
+    self.stop_continuous_run_button_analog = QPushButton(self.analog_tab_widget)
+    self.stop_continuous_run_button_analog.setFont(QFont('Arial', 14))
+    self.stop_continuous_run_button_analog.setGeometry(10, 1060, 200, 30)
+    self.stop_continuous_run_button_analog.setText("Stop continuous run")
+    self.stop_continuous_run_button_analog.clicked.connect(self.stop_continuous_run_button_clicked)
+   
+    #button to start continuous run
+    self.continuous_run_button_analog = QPushButton(self.analog_tab_widget)
+    self.continuous_run_button_analog.setFont(QFont('Arial', 14))
+    self.continuous_run_button_analog.setGeometry(220, 1060, 200, 30)
+    self.continuous_run_button_analog.setText("Continuous run")
+    self.continuous_run_button_analog.clicked.connect(self.continuous_run_button_clicked)
+ 
+    #run experiment
+    self.run_experiment_button_analog = QPushButton(self.analog_tab_widget)
+    self.run_experiment_button_analog.setFont(QFont('Arial', 14))
+    self.run_experiment_button_analog.setGeometry(430, 1060, 200, 30)
+    self.run_experiment_button_analog.setText("Run experiment")
+    self.run_experiment_button_analog.clicked.connect(self.run_experiment_button_clicked) 
+    
+    #go to edge
+    self.go_to_edge_button_analog = QPushButton(self.analog_tab_widget)
+    self.go_to_edge_button_analog.setFont(QFont('Arial', 14))
+    self.go_to_edge_button_analog.setGeometry(640, 1060, 200, 30)
+    self.go_to_edge_button_analog.setText("Go to Edge")
+    self.go_to_edge_button_analog.clicked.connect(self.go_to_edge_button_clicked)
+
+
 def dds_tab_build(self):
     self.dds_tab_num_cols = 6*12 + 3
     #DDS TABLE WIDGET
@@ -378,7 +438,7 @@ def dds_tab_build(self):
     
     #DDS TAB LAYOUT
     self.dds_table = QTableWidget(self.dds_tab_widget)
-    self.dds_table.setGeometry(QRect(0.5, 30, 1905, 1070))
+    self.dds_table.setGeometry(QRect(10, 30, 1905, 1020))
     self.dds_table.setColumnCount(self.dds_tab_num_cols)
     self.dds_table.horizontalHeader().setMinimumHeight(50)
     self.dds_table.verticalHeader().setVisible(False)
@@ -419,7 +479,7 @@ def dds_tab_build(self):
 
     #Dummy table that will display edge number, name and time and will be fixed (LEFT SIDE OF THE TABLE)
     self.dds_dummy = QTableWidget(self.dds_tab_widget)
-    self.dds_dummy.setGeometry(QRect(0.5,30,335,1053))
+    self.dds_dummy.setGeometry(QRect(10,30,335,1003))
     self.dds_dummy.setColumnCount(4)
     self.dds_dummy.setRowCount(3)
     self.dds_dummy.horizontalHeader().setMinimumHeight(50)
@@ -447,7 +507,7 @@ def dds_tab_build(self):
 
     #Dummy horizontal header (TOP SIDE OF THE TABLE)
     self.dds_dummy_header = QTableWidget(self.dds_tab_widget)
-    self.dds_dummy_header.setGeometry(QRect(0.5,30,1905,60))
+    self.dds_dummy_header.setGeometry(QRect(10,30,1905,60))
     self.dds_dummy_header.setColumnCount(self.dds_tab_num_cols)
     self.dds_dummy_header.horizontalHeader().setMinimumHeight(50)
     self.dds_dummy_header.verticalHeader().setVisible(False)
@@ -492,7 +552,7 @@ def dds_tab_build(self):
 
     #Making fixed corner (TOP LEFT SIDE OF THE TABLE)
     self.dds_fixed = QTableWidget(self.dds_tab_widget)
-    self.dds_fixed.setGeometry(QRect(0.5,30, 335,60))
+    self.dds_fixed.setGeometry(QRect(10,30, 335,60))
     self.dds_fixed.setColumnCount(4)
     self.dds_fixed.horizontalHeader().setMinimumHeight(50)
     self.dds_fixed.verticalHeader().setVisible(False)
@@ -551,6 +611,35 @@ def dds_tab_build(self):
 
     self.making_separator()
 
+    #BUTTONS AT THE BOTTOM
+    #button to stop continuous run
+    self.stop_continuous_run_button_dds = QPushButton(self.dds_tab_widget)
+    self.stop_continuous_run_button_dds.setFont(QFont('Arial', 14))
+    self.stop_continuous_run_button_dds.setGeometry(10, 1060, 200, 30)
+    self.stop_continuous_run_button_dds.setText("Stop continuous run")
+    self.stop_continuous_run_button_dds.clicked.connect(self.stop_continuous_run_button_clicked)
+   
+    #button to start continuous run
+    self.continuous_run_button_dds = QPushButton(self.dds_tab_widget)
+    self.continuous_run_button_dds.setFont(QFont('Arial', 14))
+    self.continuous_run_button_dds.setGeometry(220, 1060, 200, 30)
+    self.continuous_run_button_dds.setText("Continuous run")
+    self.continuous_run_button_dds.clicked.connect(self.continuous_run_button_clicked)
+ 
+    #run experiment
+    self.run_experiment_button_dds = QPushButton(self.dds_tab_widget)
+    self.run_experiment_button_dds.setFont(QFont('Arial', 14))
+    self.run_experiment_button_dds.setGeometry(430, 1060, 200, 30)
+    self.run_experiment_button_dds.setText("Run experiment")
+    self.run_experiment_button_dds.clicked.connect(self.run_experiment_button_clicked) 
+    
+    #go to edge
+    self.go_to_edge_button_dds = QPushButton(self.dds_tab_widget)
+    self.go_to_edge_button_dds.setFont(QFont('Arial', 14))
+    self.go_to_edge_button_dds.setGeometry(640, 1060, 200, 30)
+    self.go_to_edge_button_dds.setText("Go to Edge")
+    self.go_to_edge_button_dds.clicked.connect(self.go_to_edge_button_clicked)
+
 
 def variables_tab_build(self):
     #VARIABLES TAB WIDGET
@@ -588,11 +677,3 @@ def variables_tab_build(self):
     self.delete_variable.setGeometry(width_of_table_variables + 50, 90, 200, 30)
     self.delete_variable.setText("Delete a variable")
     self.delete_variable.clicked.connect(self.delete_new_variable_clicked)
-
-
-
-
-
-
-    
-

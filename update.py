@@ -11,11 +11,13 @@ def sequence_tab(self):
     while something_changed and iterations < iterations_limit:
         iterations += 1
         something_changed = False    
+
         for row, edge in enumerate(self.experiment.sequence):
             expression = self.sequence_table.item(row,3).text()
             try:
                 (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(expression)
                 if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
+
                     if self.experiment.variables[edge.id].is_scanned != edge.is_scanned or self.experiment.variables[edge.id].for_python != edge.for_python:
                         something_changed = True
                         self.experiment.variables[edge.id].is_scanned = edge.is_scanned
@@ -305,6 +307,12 @@ def from_object(self):
         self.dds_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
         self.dds_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
 
+    #Updating the "Skip images" button color
+    if self.experiment.skip_images == False:
+        self.skip_images_button.setStyleSheet("background-color : red; color : white")
+    else:
+        self.skip_images_button.setStyleSheet("background-color : green; color : white")
+
     #Populating the table
     for row, edge in enumerate(self.experiment.sequence):
         #displaying edge names and times        
@@ -400,5 +408,4 @@ def from_object(self):
     variables_tab(self)
     # building scanned variables table from the self.experiment.scanned_variables array
     scan_table(self)
-    self.update_on()                
-              
+    self.update_on()                  
