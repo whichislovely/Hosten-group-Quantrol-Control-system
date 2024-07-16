@@ -24,6 +24,8 @@ In order to use or scan a variable, one first needs to create it in a variables 
 The color coding of the channel state is used for better visualization of the sequence. White background values show the previously set values and hence the current state of the hardware. Green and red background specifies the changes user introduced at a specific time edge.
 
 The program was not optimized for adaptive resizing and was arranged for the full window size.
+![Sequence](https://github.com/user-attachments/assets/06027f10-ba52-4671-86e9-9eeb7ece3912)
+
 [Sequence tab.pdf](https://github.com/user-attachments/files/16245318/Sequence.tab.pdf)
 [Digital tab.pdf](https://github.com/user-attachments/files/16245314/Digital.tab.pdf)
 [DDS tab.pdf](https://github.com/user-attachments/files/16245324/DDS.tab.pdf)
