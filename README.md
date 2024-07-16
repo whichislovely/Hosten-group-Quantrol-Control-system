@@ -7,6 +7,7 @@ The current state of the GUI is adopted for the specific hardware used in Hosten
 
 This program was built and has been used on Windows based OS. 
 In order to get started simply copy the entire repository on your local machine. The program was tested with VS Code but other code editors might also work as well. Open the entire repository folder in VS Code to be able to use it properly.
+Use Ctrl+Shift+P and type Python Interpreter. Chose the python you want to use. Make sure that you close the terminal and open it again for changes to take action. You can type which python to make sure that the correct python is used.
 In the terminal of VS Code type following command to install the required libraries:
 
 pip install -r requirements.txt
