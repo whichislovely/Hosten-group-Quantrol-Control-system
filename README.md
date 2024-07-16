@@ -25,12 +25,12 @@ The color coding of the channel state is used for better visualization of the se
 
 The program was not optimized for adaptive resizing and was arranged for the full window size.
 ![Sequence](https://github.com/user-attachments/assets/06027f10-ba52-4671-86e9-9eeb7ece3912)
+![Digital](https://github.com/user-attachments/assets/43dffc20-9fe3-44db-862e-e0e2e3d12f9f)
+![DDS](https://github.com/user-attachments/assets/12187028-77be-4559-a312-a844503b2f24)
 
-[Sequence tab.pdf](https://github.com/user-attachments/files/16245318/Sequence.tab.pdf)
-[Digital tab.pdf](https://github.com/user-attachments/files/16245314/Digital.tab.pdf)
-[DDS tab.pdf](https://github.com/user-attachments/files/16245324/DDS.tab.pdf)
 And a corresponding hardcoded version that Quantrol generates and schedules is shown below:
-[Code.pdf](https://github.com/user-attachments/files/16245334/Code.pdf)
+![Code](https://github.com/user-attachments/assets/7194862f-944f-466b-b695-9390eb0d1008)
+
 
 ## Developer guide
 The program consists of several files that will be described in this section. 
