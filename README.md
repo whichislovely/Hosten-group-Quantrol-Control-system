@@ -5,6 +5,7 @@ The current state of the GUI is adopted for the specific hardware used in Hosten
 
 ## Installation
 
+This program was built and has been used on Windows based OS. 
 In order to get started simply copy the entire repository on your local machine. The program was tested with VS Code but other code editors might also work as well. Open the entire repository folder in VS Code to be able to use it properly.
 In the terminal of VS Code type following command to install the required libraries:
 
