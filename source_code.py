@@ -461,8 +461,8 @@ class MainWindow(QMainWindow):
                     elif self.main_window.currentIndex() == 2:
                         edge_num = self.analog_dummy.selectedIndexes()[0].row()    
                     elif self.main_window.currentIndex() == 3:
-                        edge_num = self.dds_dummy.selectedIndexes()[0].row()    
-                    print('went to', edge_num)
+                        edge_num = self.dds_dummy.selectedIndexes()[0].row() - 2 # because top 2 rows are used for title   
+                    print('went to', edge_num, self.dds_dummy.selectedIndexes()[0].row(), self.main_window.currentIndex())
                     #unhighlighting the previously highlighted edge if it was previously highlighted
                     if self.experiment.go_to_edge_num != -1:
                         self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)

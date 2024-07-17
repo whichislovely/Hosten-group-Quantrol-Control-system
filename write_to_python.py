@@ -167,7 +167,15 @@ def create_experiment(self, run_continuous = False):
 
 
 def create_go_to_edge(self):
-    edge = self.sequence_table.selectedIndexes()[0].row()
+    print(1)
+    if self.main_window.currentIndex() == 0:
+        edge = self.sequence_table.selectedIndexes()[0].row()
+    elif self.main_window.currentIndex() == 1:
+        edge = self.digital_dummy.selectedIndexes()[0].row()    
+    elif self.main_window.currentIndex() == 2:
+        edge = self.analog_dummy.selectedIndexes()[0].row()    
+    elif self.main_window.currentIndex() == 3:
+        edge = self.dds_dummy.selectedIndexes()[0].row() - 2 # because top 2 rows are used for title
     self.experiment.go_to_edge = edge
     file_name = "go_to_edge.py"
     if not os.path.exists(file_name):
