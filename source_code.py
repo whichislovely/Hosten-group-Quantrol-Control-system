@@ -508,6 +508,23 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Was not able to generate python file")
 
 
+    def init_hardware_button_clicked(self):
+        try:
+            #initialize environment and submit the experiment to the scheduler
+            submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit init_hardware.py"])
+            submit_experiment_thread.start()
+            #unhighlighting the previously highlighted edge
+            if self.experiment.go_to_edge_num != -1:
+                self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                self.experiment.go_to_edge_num = -1
+            self.set_color_of_the_edge(self.green, 0)
+
+            #needs to be done ---> logging the start of the experiment only if it was started without errors. Checking experiment stages
+            self.message_to_logger("Hardware initialized at the default edge.")
+        except:
+            self.message_to_logger("Was not able to initialize the hardware.")        
+
+
     def dummy_button_clicked(self):
         # print(self.server_thread.is_alive())
         # print(self.server_thread._return)

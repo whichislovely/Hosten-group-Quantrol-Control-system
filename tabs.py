@@ -110,9 +110,16 @@ def sequence_tab_build(self):
     self.load_default.clicked.connect(self.load_default_button_clicked)
 
     #dummy button for checking 
+    self.init_hardware = QPushButton(self.sequence_tab_widget)
+    self.init_hardware.setFont(QFont('Arial', 14))
+    self.init_hardware.setGeometry(width_of_table + 50, 580, 200, 30)
+    self.init_hardware.setText("Init. hardware")
+    self.init_hardware.clicked.connect(self.init_hardware_button_clicked)
+    
+    #dummy button for checking 
     self.dummy_button = QPushButton(self.sequence_tab_widget)
     self.dummy_button.setFont(QFont('Arial', 14))
-    self.dummy_button.setGeometry(width_of_table + 50, 580, 200, 30)
+    self.dummy_button.setGeometry(width_of_table + 50, 630, 200, 30)
     self.dummy_button.setText("Dummy button")
     self.dummy_button.clicked.connect(self.dummy_button_clicked)
         

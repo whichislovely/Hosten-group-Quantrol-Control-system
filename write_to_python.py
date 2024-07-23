@@ -52,23 +52,41 @@ def create_experiment(self, run_continuous = False):
     else:
         file.write(indentation + "delay(10*ms)\n") # this delay is added since our reference clock is 1GHz and self.core.break_realtime moves it forward by 15000 clock cycles
     
-    file.write(indentation + "self.zotino0.init()\n")
-    file.write(indentation + "self.urukul0_cpld.init()\n")
-    file.write(indentation + "self.urukul0_ch0.init()\n")
-    file.write(indentation + "self.urukul0_ch1.init()\n")
-    file.write(indentation + "self.urukul0_ch2.init()\n")
-    file.write(indentation + "self.urukul0_ch3.init()\n")
-    file.write(indentation + "self.urukul1_cpld.init()\n")
-    file.write(indentation + "self.urukul1_ch0.init()\n")
-    file.write(indentation + "self.urukul1_ch1.init()\n")
-    file.write(indentation + "self.urukul1_ch2.init()\n")
-    file.write(indentation + "self.urukul1_ch3.init()\n")
-    file.write(indentation + "self.urukul2_cpld.init()\n")
-    file.write(indentation + "self.urukul2_ch0.init()\n")
-    file.write(indentation + "self.urukul2_ch1.init()\n")
-    file.write(indentation + "self.urukul2_ch2.init()\n")
-    file.write(indentation + "self.urukul2_ch3.init()\n")
-    
+    # file.write(indentation + "self.zotino0.init()\n")
+    # file.write(indentation + "self.urukul0_cpld.init()\n")
+    # file.write(indentation + "self.urukul0_ch0.init()\n")
+    # file.write(indentation + "self.urukul0_ch1.init()\n")
+    # file.write(indentation + "self.urukul0_ch2.init()\n")
+    # file.write(indentation + "self.urukul0_ch3.init()\n")
+    # file.write(indentation + "self.urukul1_cpld.init()\n")
+    # file.write(indentation + "self.urukul1_ch0.init()\n")
+    # file.write(indentation + "self.urukul1_ch1.init()\n")
+    # file.write(indentation + "self.urukul1_ch2.init()\n")
+    # file.write(indentation + "self.urukul1_ch3.init()\n")
+    # file.write(indentation + "self.urukul2_cpld.init()\n")
+    # file.write(indentation + "self.urukul2_ch0.init()\n")
+    # file.write(indentation + "self.urukul2_ch1.init()\n")
+    # file.write(indentation + "self.urukul2_ch2.init()\n")
+    # file.write(indentation + "self.urukul2_ch3.init()\n")
+
+    # This is used to trigger the camera 10 times and discard those images
+    file.write(indentation + "self.ttl8.off()\n")
+    file.write(indentation + "self.ttl9.off()\n")
+    file.write(indentation + "delay(100*ms)\n")
+
+    if self.experiment.skip_images:
+        file.write(indentation + "for _ in range(10):\n")
+        indentation += "    "
+        file.write(indentation + "self.ttl8.on()\n")
+        file.write(indentation + "self.ttl9.on()\n")
+        file.write(indentation + "delay(100*ms)\n")
+        file.write(indentation + "self.ttl8.off()\n")
+        file.write(indentation + "self.ttl9.off()\n")
+        file.write(indentation + "delay(100*ms)\n")
+        
+        indentation = indentation[:-4]
+
+
     if run_continuous:
         file.write(indentation + "while True:\n")
         indentation += "    "
@@ -78,18 +96,7 @@ def create_experiment(self, run_continuous = False):
         indentation += "    "
         file.write(indentation + "delay(10*ms)\n")
 
-    if self.experiment.skip_images:
-        file.write(indentation + "for _ in range(10):\n")
-        indentation += "    "
-        file.write(indentation + "delay(100*ms)\n")
-        file.write(indentation + "self.ttl8.off()\n")
-        file.write(indentation + "self.ttl9.off()\n")
-        file.write(indentation + "delay(100*ms)\n")
-        file.write(indentation + "self.ttl8.on()\n")
-        file.write(indentation + "self.ttl9.on()\n")
-        file.write(indentation + "delay(100*ms)\n")
-        
-        indentation = indentation[:-4]
+
 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #making a scanning loop 
@@ -167,7 +174,12 @@ def create_experiment(self, run_continuous = False):
 
 
 def create_go_to_edge(self):
-    print(1)
+    '''
+    Function is used to write a description of experiment that will go to the edge selected in a tab.
+    The description is saved as go_to_edge.py   
+    '''
+
+    # The edge is defined by the currently selected tab as a last selected row in that tab
     if self.main_window.currentIndex() == 0:
         edge = self.sequence_table.selectedIndexes()[0].row()
     elif self.main_window.currentIndex() == 1:
@@ -176,6 +188,7 @@ def create_go_to_edge(self):
         edge = self.analog_dummy.selectedIndexes()[0].row()    
     elif self.main_window.currentIndex() == 3:
         edge = self.dds_dummy.selectedIndexes()[0].row() - 2 # because top 2 rows are used for title
+
     self.experiment.go_to_edge = edge
     file_name = "go_to_edge.py"
     if not os.path.exists(file_name):
@@ -202,22 +215,22 @@ def create_go_to_edge(self):
     indentation += "    "
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
-    file.write(indentation + "self.zotino0.init()\n")
-    file.write(indentation + "self.urukul0_cpld.init()\n")
-    file.write(indentation + "self.urukul0_ch0.init()\n")
-    file.write(indentation + "self.urukul0_ch1.init()\n")
-    file.write(indentation + "self.urukul0_ch2.init()\n")
-    file.write(indentation + "self.urukul0_ch3.init()\n")
-    file.write(indentation + "self.urukul1_cpld.init()\n")
-    file.write(indentation + "self.urukul1_ch0.init()\n")
-    file.write(indentation + "self.urukul1_ch1.init()\n")
-    file.write(indentation + "self.urukul1_ch2.init()\n")
-    file.write(indentation + "self.urukul1_ch3.init()\n")
-    file.write(indentation + "self.urukul2_cpld.init()\n")
-    file.write(indentation + "self.urukul2_ch0.init()\n")
-    file.write(indentation + "self.urukul2_ch1.init()\n")
-    file.write(indentation + "self.urukul2_ch2.init()\n")
-    file.write(indentation + "self.urukul2_ch3.init()\n")
+    # file.write(indentation + "self.zotino0.init()\n")
+    # file.write(indentation + "self.urukul0_cpld.init()\n")
+    # file.write(indentation + "self.urukul0_ch0.init()\n")
+    # file.write(indentation + "self.urukul0_ch1.init()\n")
+    # file.write(indentation + "self.urukul0_ch2.init()\n")
+    # file.write(indentation + "self.urukul0_ch3.init()\n")
+    # file.write(indentation + "self.urukul1_cpld.init()\n")
+    # file.write(indentation + "self.urukul1_ch0.init()\n")
+    # file.write(indentation + "self.urukul1_ch1.init()\n")
+    # file.write(indentation + "self.urukul1_ch2.init()\n")
+    # file.write(indentation + "self.urukul1_ch3.init()\n")
+    # file.write(indentation + "self.urukul2_cpld.init()\n")
+    # file.write(indentation + "self.urukul2_ch0.init()\n")
+    # file.write(indentation + "self.urukul2_ch1.init()\n")
+    # file.write(indentation + "self.urukul2_ch2.init()\n")
+    # file.write(indentation + "self.urukul2_ch3.init()\n")
     file.write(indentation + "delay(5*ms)\n")  
 
     for index, channel in enumerate(self.experiment.sequence[edge].digital):
