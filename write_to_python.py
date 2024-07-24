@@ -3,6 +3,12 @@ from sympy import simplify
    
 
 def create_experiment(self, run_continuous = False):
+    '''
+    Function is used to create the description of the experimental sequence.
+    Python like description is saved as run_experiment.py
+    run_continuous is used as a flag to indicate if the continuous run is required.
+    '''
+    
     #CREATING A FILE
     file_name = "run_experiment.py"
     if not os.path.exists(file_name):
@@ -29,6 +35,7 @@ def create_experiment(self, run_continuous = False):
     if run_continuous:
         file.write(indentation + "self.setattr_device('scheduler')\n")
 
+    # If scan is needed prepare the variables
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #iterating over valid (not "None") scanned variables and creating an array to be used as a collection of names
         var_names = ""
@@ -38,9 +45,10 @@ def create_experiment(self, run_continuous = False):
                 file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.number_of_steps))
                 var_names += variable.name + ", "
                 for_zipping += "self." + variable.name + ", "
-
     file.write("\n")
     indentation = indentation[:-4]
+
+    # Overwriting the run method
     file.write(indentation + "@kernel\n")
     file.write(indentation + "def run(self):\n")
     indentation += "    "
@@ -86,7 +94,7 @@ def create_experiment(self, run_continuous = False):
         
         indentation = indentation[:-4]
 
-
+    # Create an infinite while loop if needs to run continuously
     if run_continuous:
         file.write(indentation + "while True:\n")
         indentation += "    "
@@ -97,7 +105,7 @@ def create_experiment(self, run_continuous = False):
         file.write(indentation + "delay(10*ms)\n")
 
 
-
+    # If scan is needed 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #making a scanning loop 
         #introduce a flag for multi and single variable scan
@@ -173,27 +181,36 @@ def create_experiment(self, run_continuous = False):
     file.close()
 
 
-def create_go_to_edge(self):
+def create_go_to_edge(self, to_default = False):
     '''
     Function is used to write a description of experiment that will go to the edge selected in a tab.
     The description is saved as go_to_edge.py   
+    The flag to_default is used to be able to go to default edge in the init_hardware function
     '''
 
-    # The edge is defined by the currently selected tab as a last selected row in that tab
-    if self.main_window.currentIndex() == 0:
-        edge = self.sequence_table.selectedIndexes()[0].row()
-    elif self.main_window.currentIndex() == 1:
-        edge = self.digital_dummy.selectedIndexes()[0].row()    
-    elif self.main_window.currentIndex() == 2:
-        edge = self.analog_dummy.selectedIndexes()[0].row()    
-    elif self.main_window.currentIndex() == 3:
-        edge = self.dds_dummy.selectedIndexes()[0].row() - 2 # because top 2 rows are used for title
+    if to_default:
+        # Set the edge value to default edge
+        edge = 0
+        file_name = "init_hardware.py"
+    else:
+        # The edge is defined by the currently selected tab as a last selected row in that tab
+        if self.main_window.currentIndex() == 0:
+            edge = self.sequence_table.selectedIndexes()[0].row()
+        elif self.main_window.currentIndex() == 1:
+            edge = self.digital_dummy.selectedIndexes()[0].row()    
+        elif self.main_window.currentIndex() == 2:
+            edge = self.analog_dummy.selectedIndexes()[0].row()    
+        elif self.main_window.currentIndex() == 3:
+            edge = self.dds_dummy.selectedIndexes()[0].row() - 2 # because top 2 rows are used for title
+        file_name = "go_to_edge.py"
 
     self.experiment.go_to_edge = edge
-    file_name = "go_to_edge.py"
+    # Create a file if it is missing
     if not os.path.exists(file_name):
         with open(file_name, 'w'): pass
     file = open(file_name,'w')
+    
+    # Importing libraries and overwriting the build method
     indentation = ""
     file.write(indentation + "from artiq.experiment import *\n\n")
     file.write(indentation + "class " + file_name[:-3] + "(EnvExperiment):\n")
@@ -210,11 +227,15 @@ def create_go_to_edge(self):
     file.write(indentation + "self.setattr_device('zotino0')\n")
     file.write("\n")
     indentation = indentation[:-4]
+    
+    # Overwriting the run method
     file.write(indentation + "@kernel\n")
     file.write(indentation + "def run(self):\n")
     indentation += "    "
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
+    file.write(indentation + "delay(5*ms)\n")
+    
     # file.write(indentation + "self.zotino0.init()\n")
     # file.write(indentation + "self.urukul0_cpld.init()\n")
     # file.write(indentation + "self.urukul0_ch0.init()\n")
@@ -231,18 +252,22 @@ def create_go_to_edge(self):
     # file.write(indentation + "self.urukul2_ch1.init()\n")
     # file.write(indentation + "self.urukul2_ch2.init()\n")
     # file.write(indentation + "self.urukul2_ch3.init()\n")
-    file.write(indentation + "delay(5*ms)\n")  
-
+  
+    # Assigning digital channels
     for index, channel in enumerate(self.experiment.sequence[edge].digital):
-        if index == 8: #adding a 5 ms delay to make changes into TTL channels
+        if index == 8: #adding a 5 ms delay to make changes for more than 8 TTL channels. There is a limit of the buffer size
             file.write(indentation + "delay(5*ms)\n")
         if channel.value == 0:
             file.write(indentation + "self.ttl" + str(index) + ".off()\n")
         elif channel.value == 1:
             file.write(indentation + "self.ttl" + str(index) + ".on()\n")        
+
+    # Assigning analog channels
     for index, channel in enumerate(self.experiment.sequence[edge].analog):
         file.write(indentation + "self.zotino0.write_dac(%d, %.4f)\n" %(index, channel.value))
     file.write(indentation + "self.zotino0.load()\n")
+    
+    # Assigning DDS channels
     for index, channel in enumerate(self.experiment.sequence[edge].dds):
         urukul_num = int(index // 4)
         channel_num = int(index % 4)

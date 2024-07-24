@@ -116,10 +116,17 @@ def sequence_tab_build(self):
     self.init_hardware.setText("Init. hardware")
     self.init_hardware.clicked.connect(self.init_hardware_button_clicked)
     
+    #button to create the run_experiment.py without running the sequence. An option nice to have in case of troubleshooting
+    self.generate_run_experiment_py_button = QPushButton(self.sequence_tab_widget)
+    self.generate_run_experiment_py_button.setFont(QFont('Arial', 14))
+    self.generate_run_experiment_py_button.setGeometry(width_of_table + 50, 630, 200, 30)
+    self.generate_run_experiment_py_button.setText("Generate experiment")
+    self.generate_run_experiment_py_button.clicked.connect(self.generate_run_experiment_py_button_clicked)
+
     #dummy button for checking 
     self.dummy_button = QPushButton(self.sequence_tab_widget)
     self.dummy_button.setFont(QFont('Arial', 14))
-    self.dummy_button.setGeometry(width_of_table + 50, 630, 200, 30)
+    self.dummy_button.setGeometry(width_of_table + 50, 680, 200, 30)
     self.dummy_button.setText("Dummy button")
     self.dummy_button.clicked.connect(self.dummy_button_clicked)
         

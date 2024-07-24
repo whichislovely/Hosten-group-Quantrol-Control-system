@@ -16,7 +16,6 @@ import threading
 class MainWindow(QMainWindow):
     class Edge:
         def __init__(self, name = "", id = "id0", expression = "0", evaluation = 0, for_python = 0, value = 0, is_scanned = False):
-            self.is_scanned = False
             self.expression = expression
             self.evaluation = evaluation
             self.value = value   
@@ -30,23 +29,23 @@ class MainWindow(QMainWindow):
 
         class Digital:
             #Object is used to describe digital channels' values
-            def __init__(self, value = 0, expression = "0", evaluation = 0, for_python = 0, changed = False):
-                self.value = value
+            def __init__(self, expression = "0", evaluation = 0, value = 0, for_python = 0, changed = False, is_scanned = False):
                 self.expression = expression
                 self.evaluation = evaluation
+                self.value = value
                 self.for_python = for_python
                 self.changed = changed
-                self.is_scanned = False
+                self.is_scanned = is_scanned
 
         class Analog:
             #Object is used to describe analog channels' values
-            def __init__(self, value = 0, expression = "0", evaluation = 0, for_python = "0", changed = False):
-                self.value = value
+            def __init__(self, expression = "0", evaluation = 0, value = 0, for_python = "0", changed = False, is_scanned = False):
                 self.expression = expression
                 self.evaluation = evaluation
+                self.value = value
                 self.for_python = for_python
                 self.changed = changed
-                self.is_scanned = False
+                self.is_scanned = is_scanned
 
         class DDS:
             def __init__(self, state = 0.0, changed = False):
@@ -59,13 +58,14 @@ class MainWindow(QMainWindow):
 
             class Object:
                 #Object is used to describe analog, digital channels' values as well as DDSs' frequency, amplitude, attenuation and phase
-                def __init__(self, value = 0.0, expression = "0.0", evaluation = 0.0, changed = False):
-                    self.value = value
+                def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, changed = False, is_scanned = False):
                     self.expression = expression
                     self.evaluation = evaluation
-                    self.changed = changed   
-                    self.is_scanned = False     
                     self.for_python = evaluation
+                    self.value = value
+                    self.changed = changed   
+                    self.is_scanned = is_scanned     
+
 
     class Experiment:
         def __init__(self):
@@ -477,8 +477,10 @@ class MainWindow(QMainWindow):
             self.error_message("Chose the edge you want the system to go","No edge selected")
 
     def count_scanned_variables(self):
-        #this function iterates over all scanned variables that are not "None" and assigns the total count to 
-        #self.experiment.scanned_variables_count. The function does not return anything
+        '''
+        this function iterates over all scanned variables that are not "None" and assigns the total count to 
+        self.experiment.scanned_variables_count. The function does not return anything
+        '''
         count = 0
         for variable in self.experiment.scanned_variables:
             if variable.name != "None":
@@ -510,27 +512,41 @@ class MainWindow(QMainWindow):
 
     def init_hardware_button_clicked(self):
         try:
-            #initialize environment and submit the experiment to the scheduler
-            submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit init_hardware.py"])
-            submit_experiment_thread.start()
-            #unhighlighting the previously highlighted edge
-            if self.experiment.go_to_edge_num != -1:
-                self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
-                self.experiment.go_to_edge_num = -1
-            self.set_color_of_the_edge(self.green, 0)
+            write_to_python.create_go_to_edge(self, to_default=True)
+            self.message_to_logger("Init_hardware.py file generated")
+            try:
+                #initialize environment and submit the experiment to the scheduler
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit init_hardware.py"])
+                submit_experiment_thread.start()
+                #unhighlighting the previously highlighted edge
+                if self.experiment.go_to_edge_num != -1:
+                    self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                    self.experiment.go_to_edge_num = -1
+                self.set_color_of_the_edge(self.green, 0)
 
-            #needs to be done ---> logging the start of the experiment only if it was started without errors. Checking experiment stages
-            self.message_to_logger("Hardware initialized at the default edge.")
+                #needs to be done ---> logging the start of the experiment only if it was started without errors. Checking experiment stages
+                self.message_to_logger("Hardware initialized at the default edge.")
+            except:
+                self.message_to_logger("Was not able to initialize the hardware.")        
         except:
-            self.message_to_logger("Was not able to initialize the hardware.")        
+            self.message_to_logger("Was not able to generate init_hardware.py file")
+
+    def generate_run_experiment_py_button_clicked(self):
+        self.count_scanned_variables()
+        update.all_tabs(self)
+        try:
+            write_to_python.create_experiment(self)
+            self.message_to_logger("Python file generated")
+        except:
+            self.message_to_logger("Was not able to generate python file")
 
 
     def dummy_button_clicked(self):
         # print(self.server_thread.is_alive())
         # print(self.server_thread._return)
         #current_experiment = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artic_client scheduler.rid"])
-        write_to_python.create_experiment(self, run_continuous=True)
-        print(self.experiment.sequence[0].dds[9].phase.for_python, self.experiment.sequence[0].dds[9].phase.value)
+        # write_to_python.create_experiment(self, run_continuous=True)
+        # print(self.experiment.sequence[0].dds[9].phase.for_python, self.experiment.sequence[0].dds[9].phase.value)
         # print("analog channel values")
         # for edge in self.experiment.sequence:
         #     for ind, channel in enumerate(edge.analog):
@@ -541,8 +557,8 @@ class MainWindow(QMainWindow):
     #    print("new variables")
     #    for item in self.experiment.new_variables:
     #        print(item.name, item.value, item.is_scanned)
-        # for key, item in self.experiment.variables.items():
-        #     print("var", item.name, "is_scanned", item.is_scanned, "for_python", item.for_python)
+        for key, item in self.experiment.variables.items():
+            print("var", item.name, "is_scanned", item.is_scanned, "for_python", item.for_python)
         # for ind, edge in enumerate(self.experiment.sequence):
         #     print("edge", ind)
         #     print("    chanel", ind,"evaluation", edge.evaluation, "for_python", edge.for_python, "scanned", edge.is_scanned)

@@ -1,6 +1,6 @@
 from artiq.experiment import *
 
-class run_experiment(EnvExperiment):
+class init_hardware(EnvExperiment):
     def build(self):
         self.setattr_device('core')
         self.setattr_device('urukul0_cpld')
@@ -40,32 +40,7 @@ class run_experiment(EnvExperiment):
     def run(self):
         self.core.reset()
         self.core.break_realtime()
-        delay(10*ms)
-        self.zotino0.init()
-        self.urukul0_cpld.init()
-        self.urukul0_ch0.init()
-        self.urukul0_ch1.init()
-        self.urukul0_ch2.init()
-        self.urukul0_ch3.init()
-        self.urukul1_cpld.init()
-        self.urukul1_ch0.init()
-        self.urukul1_ch1.init()
-        self.urukul1_ch2.init()
-        self.urukul1_ch3.init()
-        self.urukul2_cpld.init()
-        self.urukul2_ch0.init()
-        self.urukul2_ch1.init()
-        self.urukul2_ch2.init()
-        self.urukul2_ch3.init()
-        for _ in range(10):
-            delay(100*ms)
-            self.ttl8.off()
-            self.ttl9.off()
-            delay(100*ms)
-            self.ttl8.on()
-            self.ttl9.on()
-            delay(100*ms)
-        #Edge number 0 name of edge: Default
+        delay(5*ms)
         self.ttl0.off()
         self.ttl1.off()
         self.ttl2.off()
@@ -116,7 +91,7 @@ class run_experiment(EnvExperiment):
         self.zotino0.write_dac(30, 0.0000)
         self.zotino0.write_dac(31, 0.0000)
         self.zotino0.load()
-        self.urukul0_ch0.set_att(22.2*dB) 
+        self.urukul0_ch0.set_att(0.0*dB) 
         self.urukul0_ch0.set(frequency = 226.049*MHz, amplitude = 0.9, phase = 0.0)
         self.urukul0_ch0.sw.on() 
         self.urukul0_ch1.set_att(0.5*dB) 
