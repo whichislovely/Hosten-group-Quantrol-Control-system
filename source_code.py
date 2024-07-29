@@ -686,8 +686,10 @@ class MainWindow(QMainWindow):
             write_to_python.create_go_to_edge(self, edge_num=edge_num)
             self.message_to_logger("Go to edge file generated")
             try:
-                if os.system("conda activate artiq_5 && artiq_client submit go_to_edge.py") == 0:
+                # if os.system("conda activate artiq_5 && artiq_client submit go_to_edge.py") == 0:
+                if 1==1:    
                     self.message_to_logger("Went to edge")
+                    print(123123, self.experiment.go_to_edge_num)
                     #unhighlighting the previously highlighted edge if it was previously highlighted
                     if self.experiment.go_to_edge_num != -1:
                         self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
@@ -747,7 +749,7 @@ class MainWindow(QMainWindow):
         default edge state and then sets the hardware in that state by running something similar to go_to_edge.py
         '''
         try:
-            write_to_python.create_go_to_edge(self, to_default=True)
+            write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
             self.message_to_logger("Init_hardware.py file generated")
             try:
                 #initialize environment and submit the experiment to the scheduler
@@ -756,7 +758,8 @@ class MainWindow(QMainWindow):
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
                     self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
-                    self.experiment.go_to_edge_num = -1
+                #Highlighting the default edge and setting the go_to_edge_num to the default edge value (0)
+                self.experiment.go_to_edge_num = 0
                 self.set_color_of_the_edge(self.green, 0)
                 self.message_to_logger("Hardware initialized at the default edge.")
             except:
@@ -779,18 +782,19 @@ class MainWindow(QMainWindow):
 
 
     def dummy_button_clicked(self):
+        pass
         '''
         Function is used to debug the program. Can be used to check the variables at different time stamps.
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
         in the console of the VS Code and observing how parameters are being changed.
         
         '''
-        print(self.server_thread.is_alive())
-        print(self.server_thread._return)
-        current_experiment = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artic_client scheduler.rid"])
-        write_to_python.create_experiment(self, run_continuous=True)
-        print(self.experiment.sequence[0].dds[9].phase.for_python, self.experiment.sequence[0].dds[9].phase.value)
-        print("analog channel values")
+        # print(self.server_thread.is_alive())
+        # print(self.server_thread._return)
+        # current_experiment = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artic_client scheduler.rid"])
+        # write_to_python.create_experiment(self, run_continuous=True)
+        # print(self.experiment.sequence[0].dds[9].phase.for_python, self.experiment.sequence[0].dds[9].phase.value)
+        # print("analog channel values")
         # for edge in self.experiment.sequence:
         #     for ind, channel in enumerate(edge.analog):
         #         print("Channel", ind, "val", channel.value, "evaluation", channel.evaluation, "for_python", channel.for_python)
@@ -861,7 +865,7 @@ class MainWindow(QMainWindow):
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
                     self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
-                    self.experiment.go_to_egde_num = -1
+                    self.experiment.go_to_egde_num = 0
                 
                 #needs to be done ---> logging the start of the experiment only if it was started without errors. Checking experiment stages
                 self.message_to_logger("Experiment started")
@@ -876,12 +880,18 @@ class MainWindow(QMainWindow):
         Function is used when the user wants to stop continuous run. It will stop anything and run the init_hardware.py file
         '''
         try:
-            write_to_python.create_go_to_edge(self, to_default=True)
+            write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
             self.message_to_logger("Init_hardware.py file generated")
             try:
                 submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_run init_hardware.py"])
                 submit_experiment_thread.start()
                 self.message_to_logger("Experiment was stopped. Hardware is set to the default values")
+                #unhighlighting the previously highlighted edge
+                if self.experiment.go_to_edge_num != -1:
+                    self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                #Highlighting the default edge and setting the go_to_edge_num to the default edge value (0)
+                self.experiment.go_to_edge_num = 0
+                self.set_color_of_the_edge(self.green, 0)
             except:
                 self.message_to_logger("Could not stop the experiment.")
         except:

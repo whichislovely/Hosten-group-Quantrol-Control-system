@@ -172,7 +172,6 @@ def create_go_to_edge(self, edge_num, to_default = False):
     The description is saved as go_to_edge.py   
     The flag to_default is used to be able to go to default edge in the init_hardware function
     '''
-
     if to_default:
         # Set the edge value to default edge
         edge = 0
@@ -181,7 +180,6 @@ def create_go_to_edge(self, edge_num, to_default = False):
         # The edge is defined by the currently selected tab as a last selected row in that tab
         edge = edge_num
         file_name = "go_to_edge.py"
-
     self.experiment.go_to_edge = edge
     # Create a file if it is missing
     if not os.path.exists(file_name):
@@ -205,7 +203,6 @@ def create_go_to_edge(self, edge_num, to_default = False):
     file.write(indentation + "self.setattr_device('zotino0')\n")
     file.write("\n")
     indentation = indentation[:-4]
-    
     # Overwriting the run method
     file.write(indentation + "@kernel\n")
     file.write(indentation + "def run(self):\n")
@@ -255,5 +252,4 @@ def create_go_to_edge(self, edge_num, to_default = False):
             file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
         elif channel.state.value == 0:
             file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")                
-
     file.close()
