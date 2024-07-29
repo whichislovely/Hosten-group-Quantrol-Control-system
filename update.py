@@ -8,24 +8,21 @@ def sequence_tab(self):
     something_changed = True
     iterations = 0 
     iterations_limit = 100 #after the maximum number of iterations it will throw a warning message
+    #this while loop is done to accomodate all mutual dependencies. It may happen that user will crash the program by introducing closed loops.
     while something_changed and iterations < iterations_limit:
         iterations += 1
         something_changed = False    
-
         for row, edge in enumerate(self.experiment.sequence):
             expression = self.sequence_table.item(row,3).text()
             try:
                 (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(expression)
                 if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
-
                     if self.experiment.variables[edge.id].is_scanned != edge.is_scanned or self.experiment.variables[edge.id].for_python != edge.for_python:
                         something_changed = True
                         self.experiment.variables[edge.id].is_scanned = edge.is_scanned
                         self.experiment.variables[edge.id].for_python = edge.for_python
             except:
                 return "sequence table col 3, edge %d" %row
-
-
     #Update values
     #this while loop is done to accomodate all mutual dependencies. It may happen that user will crash the program by introducing closed loops.
     something_changed = True
@@ -34,7 +31,6 @@ def sequence_tab(self):
     while something_changed and iterations < iterations_limit:
         iterations += 1
         something_changed = False
-
         for edge_index, edge in enumerate(self.experiment.sequence):
             #UPDATING EDGE VALUES (TIME)
             try:
@@ -57,7 +53,6 @@ def sequence_tab(self):
     self.update_on()
 
 
-
 def digital_tab(self, update_expressions_and_evaluations = True, update_values_and_table = True):
     self.update_off()
     #note that in order to display numbers you first need to convert them to string
@@ -66,7 +61,7 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
             channel = self.experiment.sequence[row].digital[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
             col = channel_index + 4
-            if channel.changed: 
+            if channel.changed: #Channel state needs to be updated
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = self.digital_table.item(row,col).text()
@@ -92,18 +87,18 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                 current_evaluation = channel.evaluation
                 current_value = channel.value
                 current_for_python = channel.for_python
-            else: # We first need to update table entries, then evaluations and then values. Because not human entered values depend on previous human entered ones.
-                # Updating digital table entries
-                if update_values_and_table:
-                    self.digital_table.item(row,col).setText(current_expression + " ")                
+            else: #Update the value according to the previously set state
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = current_expression
                     channel.evaluation = current_evaluation
                     channel.for_python = current_for_python
-                #Updating values
+                #Updating values and table entries
                 if update_values_and_table:
-                    channel.value = current_value   
+                    channel.value = int(current_value)
+                    self.digital_table.item(row,col).setText(str(channel.value) + " ") # Updating digital table entries 
+                #Color coding the values
+                self.digital_table.item(row,col).setBackground(self.white)   
                                  
     self.update_on()
 
@@ -119,7 +114,7 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
             channel = self.experiment.sequence[row].analog[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
             col = channel_index + 4
-            if channel.changed: 
+            if channel.changed: #Channel state needs to be updated
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = self.analog_table.item(row,col).text()
@@ -146,10 +141,7 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                 current_evaluation = channel.evaluation
                 current_value = channel.value
                 current_for_python = channel.for_python
-            else:# We first need to update table entries, then evaluations and then values. Because not human entered values depend on previous human entered ones.
-                # Updating digital table entries
-                if update_values_and_table:
-                    self.analog_table.item(row,col).setText(current_expression + " ")                
+            else: #Update the value according to the previously set state
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = current_expression
@@ -158,6 +150,10 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                 #Updating values
                 if update_values_and_table:
                     channel.value = current_value     
+                    self.analog_table.item(row,col).setText(current_expression + " ")  # Updating analog table entries                       
+                #Color coding the values
+                self.analog_table.item(row,col).setBackground(self.white)                       
+
     self.update_on()
 
 def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_table = True):
@@ -176,7 +172,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                 table_item = self.dds_table.item(row, col)
                 exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
                 channel_entry = self.channel_entry
-                if channel.changed: 
+                if channel.changed: #Channel state needs to be updated
                     #Updating expressions and evaluations
                     if update_expressions_and_evaluations:
                         channel_entry.expression = table_item.text()
@@ -203,17 +199,15 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                     current_evaluation = channel_entry.evaluation
                     current_value = channel_entry.value
                     current_for_python = channel_entry.for_python
-                else:# We first need to update table entries, then evaluations and then values. Because not human entered values depend on previous human entered ones.
-                    # Updating digital table entries
-                    if update_values_and_table:
-                        table_item.setText(current_expression + " ")                
+                else: #Update the value according to the previously set state
                     #Updating expressions and evaluations
                     if update_expressions_and_evaluations:
                         channel_entry.expression = current_expression
                         channel_entry.evaluation = current_evaluation
                         channel_entry.for_python = current_for_python
-                    #Updating values
+                    #Updating dds table values and table entries
                     if update_values_and_table:
+                        table_item.setText(current_expression + " ")  
                         channel_entry.value = current_value
 
     self.update_on()
@@ -247,8 +241,6 @@ def scan_table(self):
 def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_tables = True):
     '''
     This function updates all tabs. It just calls an update of each tab one by one
-    
-    Development : we need to include update variables tab and include it    
     '''
     sequence_tab_return = sequence_tab(self)
     if (sequence_tab_return==None):

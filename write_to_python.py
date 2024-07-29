@@ -181,7 +181,7 @@ def create_experiment(self, run_continuous = False):
     file.close()
 
 
-def create_go_to_edge(self, to_default = False):
+def create_go_to_edge(self, edge_num, to_default = False):
     '''
     Function is used to write a description of experiment that will go to the edge selected in a tab.
     The description is saved as go_to_edge.py   
@@ -194,14 +194,7 @@ def create_go_to_edge(self, to_default = False):
         file_name = "init_hardware.py"
     else:
         # The edge is defined by the currently selected tab as a last selected row in that tab
-        if self.main_window.currentIndex() == 0:
-            edge = self.sequence_table.selectedIndexes()[0].row()
-        elif self.main_window.currentIndex() == 1:
-            edge = self.digital_dummy.selectedIndexes()[0].row()    
-        elif self.main_window.currentIndex() == 2:
-            edge = self.analog_dummy.selectedIndexes()[0].row()    
-        elif self.main_window.currentIndex() == 3:
-            edge = self.dds_dummy.selectedIndexes()[0].row() - 2 # because top 2 rows are used for title
+        edge = edge_num
         file_name = "go_to_edge.py"
 
     self.experiment.go_to_edge = edge

@@ -3,14 +3,15 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from datetime import datetime
 
-
-#this is needed for making some rows or columns read only
-#Example : delegate = ReadOnlyDelegate(self)
-#          self.edges_table.setItemDelegateForColumn(2,delegate)
 class ReadOnlyDelegate(QStyledItemDelegate):
+    '''
+    Function is used to make some rows and columns read only
+    Example :   delegate = ReadOnlyDelegate(self)
+                self.edges_table.setItemDelegateForColumn(2,delegate)
+    '''
     def createEditor(self, parent, option, index):
-        #print("createEditor event fired")
         return
+
 
 def sequence_tab_build(self):
     #SEQUENCE TAB WIDGET
@@ -170,6 +171,7 @@ def sequence_tab_build(self):
     self.scan_table_parameters.setColumnWidth(1,200)
     self.scan_table_parameters.setColumnWidth(2,200)
     self.scan_table_parameters.itemChanged.connect(self.scan_table_parameters_changed)
+    
     #Add scanned variable button
     self.add_scanned_variable_button = QPushButton()
     self.add_scanned_variable_button.setFont(QFont('Arial', 14))
@@ -206,7 +208,6 @@ def sequence_tab_build(self):
     self.scan_table.setChecked(False)
     self.scan_table.setFont(QFont("Arial", 14))
     self.scan_table.move(1100, 30)
-    #self.scan_table.setGeometry(1100, 30, 675, 250)
     self.scan_table.toggled.connect(self.scan_table_checked)
     vBox = QVBoxLayout()
     self.scan_table.setLayout(vBox)
@@ -221,6 +222,7 @@ def sequence_tab_build(self):
     self.logger.appendPlainText("Welcome to the Hosten lab! Hope you enjoy your stay here :)")
     self.logger.appendPlainText("")
     self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Program initialized")
+    
     #clear logger button
     self.clear_logger_button = QPushButton(self.sequence_tab_widget)
     self.clear_logger_button.setFont(QFont("Arial", 14))
