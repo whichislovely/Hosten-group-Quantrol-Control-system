@@ -81,7 +81,6 @@ def create_experiment(self, run_continuous = False):
     file.write(indentation + "self.ttl8.off()\n")
     file.write(indentation + "self.ttl9.off()\n")
     file.write(indentation + "delay(100*ms)\n")
-
     if self.experiment.skip_images:
         file.write(indentation + "for _ in range(10):\n")
         indentation += "    "
@@ -98,12 +97,6 @@ def create_experiment(self, run_continuous = False):
     if run_continuous:
         file.write(indentation + "while True:\n")
         indentation += "    "
-        file.write(indentation + "if self.scheduler.check_pause():\n")
-        file.write(indentation + "    break\n")
-        file.write(indentation + "else:\n")
-        indentation += "    "
-        file.write(indentation + "delay(10*ms)\n")
-
 
     # If scan is needed 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
@@ -114,14 +107,10 @@ def create_experiment(self, run_continuous = False):
         else:
             file.write(indentation + "for %s in %s:\n" %(var_names[:-2], for_zipping[:-2]))        
         indentation += "    "
-
- 
     self.delta_t = 0
-
-
-
     #flag_init is used to indicate that there is no need for a delay calculation for the first row
     flag_init = 0
+
     for edge in range(self.sequence_num_rows):
         file.write(indentation + "#Edge number " + str(edge) + " name of edge: " + self.experiment.sequence[edge].name + "\n")
         if flag_init == 0: # in the first iteration it does not need to do anything as delta_t is assigned to 0
@@ -174,10 +163,6 @@ def create_experiment(self, run_continuous = False):
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
                 else:
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
-        
-    if run_continuous:
-        file.write(indentation + "self.core.wait_until_mu(now_mu())\n")
-                
     file.close()
 
 
