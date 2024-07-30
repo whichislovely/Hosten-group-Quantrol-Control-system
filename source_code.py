@@ -1,3 +1,24 @@
+'''
+    |||||||   ||    ||    ||    ||    ||  ||||||||  ||||||    |||||   ||
+    ||   ||   ||    ||   ||||   |||   ||     ||     ||   ||  ||   ||  ||
+    ||   ||   ||    ||  ||  ||  || || ||     ||     ||   ||  ||   ||  ||
+    ||   ||   ||    ||  ||||||  ||  | ||     ||     ||||||   ||   ||  ||
+    ||   ||   ||    ||  ||  ||  ||   |||     ||     ||  ||   ||   ||  ||
+    ||||||||   ||||||   ||  ||  ||    ||     ||     ||   ||   |||||   ||||||
+          ||
+
+Quantrol is used as a high level solution built on top of artiq infrastructure to allow scientists to use precise
+timing control system with no prerequisite of coding. It features an easy to interpret table based experimental
+sequence description, variables use and scan, input values allowed range check and many more.
+
+Author  :   Vyacheslav Li 
+Email   :   vyacheslav.li.1991@gmail.com
+Date    :   07.30.2024
+Version :   1.0
+'''
+
+
+
 from os import error
 import os
 import sys
