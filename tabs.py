@@ -2,6 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from datetime import datetime
+import config  
 
 class ReadOnlyDelegate(QStyledItemDelegate):
     '''
@@ -232,7 +233,7 @@ def sequence_tab_build(self):
 
 # DIGITAL TAB
 def digital_tab_build(self):
-    self.digital_tab_num_cols = 16 + 4    
+    self.digital_tab_num_cols = config.digital_channels_number + 4    
     self.digital_and_analog_table_column_width = 130
     #DIGITAL TAB WIDGET
     self.digital_tab_widget = QWidget()
@@ -337,7 +338,7 @@ def digital_tab_build(self):
 
 #ANALOG TAB
 def analog_tab_build(self):
-    self.analog_tab_num_cols = 32 + 4    
+    self.analog_tab_num_cols = config.analog_channels_number + 4    
     #ANALOG TAB WIDGET
     self.analog_tab_widget = QWidget()
     #ANALOG LABLE
@@ -442,7 +443,7 @@ def analog_tab_build(self):
 
 
 def dds_tab_build(self):
-    self.dds_tab_num_cols = 6*12 + 3
+    self.dds_tab_num_cols = 6*config.dds_channels_number + 3
     #DDS TABLE WIDGET
     self.dds_tab_widget = QWidget()
     #DDS LABLE
@@ -471,7 +472,7 @@ def dds_tab_build(self):
 
     delegate = ReadOnlyDelegate(self)
     #SHAPING THE TABLE
-    for i in range(12):
+    for i in range(config.dds_channels_number):
         self.dds_table.setSpan(0,4 + 6*i, 1, 5) # stretching the title of the channel
         self.dds_table.setColumnWidth(3 + 6*i, 5) # making separation line thin
         self.dds_table.setColumnWidth(8 + 6*i, 45) # making state column smaller
@@ -488,7 +489,10 @@ def dds_tab_build(self):
         for setting in range(5):
             exec("self.dds_table.setItem(2, col + setting, QTableWidgetItem(str(channel.%s.expression)))" %self.setting_dict[setting])
             exec("self.dds_table.item(2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
-            self.dds_table.item(2, col + setting).setBackground(self.green)
+            if channel.state == 1:
+                self.dds_table.item(2, col + setting).setBackground(self.green)
+            else:  
+                self.dds_table.item(2, col + setting).setBackground(self.red)
 
 
     self.dds_table.itemChanged.connect(self.dds_table_changed)
@@ -540,7 +544,7 @@ def dds_tab_build(self):
     self.dds_dummy_header.setColumnWidth(2,100)
 
     #SHAPING THE TABLE
-    for i in range(12):
+    for i in range(config.dds_channels_number):
         self.dds_dummy_header.setSpan(0,4 + 6*i, 1, 5) # stretching the title of the channel
         self.dds_dummy_header.setColumnWidth(3 + 6*i, 5) # making separation line thin
         self.dds_dummy_header.setColumnWidth(8 + 6*i, 45) # making state column smaller
@@ -549,7 +553,7 @@ def dds_tab_build(self):
     self.dds_dummy_header.setItemDelegateForRow(1, delegate) #making row number 2 uneditable
 
     #populating headers and separators
-    for i in range(12):
+    for i in range(config.dds_channels_number):
         #separator
         self.dds_dummy_header.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
         self.dds_dummy_header.setItem(0,6*i + 3, QTableWidgetItem())

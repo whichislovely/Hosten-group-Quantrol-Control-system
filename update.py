@@ -1,6 +1,7 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+import config
 
 def sequence_tab(self):
     self.update_off()
@@ -56,7 +57,7 @@ def sequence_tab(self):
 def digital_tab(self, update_expressions_and_evaluations = True, update_values_and_table = True):
     self.update_off()
     #note that in order to display numbers you first need to convert them to string
-    for channel_index in range(16):
+    for channel_index in range(config.digital_channels_number):
         for row in range(self.sequence_num_rows):
             channel = self.experiment.sequence[row].digital[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
@@ -109,7 +110,7 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
     '''
     self.update_off()
     #note that in order to display numbers you first need to convert them to string
-    for channel_index in range(32):
+    for channel_index in range(config.analog_channels_number):
         for row in range(self.sequence_num_rows):
             channel = self.experiment.sequence[row].analog[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
@@ -163,7 +164,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
     '''
     self.update_off()
     #note that in order to display numbers you first need to convert them to string
-    for channel_index in range(12):
+    for channel_index in range(config.dds_channels_number):
         for setting in range(5):
             for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
                 channel = self.experiment.sequence[row-2].dds[channel_index]
@@ -289,7 +290,7 @@ def from_object(self):
     self.digital_dummy.setHorizontalHeaderLabels(self.experiment.title_digital_tab[0:3])
     self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
     self.analog_dummy.setHorizontalHeaderLabels(self.experiment.title_analog_tab[0:3])
-    for i in range(12):
+    for i in range(config.dds_channels_number):
         self.dds_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_dds_tab[i+4])))
         self.dds_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
         #headers Channel attributes (f, Amp, att, phase, state)
@@ -326,7 +327,7 @@ def from_object(self):
         self.dds_dummy.setItem(row+2,1, QTableWidgetItem(edge.name))
         self.dds_dummy.setItem(row+2,2, QTableWidgetItem(str(edge.value)))        
     #displaying digital channels
-    for channel_index in range(16):
+    for channel_index in range(config.digital_channels_number):
         for row in range(self.sequence_num_rows):
             channel = self.experiment.sequence[row].digital[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
@@ -349,7 +350,7 @@ def from_object(self):
                 channel.for_python = current_for_python
                 channel.value = current_value  
     #displaying analog channels
-    for channel_index in range(32):
+    for channel_index in range(config.analog_channels_number):
         for row in range(self.sequence_num_rows):
             channel = self.experiment.sequence[row].analog[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
@@ -372,7 +373,7 @@ def from_object(self):
                 channel.for_python = current_for_python
                 channel.value = current_value 
     #displaying dds channels
-    for channel_index in range(12):
+    for channel_index in range(config.dds_channels_number):
         for setting in range(5):
             for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
                 channel = self.experiment.sequence[row-2].dds[channel_index]
