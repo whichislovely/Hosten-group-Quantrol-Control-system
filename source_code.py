@@ -332,6 +332,7 @@ class MainWindow(QMainWindow):
                 self.error_message('Default file is incompatible. Initializing the DEFAULT default values and updating the default file.', 'Error')
             else:
                 self.error_message('Default file is not found. Initializing the DEFAULT default values and updating the default file.', 'Error')
+            os.makedirs("./default", exist_ok=True)
             with open("./default/default", 'wb') as file:
                 pickle.dump(self.experiment, file)
 
@@ -824,8 +825,8 @@ class MainWindow(QMainWindow):
         '''
         for edge_num, edge in enumerate(self.experiment.sequence):
             print("edge number", edge_num)
-            for index, channel in enumerate(edge.digital):
-                print("channel", index, channel.changed, channel.value, channel.expression)
+            for index, channel in enumerate(edge.dds):
+                print("channel", channel.state)
         # print(self.server_thread.is_alive())
         # print(self.server_thread._return)
         # current_experiment = self.CustomThread(target=os.system, args=["conda activate %s && artic_client scheduler.rid"%config.artiq_environment_name])

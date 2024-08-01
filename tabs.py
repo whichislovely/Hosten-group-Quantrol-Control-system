@@ -38,9 +38,9 @@ def sequence_tab_build(self):
     self.sequence_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.sequence_table.setFont(QFont('Arial', 12))
     self.sequence_table.setColumnWidth(0,50)
-    self.sequence_table.setColumnWidth(1,180)
+    self.sequence_table.setColumnWidth(1,220)
     self.sequence_table.setColumnWidth(2,100)
-    self.sequence_table.setColumnWidth(3,246.5)
+    self.sequence_table.setColumnWidth(3,206.5)
     self.sequence_table.setColumnWidth(4,246.5)
     self.sequence_table.itemChanged.connect(self.sequence_table_changed)
     delegate = ReadOnlyDelegate(self)
@@ -497,9 +497,11 @@ def dds_tab_build(self):
         for setting in range(5):
             exec("self.dds_table.setItem(2, col + setting, QTableWidgetItem(str(channel.%s.expression)))" %self.setting_dict[setting])
             exec("self.dds_table.item(2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
-            if channel.state == 1:
+            if channel.state.value == 1:
+                # print(1)
                 self.dds_table.item(2, col + setting).setBackground(self.green)
             else:  
+                # print(2)
                 self.dds_table.item(2, col + setting).setBackground(self.red)
 
 
