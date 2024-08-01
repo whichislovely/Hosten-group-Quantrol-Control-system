@@ -81,14 +81,15 @@ def sequence_tab_build(self):
     self.delete_edge_button.setText("Delete Edge")
     self.delete_edge_button.clicked.connect(self.delete_edge_button_clicked)
 
-    #trigger camera 10 times
-    self.skip_images_button = QPushButton(self.sequence_tab_widget)
-    self.skip_images_button.setFont(QFont('Arial', 14))
-    self.skip_images_button.setGeometry(width_of_table + 50, 330, 200, 30)
-    self.skip_images_button.setText("Skip images")
-    self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
-    self.skip_images_button.setStyleSheet("background-color : green; color : white") 
-    self.experiment.skip_images = True
+    if config.allow_skipping_images:
+        #trigger camera 10 times
+        self.skip_images_button = QPushButton(self.sequence_tab_widget)
+        self.skip_images_button.setFont(QFont('Arial', 14))
+        self.skip_images_button.setGeometry(width_of_table + 50, 330, 200, 30)
+        self.skip_images_button.setText("Skip images")
+        self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
+        self.skip_images_button.setStyleSheet("background-color : green; color : white") 
+        self.experiment.skip_images = True
 
     #button to save current sequence as
     self.save_sequence_as_button = QPushButton(self.sequence_tab_widget)
@@ -111,7 +112,7 @@ def sequence_tab_build(self):
     self.load_default.setText("Load default")
     self.load_default.clicked.connect(self.load_default_button_clicked)
 
-    #dummy button for checking 
+    #button to initialize the hardware
     self.init_hardware = QPushButton(self.sequence_tab_widget)
     self.init_hardware.setFont(QFont('Arial', 14))
     self.init_hardware.setGeometry(width_of_table + 50, 580, 200, 30)
@@ -125,7 +126,7 @@ def sequence_tab_build(self):
     self.generate_run_experiment_py_button.setText("Generate experiment")
     self.generate_run_experiment_py_button.clicked.connect(self.generate_run_experiment_py_button_clicked)
 
-    #dummy button for checking 
+    #dummy button for troubleshooting 
     self.dummy_button = QPushButton(self.sequence_tab_widget)
     self.dummy_button.setFont(QFont('Arial', 14))
     self.dummy_button.setGeometry(width_of_table + 50, 680, 200, 30)
@@ -193,6 +194,12 @@ def sequence_tab_build(self):
     self.number_of_steps_input.editingFinished.connect(self.number_of_steps_input_changed)
     self.number_of_steps_input.setText("1")
 
+    #warning for the user
+    self.warning_about_scan_range = QLabel(self.sequence_tab_widget)
+    self.warning_about_scan_range.setFont(QFont('Arial', 14))
+    self.warning_about_scan_range.setGeometry(width_of_table + 300, 330, 800, 30)
+    self.warning_about_scan_range.setText("Make sure the scan of variables remains withing the allowed values range!!!")
+
     #Horizontal layout
     hBox = QHBoxLayout()
     temp = QWidget()
@@ -220,7 +227,8 @@ def sequence_tab_build(self):
     self.logger.setFont(QFont("Arial", 12))
     self.logger.setGeometry(width_of_table + 50, 790, 1000, 300)
     self.logger.setReadOnly(True)
-    self.logger.appendPlainText("Welcome to the Hosten lab! Hope you enjoy your stay here :)")
+    self.logger.appendPlainText("Welcome to the %s lab! Hope you enjoy your stay here :)" %config.research_group_name)
+    self.logger.appendPlainText("Don't forget to initialize the hardware after the power cycle!!!")
     self.logger.appendPlainText("")
     self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Program initialized")
     

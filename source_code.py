@@ -257,7 +257,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         #MAIN PAGE LAYOUT
-        self.setWindowTitle("Experimental control application. Hosten Group. Cold atoms team.")
+        self.setWindowTitle("Quantrol. %s Group" %config.research_group_name)
         self.main_window = QTabWidget()
         self.setCentralWidget(self.main_window)
         self.setGeometry(0,30,1920,1200)
@@ -822,8 +822,10 @@ class MainWindow(QMainWindow):
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
         in the console of the VS Code and observing how parameters are being changed.
         '''
-        for channel in self.experiment.sequence[0].analog:
-            print(channel.changed, channel.value)
+        for edge_num, edge in enumerate(self.experiment.sequence):
+            print("edge number", edge_num)
+            for index, channel in enumerate(edge.digital):
+                print("channel", index, channel.changed, channel.value, channel.expression)
         # print(self.server_thread.is_alive())
         # print(self.server_thread._return)
         # current_experiment = self.CustomThread(target=os.system, args=["conda activate %s && artic_client scheduler.rid"%config.artiq_environment_name])
@@ -1228,13 +1230,16 @@ class MainWindow(QMainWindow):
                     else:
                         #Reverting back the previously accepted expression
                         self.update_off()
-                        table_item.setText(str(channel.value))
+                        table_item.setText(str(channel.expression))
                         self.update_on()
                         self.error_message("Only value '1' or '0' are expected!", "Wrong entry!")
                 except:
                     #Return the previously assigned value if the expression can not be evaluated
                     self.update_off()
-                    table_item.setText(str(channel.value))
+                    if channel.changed:
+                        table_item.setText(channel.expression)
+                    else:
+                        table_item.setText(str(channel.value))
                     self.update_on()
                     self.error_message("Expression can not be evaluated", "Wrong entry")
 
@@ -1438,6 +1443,9 @@ class MainWindow(QMainWindow):
                     self.update_on()             
                 elif new_name in self.experiment.variables:#Restricting the user from defining the variable name as already defined variable names to avoid having dublicates
                     self.error_message('Variable name is already used', 'Invalid variable name')
+                    self.update_off()
+                    table_item.setText(variable.name)       
+                    self.update_on()                         
                 else: # The varibable name is almost among allowed, only the integer or float without other caracters should be checked.
                     only_numbers = False
                     try:
@@ -1446,6 +1454,9 @@ class MainWindow(QMainWindow):
                     except:
                         pass
                     if only_numbers: #Restricting the user from defining a variable name using only numbers
+                        self.update_off()
+                        table_item.setText(variable.name)       
+                        self.update_on()                         
                         self.error_message('Variable name can not be in a form of a number', 'Invalid variable name')
                     else:
                         #Allowed variable name. Now checking if it is used in any expression or not. It is done by deleting the variable and trying to evaluate every expression
@@ -1458,6 +1469,9 @@ class MainWindow(QMainWindow):
                             self.experiment.variables[new_name].name = new_name
                             self.experiment.variables[new_name].is_scanned = False
                             variable.name = new_name
+                            self.update_off()
+                            table_item.setText(variable.name)
+                            self.update_on()                            
                         else: #The previous variable was used somewhere. Reverting the name to the previous 
                             self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
                             self.experiment.variables[backup.name] = backup

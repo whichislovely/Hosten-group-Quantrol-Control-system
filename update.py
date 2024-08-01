@@ -97,7 +97,8 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                 #Updating values and table entries
                 if update_values_and_table:
                     channel.value = int(current_value)
-                    self.digital_table.item(row,col).setText(str(channel.value) + " ") # Updating digital table entries 
+                    self.digital_table.item(row,col).setText(channel.expression + " ") # Updating digital table entries 
+                    self.digital_table.item(row,col).setToolTip(str(channel.value))
                 #Color coding the values
                 self.digital_table.item(row,col).setBackground(self.white)   
                                  
@@ -152,6 +153,7 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                 if update_values_and_table:
                     channel.value = current_value     
                     self.analog_table.item(row,col).setText(current_expression + " ")  # Updating analog table entries                       
+                    self.analog_table.item(row,col).setToolTip(str(channel.value))
                 #Color coding the values
                 self.analog_table.item(row,col).setBackground(self.white)                       
 
@@ -208,8 +210,10 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                         channel_entry.for_python = current_for_python
                     #Updating dds table values and table entries
                     if update_values_and_table:
-                        table_item.setText(current_expression + " ")  
                         channel_entry.value = current_value
+                        table_item.setText(current_expression + " ")  
+                        table_item.setToolTip(str(channel_entry.value))
+                        
 
     self.update_on()
 

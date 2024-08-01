@@ -152,7 +152,8 @@ def create_experiment(self, run_continuous = False):
                     else:
                         file.write(indentation + "self.fastino0.set_dac(%d, %.4f)\n" %(index, channel.value))
             #Moving the time cursor back
-            file.write(indentation + "delay(-%d0*ns)\n" %number_of_channels_changed)
+            if number_of_channels_changed > 1:
+                file.write(indentation + "delay(-%d0*ns)\n" %(number_of_channels_changed-1))
             
         #DDS CHANNEL CHANGES
         for index, channel in enumerate(self.experiment.sequence[edge].dds):
