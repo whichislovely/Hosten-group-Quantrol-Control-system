@@ -1,3 +1,22 @@
+'''
+    |||||||   ||    ||    ||    ||    ||  ||||||||  ||||||    |||||   ||
+    ||   ||   ||    ||   ||||   |||   ||     ||     ||   ||  ||   ||  ||
+    ||   ||   ||    ||  ||  ||  || || ||     ||     ||   ||  ||   ||  ||
+    ||   ||   ||    ||  ||||||  ||  | ||     ||     ||||||   ||   ||  ||
+    ||   ||   ||    ||  ||  ||  ||   |||     ||     ||  ||   ||   ||  ||
+    ||||||||   ||||||   ||  ||  ||    ||     ||     ||   ||   |||||   ||||||
+          ||
+
+Quantrol is used as a high level solution built on top of artiq infrastructure to allow scientists to use precise
+timing control system with no prerequisite of coding. It features an easy to interpret table based experimental
+sequence description, variables use and scan, input values allowed range check and many more.
+
+Author  :   Vyacheslav Li 
+Email   :   vyacheslav.li.1991@gmail.com
+Date    :   07.30.2024
+Version :   1.0
+'''
+
 from os import error
 import os
 import sys
@@ -11,6 +30,7 @@ from datetime import datetime
 from copy import deepcopy
 import update
 import threading
+import config
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -49,9 +69,9 @@ class MainWindow(QMainWindow):
             self.id = id
             self.is_scanned = is_scanned
             self.for_python = for_python
-            self.analog = [self.Analog() for i in range(32)]
-            self.digital = [self.Digital() for i in range(16)]
-            self.dds = [self.DDS() for i in range(12)]
+            self.digital = [self.Digital() for i in range(config.digital_channels_number)]
+            self.analog = [self.Analog() for i in range(config.analog_channels_number)]
+            self.dds = [self.DDS() for i in range(config.dds_channels_number)]
 
 
         class Digital:
@@ -68,7 +88,7 @@ class MainWindow(QMainWindow):
                                 in the expression, the channel becomes scanned as it is supposed to be changing at different
                                 scan steps
             '''
-            def __init__(self, expression = "0", evaluation = 0, value = 0, for_python = 0, changed = False, is_scanned = False):
+            def __init__(self, expression = "0", evaluation = 0, value = 0, for_python = 0, changed = True, is_scanned = False):
                 self.expression = expression
                 self.evaluation = evaluation
                 self.value = value
@@ -91,7 +111,7 @@ class MainWindow(QMainWindow):
                                 in the expression, the channel becomes scanned as it is supposed to be changing at different
                                 scan steps
             '''            
-            def __init__(self, expression = "0", evaluation = 0, value = 0, for_python = "0", changed = False, is_scanned = False):
+            def __init__(self, expression = "0", evaluation = 0, value = 0, for_python = "0", changed = True, is_scanned = False):
                 self.expression = expression
                 self.evaluation = evaluation
                 self.value = value
@@ -111,7 +131,7 @@ class MainWindow(QMainWindow):
                 state        :   An object that is used to describe the ON/OFF state of the dds channel
                 changed      :   Flag indicating if the dds channel is required to be changed at this time edge                
             '''
-            def __init__(self, state = 0.0, changed = False):
+            def __init__(self, state = 0, changed = True):
                 self.frequency = self.Object()
                 self.amplitude = self.Object()
                 self.attenuation = self.Object()
@@ -135,7 +155,7 @@ class MainWindow(QMainWindow):
                                     in the expression, the channel parameter becomes scanned as it is supposed to be changing at different
                                     scan steps
                 '''
-                def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, changed = False, is_scanned = False):
+                def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, changed = True, is_scanned = False):
                     self.expression = expression
                     self.evaluation = evaluation
                     self.for_python = evaluation
@@ -237,7 +257,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         #MAIN PAGE LAYOUT
-        self.setWindowTitle("Experimental control application. Hosten Group. Cold atoms team.")
+        self.setWindowTitle("Quantrol. %s Group" %config.research_group_name)
         self.main_window = QTabWidget()
         self.setCentralWidget(self.main_window)
         self.setGeometry(0,30,1920,1200)
@@ -273,7 +293,7 @@ class MainWindow(QMainWindow):
         self.to_update = True
         
         #starting artiq server (artiq_master)
-        self.server_thread = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artiq_master"])
+        self.server_thread = self.CustomThread(target=os.system, args=["conda activate %s && artiq_master"%config.artiq_environment_name])
         self.server_thread.start()  
     '''
     ||||||  ||    ||  ||    ||  |||||| |||||||| ||||||   |||||   ||    ||  ||||||||  ||  ||  ||
@@ -289,16 +309,32 @@ class MainWindow(QMainWindow):
         The function downloads the default state and initializes it by assigning the current experimental
         to the default values
         '''
+        incompatible = False
         try:
             with open("./default/default", 'rb') as file:
                 default_experiment = pickle.load(file)
+            if (len(default_experiment.sequence[0].digital) == config.digital_channels_number) and (len(default_experiment.sequence[0].analog) == config.analog_channels_number) and (len(default_experiment.sequence[0].dds) == config.dds_channels_number):
+                pass
+            else:
+                incompatible = True
+                default_experiment.sequence[0].digital[1000000000] #Causing an error
             #reassign the default values to the current self.experiment object
             self.experiment.sequence[0] = deepcopy(default_experiment.sequence[0])
             self.experiment.title_digital_tab = deepcopy(default_experiment.title_digital_tab)
             self.experiment.title_analog_tab = deepcopy(default_experiment.title_analog_tab)
             self.experiment.title_dds_tab = deepcopy(default_experiment.title_dds_tab)
         except:
-            self.error_message('No default file was found.', 'Error')
+            self.experiment.sequence[0] = self.Edge(name="Default")
+            self.experiment.title_digital_tab = ["#", "Name", "Time (ms)", ""] + [f"D{i}" for i in range(config.digital_channels_number)]
+            self.experiment.title_analog_tab = ["#", "Name", "Time (ms)", ""] + [f"A{i}" for i in range(config.analog_channels_number)]
+            self.experiment.title_dds_tab = ["#", "Name", "Time (ms)", ""] + [f"DDS{i}" for i in range(config.dds_channels_number)]            
+            if incompatible:
+                self.error_message('Default file is incompatible. Initializing the DEFAULT default values and updating the default file.', 'Error')
+            else:
+                self.error_message('Default file is not found. Initializing the DEFAULT default values and updating the default file.', 'Error')
+            with open("./default/default", 'wb') as file:
+                pickle.dump(self.experiment, file)
+
     
 
     def message_to_logger(self, message):
@@ -330,7 +366,7 @@ class MainWindow(QMainWindow):
         self.dds_dummy.setItem(0,3, QTableWidgetItem())
         self.dds_dummy.item(0,3).setBackground(self.gray)
         # gray coloured separating line dds tab
-        for i in range(12):
+        for i in range(config.dds_channels_number):
             self.dds_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
             self.dds_table.setItem(0,6*i + 3, QTableWidgetItem())
             self.dds_table.item(0, 6*i + 3).setBackground(self.gray)
@@ -686,10 +722,8 @@ class MainWindow(QMainWindow):
             write_to_python.create_go_to_edge(self, edge_num=edge_num)
             self.message_to_logger("Go to edge file generated")
             try:
-                # if os.system("conda activate artiq_5 && artiq_client submit go_to_edge.py") == 0:
-                if 1==1:    
+                if os.system("conda activate %s && artiq_client submit go_to_edge.py"%config.artiq_environment_name) == 0:
                     self.message_to_logger("Went to edge")
-                    print(123123, self.experiment.go_to_edge_num)
                     #unhighlighting the previously highlighted edge if it was previously highlighted
                     if self.experiment.go_to_edge_num != -1:
                         self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
@@ -729,7 +763,7 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Python file generated")
             try:
                 #initialize environment and submit the experiment to the scheduler
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit run_experiment.py"])
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_client submit run_experiment.py"%config.artiq_environment_name])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -753,7 +787,7 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Init_hardware.py file generated")
             try:
                 #initialize environment and submit the experiment to the scheduler
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit init_hardware.py"])
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_client submit init_hardware.py"%config.artiq_environment_name])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -783,15 +817,18 @@ class MainWindow(QMainWindow):
 
     def dummy_button_clicked(self):
         pass
-        '''
+        ''' 
         Function is used to debug the program. Can be used to check the variables at different time stamps.
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
         in the console of the VS Code and observing how parameters are being changed.
-        
         '''
+        for edge_num, edge in enumerate(self.experiment.sequence):
+            print("edge number", edge_num)
+            for index, channel in enumerate(edge.digital):
+                print("channel", index, channel.changed, channel.value, channel.expression)
         # print(self.server_thread.is_alive())
         # print(self.server_thread._return)
-        # current_experiment = self.CustomThread(target=os.system, args=["conda activate artiq_5 && artic_client scheduler.rid"])
+        # current_experiment = self.CustomThread(target=os.system, args=["conda activate %s && artic_client scheduler.rid"%config.artiq_environment_name])
         # write_to_python.create_experiment(self, run_continuous=True)
         # print(self.experiment.sequence[0].dds[9].phase.for_python, self.experiment.sequence[0].dds[9].phase.value)
         # print("analog channel values")
@@ -860,7 +897,7 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Python file generated")
             try:
                 #initialize environment and submit the experiment to run continuously unless it is stopped
-                submit_run_continuously_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_client submit run_experiment.py"])
+                submit_run_continuously_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_client submit run_experiment.py"%config.artiq_environment_name])
                 submit_run_continuously_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -883,7 +920,7 @@ class MainWindow(QMainWindow):
             write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
             self.message_to_logger("Init_hardware.py file generated")
             try:
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate artiq_5 && artiq_run init_hardware.py"])
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
                 submit_experiment_thread.start()
                 self.message_to_logger("Experiment was stopped. Hardware is set to the default values")
                 #unhighlighting the previously highlighted edge
@@ -1193,13 +1230,16 @@ class MainWindow(QMainWindow):
                     else:
                         #Reverting back the previously accepted expression
                         self.update_off()
-                        table_item.setText(str(channel.value))
+                        table_item.setText(str(channel.expression))
                         self.update_on()
                         self.error_message("Only value '1' or '0' are expected!", "Wrong entry!")
                 except:
                     #Return the previously assigned value if the expression can not be evaluated
                     self.update_off()
-                    table_item.setText(str(channel.value))
+                    if channel.changed:
+                        table_item.setText(channel.expression)
+                    else:
+                        table_item.setText(str(channel.value))
                     self.update_on()
                     self.error_message("Expression can not be evaluated", "Wrong entry")
 
@@ -1335,7 +1375,7 @@ class MainWindow(QMainWindow):
                         update.dds_tab(self)
                     else:
                         #Reverting back the previously accepted expression                            
-                        self.error_message("Only values between %f and %f are expected" %(minimum, maximum), "Wrong entry")
+                        self.error_message("Only values between %d and %d are expected" %(minimum, maximum), "Wrong entry")
                         self.update_off()
                         exec("self.dds_table.item(row,col).setText(str(self.experiment.sequence[edge_num].dds[channel].%s.expression))" %self.setting_dict[setting])
                         self.update_on()
@@ -1403,6 +1443,9 @@ class MainWindow(QMainWindow):
                     self.update_on()             
                 elif new_name in self.experiment.variables:#Restricting the user from defining the variable name as already defined variable names to avoid having dublicates
                     self.error_message('Variable name is already used', 'Invalid variable name')
+                    self.update_off()
+                    table_item.setText(variable.name)       
+                    self.update_on()                         
                 else: # The varibable name is almost among allowed, only the integer or float without other caracters should be checked.
                     only_numbers = False
                     try:
@@ -1411,6 +1454,9 @@ class MainWindow(QMainWindow):
                     except:
                         pass
                     if only_numbers: #Restricting the user from defining a variable name using only numbers
+                        self.update_off()
+                        table_item.setText(variable.name)       
+                        self.update_on()                         
                         self.error_message('Variable name can not be in a form of a number', 'Invalid variable name')
                     else:
                         #Allowed variable name. Now checking if it is used in any expression or not. It is done by deleting the variable and trying to evaluate every expression
@@ -1423,6 +1469,9 @@ class MainWindow(QMainWindow):
                             self.experiment.variables[new_name].name = new_name
                             self.experiment.variables[new_name].is_scanned = False
                             variable.name = new_name
+                            self.update_off()
+                            table_item.setText(variable.name)
+                            self.update_on()                            
                         else: #The previous variable was used somewhere. Reverting the name to the previous 
                             self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
                             self.experiment.variables[backup.name] = backup

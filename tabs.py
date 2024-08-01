@@ -2,6 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from datetime import datetime
+import config  
 
 class ReadOnlyDelegate(QStyledItemDelegate):
     '''
@@ -80,14 +81,15 @@ def sequence_tab_build(self):
     self.delete_edge_button.setText("Delete Edge")
     self.delete_edge_button.clicked.connect(self.delete_edge_button_clicked)
 
-    #trigger camera 10 times
-    self.skip_images_button = QPushButton(self.sequence_tab_widget)
-    self.skip_images_button.setFont(QFont('Arial', 14))
-    self.skip_images_button.setGeometry(width_of_table + 50, 330, 200, 30)
-    self.skip_images_button.setText("Skip images")
-    self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
-    self.skip_images_button.setStyleSheet("background-color : green; color : white") 
-    self.experiment.skip_images = True
+    if config.allow_skipping_images:
+        #trigger camera 10 times
+        self.skip_images_button = QPushButton(self.sequence_tab_widget)
+        self.skip_images_button.setFont(QFont('Arial', 14))
+        self.skip_images_button.setGeometry(width_of_table + 50, 330, 200, 30)
+        self.skip_images_button.setText("Skip images")
+        self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
+        self.skip_images_button.setStyleSheet("background-color : green; color : white") 
+        self.experiment.skip_images = True
 
     #button to save current sequence as
     self.save_sequence_as_button = QPushButton(self.sequence_tab_widget)
@@ -110,7 +112,7 @@ def sequence_tab_build(self):
     self.load_default.setText("Load default")
     self.load_default.clicked.connect(self.load_default_button_clicked)
 
-    #dummy button for checking 
+    #button to initialize the hardware
     self.init_hardware = QPushButton(self.sequence_tab_widget)
     self.init_hardware.setFont(QFont('Arial', 14))
     self.init_hardware.setGeometry(width_of_table + 50, 580, 200, 30)
@@ -124,7 +126,7 @@ def sequence_tab_build(self):
     self.generate_run_experiment_py_button.setText("Generate experiment")
     self.generate_run_experiment_py_button.clicked.connect(self.generate_run_experiment_py_button_clicked)
 
-    #dummy button for checking 
+    #dummy button for troubleshooting 
     self.dummy_button = QPushButton(self.sequence_tab_widget)
     self.dummy_button.setFont(QFont('Arial', 14))
     self.dummy_button.setGeometry(width_of_table + 50, 680, 200, 30)
@@ -192,6 +194,12 @@ def sequence_tab_build(self):
     self.number_of_steps_input.editingFinished.connect(self.number_of_steps_input_changed)
     self.number_of_steps_input.setText("1")
 
+    #warning for the user
+    self.warning_about_scan_range = QLabel(self.sequence_tab_widget)
+    self.warning_about_scan_range.setFont(QFont('Arial', 14))
+    self.warning_about_scan_range.setGeometry(width_of_table + 300, 330, 800, 30)
+    self.warning_about_scan_range.setText("Make sure the scan of variables remains withing the allowed values range!!!")
+
     #Horizontal layout
     hBox = QHBoxLayout()
     temp = QWidget()
@@ -219,7 +227,8 @@ def sequence_tab_build(self):
     self.logger.setFont(QFont("Arial", 12))
     self.logger.setGeometry(width_of_table + 50, 790, 1000, 300)
     self.logger.setReadOnly(True)
-    self.logger.appendPlainText("Welcome to the Hosten lab! Hope you enjoy your stay here :)")
+    self.logger.appendPlainText("Welcome to the %s lab! Hope you enjoy your stay here :)" %config.research_group_name)
+    self.logger.appendPlainText("Don't forget to initialize the hardware after the power cycle!!!")
     self.logger.appendPlainText("")
     self.logger.appendPlainText(datetime.now().strftime("%D %H:%M:%S - ") + "Program initialized")
     
@@ -232,7 +241,7 @@ def sequence_tab_build(self):
 
 # DIGITAL TAB
 def digital_tab_build(self):
-    self.digital_tab_num_cols = 16 + 4    
+    self.digital_tab_num_cols = config.digital_channels_number + 4    
     self.digital_and_analog_table_column_width = 130
     #DIGITAL TAB WIDGET
     self.digital_tab_widget = QWidget()
@@ -337,7 +346,7 @@ def digital_tab_build(self):
 
 #ANALOG TAB
 def analog_tab_build(self):
-    self.analog_tab_num_cols = 32 + 4    
+    self.analog_tab_num_cols = config.analog_channels_number + 4    
     #ANALOG TAB WIDGET
     self.analog_tab_widget = QWidget()
     #ANALOG LABLE
@@ -442,7 +451,7 @@ def analog_tab_build(self):
 
 
 def dds_tab_build(self):
-    self.dds_tab_num_cols = 6*12 + 3
+    self.dds_tab_num_cols = 6*config.dds_channels_number + 3
     #DDS TABLE WIDGET
     self.dds_tab_widget = QWidget()
     #DDS LABLE
@@ -471,7 +480,7 @@ def dds_tab_build(self):
 
     delegate = ReadOnlyDelegate(self)
     #SHAPING THE TABLE
-    for i in range(12):
+    for i in range(config.dds_channels_number):
         self.dds_table.setSpan(0,4 + 6*i, 1, 5) # stretching the title of the channel
         self.dds_table.setColumnWidth(3 + 6*i, 5) # making separation line thin
         self.dds_table.setColumnWidth(8 + 6*i, 45) # making state column smaller
@@ -488,7 +497,10 @@ def dds_tab_build(self):
         for setting in range(5):
             exec("self.dds_table.setItem(2, col + setting, QTableWidgetItem(str(channel.%s.expression)))" %self.setting_dict[setting])
             exec("self.dds_table.item(2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
-            self.dds_table.item(2, col + setting).setBackground(self.green)
+            if channel.state == 1:
+                self.dds_table.item(2, col + setting).setBackground(self.green)
+            else:  
+                self.dds_table.item(2, col + setting).setBackground(self.red)
 
 
     self.dds_table.itemChanged.connect(self.dds_table_changed)
@@ -540,7 +552,7 @@ def dds_tab_build(self):
     self.dds_dummy_header.setColumnWidth(2,100)
 
     #SHAPING THE TABLE
-    for i in range(12):
+    for i in range(config.dds_channels_number):
         self.dds_dummy_header.setSpan(0,4 + 6*i, 1, 5) # stretching the title of the channel
         self.dds_dummy_header.setColumnWidth(3 + 6*i, 5) # making separation line thin
         self.dds_dummy_header.setColumnWidth(8 + 6*i, 45) # making state column smaller
@@ -549,7 +561,7 @@ def dds_tab_build(self):
     self.dds_dummy_header.setItemDelegateForRow(1, delegate) #making row number 2 uneditable
 
     #populating headers and separators
-    for i in range(12):
+    for i in range(config.dds_channels_number):
         #separator
         self.dds_dummy_header.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
         self.dds_dummy_header.setItem(0,6*i + 3, QTableWidgetItem())
