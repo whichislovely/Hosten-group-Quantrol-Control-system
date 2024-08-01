@@ -8,7 +8,8 @@ newseq/
 repository/*
 results/
 default/
-
+device_db.py
+config.py
 
 
 
