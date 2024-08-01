@@ -31,7 +31,7 @@ def create_experiment(self, run_continuous = False):
             file.write(indentation + "self.setattr_device('urukul%d_ch%d')\n" %(_,i)) 
     for _ in range(16):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
-    file.write(indentation + "self.setattr_device('zotino0')\n")
+    file.write(indentation + "self.setattr_device('%s0')\n" %config.analog_card)
     
     if run_continuous:
         file.write(indentation + "self.setattr_device('scheduler')\n")
@@ -203,7 +203,8 @@ def create_go_to_edge(self, edge_num, to_default = False):
             file.write(indentation + "self.setattr_device('urukul%d_ch%d')\n" %(_,i)) 
     for _ in range(16):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
-    file.write(indentation + "self.setattr_device('zotino0')\n")
+    
+    file.write(indentation + "self.setattr_device('%s0')\n" %config.analog_card)
     file.write("\n")
     indentation = indentation[:-4]
     # Overwriting the run method
