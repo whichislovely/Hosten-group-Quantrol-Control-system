@@ -86,6 +86,7 @@ def create_experiment(self, run_continuous = False):
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #making a scanning loop 
         #introduce a flag for multi and single variable scan
+        file.write(indentation + "#Beginning of the Scan\n")
         if self.experiment.scanned_variables_count > 1:
             file.write(indentation + "for step in range(%d):\n" %(self.experiment.number_of_steps))
         indentation += "    "
