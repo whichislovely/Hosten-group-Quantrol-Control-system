@@ -1,6 +1,5 @@
 __pycache__/
 default/
-
 go_to_edge.py
 init_hardware.py
 run_experiment.py
