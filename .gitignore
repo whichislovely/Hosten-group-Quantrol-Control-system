@@ -5,11 +5,14 @@ last_rid.pyon
 dataset_db.pyon
 atom_characterization_seq/
 cooling_sequences/
-dipole_seq/
+sequences/
 newseq/
 repository/
 results/
 default/
+developer_notes
+readme.txt
+
 
 
 
