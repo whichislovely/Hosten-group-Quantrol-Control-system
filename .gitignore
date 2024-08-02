@@ -1,18 +1,14 @@
 __pycache__/
+default/
+repository/*
+results/*
 go_to_edge.py
+init_hardware.py
 run_experiment.py
 last_rid.pyon
 dataset_db.pyon
-atom_characterization_seq/
-cooling_sequences/
-dipole_seq/
-newseq/
-repository/*
-results/
-default/
 device_db.py
-config.pydeveloper_notes
-readme.txt
+config.py
 
 
 
