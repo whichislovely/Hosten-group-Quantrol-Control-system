@@ -816,6 +816,37 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Was not able to generate python file")
 
 
+    def submit_run_experiment_py_button_clicked(self):
+        '''
+        Function is used to submit already existing run_experiment.py without updating it with the current state
+        of the experimental description. Useful in case one needs to hard code some changes into the previously
+        generated run_experiment.py file. For instance, making a 2D scan:
+        
+        self.a = np.linspace(a_min, a_max, number_of_steps_a)
+        self.b = np.linspace(b_min, b_max, number_of_steps_b)
+        
+        for index_a in range(number_of_steps_a):
+            for index_b in range(number_of_steps_b):
+                self.ttl0(self.a[index_a])
+                self.ttl1(self.b[index_b])
+        '''
+        file_name = "run_experiment.py"
+        if os.path.exists(file_name):
+            try:
+                #initialize environment and submit the experiment to the scheduler
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_client submit run_experiment.py"%config.artiq_environment_name])
+                submit_experiment_thread.start()
+                #unhighlighting the previously highlighted edge
+                if self.experiment.go_to_edge_num != -1:
+                    self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                    self.experiment.go_to_edge_num = -1
+                #needs to be done ---> logging the start of the experiment only if it was started without errors. Checking experiment stages
+                self.message_to_logger("Experiment started")
+            except:
+                self.message_to_logger("Was not able to start experiment")        
+        else:
+            self.message_to_logger("The file run_experiment.py is not found")
+        
     def dummy_button_clicked(self):
         pass
         ''' 

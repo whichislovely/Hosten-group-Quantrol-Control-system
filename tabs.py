@@ -126,6 +126,13 @@ def sequence_tab_build(self):
     self.generate_run_experiment_py_button.setText("Generate experiment")
     self.generate_run_experiment_py_button.clicked.connect(self.generate_run_experiment_py_button_clicked)
 
+    #button to submit the run_experiment.py without updating it with the current experimental description. It is useful in case one needs to hard code something in the sequence and wants to just run it
+    self.submit_run_experiment_py_button = QPushButton(self.sequence_tab_widget)
+    self.submit_run_experiment_py_button.setFont(QFont('Arial', 14))
+    self.submit_run_experiment_py_button.setGeometry(width_of_table + 260, 630, 200, 30)
+    self.submit_run_experiment_py_button.setText("Submit experiment")
+    self.submit_run_experiment_py_button.clicked.connect(self.submit_run_experiment_py_button_clicked)
+
     #dummy button for troubleshooting 
     self.dummy_button = QPushButton(self.sequence_tab_widget)
     self.dummy_button.setFont(QFont('Arial', 14))
