@@ -1,7 +1,7 @@
 digital_channels_number = 16
 analog_channels_number = 16
 dds_channels_number = 12
-artiq_environment_name = "artiq" # cold atoms team has "artiq_5". Hybrid experiment has "artiq"
-analog_card = "fastino" # cold atoms team has "zotino". Hybrid experiment has "fastino"
+artiq_environment_name = "artiq" # it can be either artiq or artiq_5 for Hosten lab systems
+analog_card = "fastino" # it can be either fastino or zotino for Hosten lab systems
 research_group_name = "Hosten"
-allow_skipping_images = False
+allow_skipping_images = True
