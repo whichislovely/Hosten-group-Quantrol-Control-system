@@ -5,12 +5,13 @@ last_rid.pyon
 dataset_db.pyon
 atom_characterization_seq/
 cooling_sequences/
-sequences/
+dipole_seq/
 newseq/
-repository/
+repository/*
 results/
 default/
-developer_notes
+device_db.py
+config.pydeveloper_notes
 readme.txt
 
 

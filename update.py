@@ -304,11 +304,12 @@ def from_object(self):
         self.dds_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
         self.dds_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
 
-    #Updating the "Skip images" button color
-    if self.experiment.skip_images == False:
-        self.skip_images_button.setStyleSheet("background-color : red; color : white")
-    else:
-        self.skip_images_button.setStyleSheet("background-color : green; color : white")
+    if config.allow_skipping_images:
+        #Updating the "Skip images" button color
+        if self.experiment.skip_images == False:
+            self.skip_images_button.setStyleSheet("background-color : red; color : white")
+        else:
+            self.skip_images_button.setStyleSheet("background-color : green; color : white")
 
     #Populating the table
     for row, edge in enumerate(self.experiment.sequence):

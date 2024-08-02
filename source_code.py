@@ -332,6 +332,7 @@ class MainWindow(QMainWindow):
                 self.error_message('Default file is incompatible. Initializing the DEFAULT default values and updating the default file.', 'Error')
             else:
                 self.error_message('Default file is not found. Initializing the DEFAULT default values and updating the default file.', 'Error')
+            os.makedirs("./default", exist_ok=True)
             with open("./default/default", 'wb') as file:
                 pickle.dump(self.experiment, file)
 
@@ -824,8 +825,8 @@ class MainWindow(QMainWindow):
         '''
         for edge_num, edge in enumerate(self.experiment.sequence):
             print("edge number", edge_num)
-            for index, channel in enumerate(edge.digital):
-                print("channel", index, channel.changed, channel.value, channel.expression)
+            for index, channel in enumerate(edge.analog):
+                print("channel", channel.value, channel.for_python)
         # print(self.server_thread.is_alive())
         # print(self.server_thread._return)
         # current_experiment = self.CustomThread(target=os.system, args=["conda activate %s && artic_client scheduler.rid"%config.artiq_environment_name])
@@ -1133,12 +1134,18 @@ class MainWindow(QMainWindow):
                         self.update_on()
                 self.count_scanned_variables()
             elif col == 1: #min_val of the scanned variable changed
-                variable.min_val = float(table_item.text())
-                if self.scan_table_parameters.item(row, 0).text() != "None": # this makes sure that we do not have to deal with "None" named variable
-                    # we use the min values in order to use in sorting of the sequence tab
-                    self.experiment.variables[variable.name].value = float(table_item.text())
+                try:
+                    variable.min_val = float(table_item.text())
+                    if self.scan_table_parameters.item(row, 0).text() != "None": # this makes sure that we do not have to deal with "None" named variable
+                        # we use the min values in order to use in sorting of the sequence tab
+                        self.experiment.variables[variable.name].value = float(table_item.text())
+                except:
+                    self.error_message("Expression can not be evaluated", "Wrong entry")
             elif col == 2: #max_val of the scanned variable changed
-                variable.max_val = float(table_item.text())
+                try:
+                    variable.max_val = float(table_item.text())
+                except:
+                    self.error_message("Expression can not be evaluated", "Wrong entry")
             update.variables_tab(self)
             update.all_tabs(self)
             update.scan_table(self)       
@@ -1286,7 +1293,7 @@ class MainWindow(QMainWindow):
     def analog_table_changed(self, item):
         '''
         Function is used when the user changes the values in the analog table. It ensures that the expressions are float values in the 
-        range between -10 to +10. The user can delete the input and the function will assign the value of the previous edge and unhighlight the channel
+        range between -9.9 to +9.9. The user can delete the input and the function will assign the value of the previous edge and unhighlight the channel
         indicating that it should not be changed and will only display previously set value.
         '''
         if self.to_update:
@@ -1296,7 +1303,7 @@ class MainWindow(QMainWindow):
             table_item = self.analog_table.item(row,col)
             if table_item.text() == "": #User deleted the value. The function will display the previously set state
                 if row == 0: # default edge
-                    self.error_message("You can not delete initial value! Only values from '-10' to '10' are expected", "Initial value is needed!")
+                    self.error_message("You can not delete initial value!", "Initial value is needed!")
                     self.update_off()
                     table_item.setText(channel.expression)
                     self.update_on()
@@ -1309,7 +1316,7 @@ class MainWindow(QMainWindow):
                     expression = table_item.text()
                     (evaluation, for_python, is_scanned) = self.decode_input(expression)
                     exec("self.value =" + evaluation)
-                    if (self.value <= 10 and self.value >= -10):
+                    if (self.value <= 9.9 and self.value >= -9.9):
                         channel.expression = expression
                         channel.evaluation = evaluation
                         channel.value = self.value
@@ -1322,7 +1329,7 @@ class MainWindow(QMainWindow):
                         self.update_off()
                         table_item.setText(channel.expression)
                         self.update_on()
-                        self.error_message("Only values between '+10' and '-10' are expected", "Wrong entry")
+                        self.error_message("Only values between '+9.9' and '-9.9' are expected", "Wrong entry")
                 except:
                     #Return the previously assigned value if the expression can not be evaluated                    
                     self.update_off()

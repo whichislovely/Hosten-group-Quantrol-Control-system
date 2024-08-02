@@ -25,13 +25,15 @@ def create_experiment(self, run_continuous = False):
     file.write(indentation + "def build(self):\n")
     indentation += "    "
     file.write(indentation + "self.setattr_device('core')\n")
-    for _ in range(3):
+    number_of_urukuls = int(config.dds_channels_number)//4
+    for _ in range(number_of_urukuls):
         file.write(indentation + "self.setattr_device('urukul%d_cpld')\n" %_) 
         for i in range(4):
             file.write(indentation + "self.setattr_device('urukul%d_ch%d')\n" %(_,i)) 
-    for _ in range(16):
+    number_of_ttls = int(config.digital_channels_number)        
+    for _ in range(number_of_ttls):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
-    file.write(indentation + "self.setattr_device('zotino0')\n")
+    file.write(indentation + "self.setattr_device('%s0')\n" %config.analog_card)
     
     if run_continuous:
         file.write(indentation + "self.setattr_device('scheduler')\n")
@@ -40,12 +42,10 @@ def create_experiment(self, run_continuous = False):
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #iterating over valid (not "None") scanned variables and creating an array to be used as a collection of names
         var_names = ""
-        for_zipping = ""
         for variable in self.experiment.scanned_variables:
             if variable.name != "None":
                 file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.number_of_steps))
                 var_names += variable.name + ", "
-                for_zipping += "self." + variable.name + ", "
     file.write("\n")
     indentation = indentation[:-4]
 
@@ -57,15 +57,15 @@ def create_experiment(self, run_continuous = False):
     file.write(indentation + "self.core.break_realtime()\n")
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         # this delay needs to be optimized. It may depend on scanning parameters as well
-        file.write(indentation + "delay(5*s)\n") 
+        file.write(indentation + "delay(1*s)\n") 
     else:
         file.write(indentation + "delay(10*ms)\n") # this delay is added since our reference clock is 1GHz and self.core.break_realtime moves it forward by 15000 clock cycles
     
     # This is used to trigger the camera 10 times and discard those images
-    file.write(indentation + "self.ttl8.off()\n")
-    file.write(indentation + "self.ttl9.off()\n")
-    file.write(indentation + "delay(100*ms)\n")
-    if self.experiment.skip_images:
+    if config.allow_skipping_images == True and self.experiment.skip_images:
+        file.write(indentation + "self.ttl8.off()\n")
+        file.write(indentation + "self.ttl9.off()\n")
+        file.write(indentation + "delay(100*ms)\n")
         file.write(indentation + "for _ in range(10):\n")
         indentation += "    "
         file.write(indentation + "self.ttl8.on()\n")
@@ -87,9 +87,7 @@ def create_experiment(self, run_continuous = False):
         #making a scanning loop 
         #introduce a flag for multi and single variable scan
         if self.experiment.scanned_variables_count > 1:
-            file.write(indentation + "for %s in zip(%s):\n" %(var_names[:-2], for_zipping[:-2]))
-        else:
-            file.write(indentation + "for %s in %s:\n" %(var_names[:-2], for_zipping[:-2]))        
+            file.write(indentation + "for step in range(%d):\n" %(self.experiment.number_of_steps))
         indentation += "    "
     self.delta_t = 0
 
@@ -121,7 +119,7 @@ def create_experiment(self, run_continuous = False):
                     file.write(indentation + "self.ttl" + str(index) + ".on()\n") 
                 else:
                     file.write(indentation + "self.ttl" + str(index) + ".off()\n") 
-
+        
         #ANALOG CHANNEL CHANGES
         #Assigning zotino card values
         if config.analog_card == "zotino":
@@ -130,7 +128,7 @@ def create_experiment(self, run_continuous = False):
                 if channel.changed == True:
                     flag_zotino_change_needed = True
                     if channel.is_scanned:
-                        file.write(indentation + "self.zotino0.write_dac(%d, channel.for_python)\n" %index)
+                        file.write(indentation + "self.zotino0.write_dac(%d, self.%s[step])\n" %(index,channel.for_python))
                     else:
                         file.write(indentation + "self.zotino0.write_dac(%d, %.4f)\n" %(index, channel.value))
             if flag_zotino_change_needed:
@@ -143,17 +141,14 @@ def create_experiment(self, run_continuous = False):
             for index, channel in enumerate(self.experiment.sequence[edge].analog):
                 if channel.changed == True:
                     number_of_channels_changed += 1
-                    if first_analog_channel == True: #To avoid adding a delay before the first analog channel change
-                        first_analog_channel = False
-                    else:
-                        file.write(indentation + "delay(10*ns)\n")    
+                    file.write(indentation + "delay(10*ns)\n")    
                     if channel.is_scanned:
-                        file.write(indentation + "self.fastino0.set_dac(%d, channel.for_python)\n" %index)
+                        file.write(indentation + "self.fastino0.set_dac(%d, self.%s[step])\n" %(index,channel.for_python))
                     else:
                         file.write(indentation + "self.fastino0.set_dac(%d, %.4f)\n" %(index, channel.value))
             #Moving the time cursor back
             if number_of_channels_changed > 1:
-                file.write(indentation + "delay(-%d0*ns)\n" %(number_of_channels_changed-1))
+                file.write(indentation + "delay(-%d0*ns)\n" %(number_of_channels_changed))
             
         #DDS CHANNEL CHANGES
         for index, channel in enumerate(self.experiment.sequence[edge].dds):
@@ -197,13 +192,16 @@ def create_go_to_edge(self, edge_num, to_default = False):
     file.write(indentation + "def build(self):\n")
     indentation += "    "
     file.write(indentation + "self.setattr_device('core')\n")
-    for _ in range(3):
+    number_of_urukuls = int(config.dds_channels_number)//4
+    for _ in range(number_of_urukuls):
         file.write(indentation + "self.setattr_device('urukul%d_cpld')\n" %_) 
         for i in range(4):
             file.write(indentation + "self.setattr_device('urukul%d_ch%d')\n" %(_,i)) 
-    for _ in range(16):
+    number_of_ttls = int(config.digital_channels_number)
+    for _ in range(number_of_ttls):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
-    file.write(indentation + "self.setattr_device('zotino0')\n")
+    
+    file.write(indentation + "self.setattr_device('%s0')\n" %config.analog_card)
     file.write("\n")
     indentation = indentation[:-4]
     # Overwriting the run method
