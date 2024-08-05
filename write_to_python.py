@@ -55,14 +55,12 @@ def create_experiment(self, run_continuous = False):
     indentation += "    "
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
-    if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
-        # this delay needs to be optimized. It may depend on scanning parameters as well
-        file.write(indentation + "delay(1*s)\n") 
-    else:
-        file.write(indentation + "delay(10*ms)\n") # this delay is added since our reference clock is 1GHz and self.core.break_realtime moves it forward by 15000 clock cycles
+
+    file.write(indentation + "delay(1*s)\n") # this delay is added since our reference clock is 1GHz and self.core.break_realtime moves it forward by 15000 clock cycles
     
     # This is used to trigger the camera 10 times and discard those images
     if config.allow_skipping_images == True and self.experiment.skip_images:
+        file.write(indentation + "# Triggering camera 10 times in the beginning of experiment\n")
         file.write(indentation + "self.ttl8.off()\n")
         file.write(indentation + "self.ttl9.off()\n")
         file.write(indentation + "delay(100*ms)\n")
@@ -82,13 +80,14 @@ def create_experiment(self, run_continuous = False):
         file.write(indentation + "while True:\n")
         indentation += "    "
 
+    # 10 ns delay to avoid collision of the last edge assignment of digital channels as there is at most 8 channel changes at a given time stamp
+    file.write(indentation + "delay(10*ns)\n")
     # If scan is needed 
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #making a scanning loop 
         #introduce a flag for multi and single variable scan
         file.write(indentation + "#Beginning of the Scan\n")
-        if self.experiment.scanned_variables_count > 1:
-            file.write(indentation + "for step in range(%d):\n" %(self.experiment.number_of_steps))
+        file.write(indentation + "for step in range(%d):\n" %(self.experiment.number_of_steps))
         indentation += "    "
     self.delta_t = 0
 
@@ -100,7 +99,14 @@ def create_experiment(self, run_continuous = False):
             flag_init = 1
         else:
             #Brackets are needed to take into account that for_python can be a mathematical expression with signs
-            self.delta_t = str(simplify("(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"))
+            print(1)
+            try:
+                temp_text = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
+                # print(temp_text)
+                self.delta_t = str(simplify(temp_text))
+            except:
+                self.delta_t = temp_text
+            print(2, self.delta_t)
             # self.delta_t = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
             try: #this try is used to try evaluating the expression. It will only be able to do so in case it is scanned
                 exec("self.delta_t = " + self.delta_t)
@@ -121,6 +127,8 @@ def create_experiment(self, run_continuous = False):
                 else:
                     file.write(indentation + "self.ttl" + str(index) + ".off()\n") 
         
+        if edge == 0: #adding a 10 ns delay after 8 ttl channels because otherwise it ignores the first analog channel
+            file.write(indentation + "delay(10*ns)\n")
         #ANALOG CHANNEL CHANGES
         #Assigning zotino card values
         if config.analog_card == "zotino":
@@ -129,7 +137,7 @@ def create_experiment(self, run_continuous = False):
                 if channel.changed == True:
                     flag_zotino_change_needed = True
                     if channel.is_scanned:
-                        file.write(indentation + "self.zotino0.write_dac(%d, self.%s[step])\n" %(index,channel.for_python))
+                        file.write(indentation + "self.zotino0.write_dac(%d, %s)\n" %(index,channel.for_python))
                     else:
                         file.write(indentation + "self.zotino0.write_dac(%d, %.4f)\n" %(index, channel.value))
             if flag_zotino_change_needed:
@@ -144,7 +152,7 @@ def create_experiment(self, run_continuous = False):
                     number_of_channels_changed += 1
                     file.write(indentation + "delay(10*ns)\n")    
                     if channel.is_scanned:
-                        file.write(indentation + "self.fastino0.set_dac(%d, self.%s[step])\n" %(index,channel.for_python))
+                        file.write(indentation + "self.fastino0.set_dac(%d, %s)\n" %(index,channel.for_python))
                     else:
                         file.write(indentation + "self.fastino0.set_dac(%d, %.4f)\n" %(index, channel.value))
             #Moving the time cursor back
@@ -156,8 +164,8 @@ def create_experiment(self, run_continuous = False):
             if channel.changed == True:
                 urukul_num = int(index // 4)
                 channel_num = int(index % 4)
-                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att(" + str(channel.attenuation.for_python) + "*dB) \n")    
-                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.for_python) + "*MHz, amplitude = " + str(channel.amplitude.for_python) + ", phase = " + str(channel.phase.for_python) + ")\n")    
+                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att((" + str(channel.attenuation.for_python) + ")*dB) \n")    
+                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = (" + str(channel.frequency.for_python) + ")*MHz, amplitude = " + str(channel.amplitude.for_python) + ", phase = " + str(channel.phase.for_python) + ")\n")    
                 if channel.state.value == 1:
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
                 else:
@@ -222,7 +230,7 @@ def create_go_to_edge(self, edge_num, to_default = False):
             file.write(indentation + "self.ttl" + str(index) + ".off()\n")
         elif channel.value == 1:
             file.write(indentation + "self.ttl" + str(index) + ".on()\n")        
-
+    file.write(indentation + "delay(10*ns)\n")
     # ANALOG CHANNEL CHANGES
     # Assigning zotino card changes
     if config.analog_card == "zotino":

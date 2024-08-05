@@ -167,7 +167,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
     self.update_off()
     #note that in order to display numbers you first need to convert them to string
     for channel_index in range(config.dds_channels_number):
-        for setting in range(5):
+        for setting in range(4,-1,-1): #start an update from the state of the channel to properly update the color coding
             for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
                 channel = self.experiment.sequence[row-2].dds[channel_index]
                 # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
@@ -189,6 +189,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                             exec("channel_entry.value =" + channel_entry.evaluation)
                         except:
                             return "dds channel %d, edge %d" %(channel_index, row)
+                        #check if the value within allowed range
                         if channel_entry.value >= self.min_dict[setting] and channel_entry.value <= self.max_dict[setting]:
                             #Color coding the values
                             if channel.state.value == 1:

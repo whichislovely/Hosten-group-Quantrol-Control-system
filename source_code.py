@@ -427,11 +427,15 @@ class MainWindow(QMainWindow):
                     variable = self.experiment.variables[current]
                     if self.experiment.do_scan and variable.is_scanned:#if scanned assign the python form else assign the value
                         is_scanned = True
+                        # output_for_python += "self." + str(self.experiment.variables[current].for_python) + "[step]" + text[index]
                         output_for_python += str(self.experiment.variables[current].for_python) + text[index]
                     else:
                         output_for_python += str(variable.value) + text[index]
                 current = ""
                 index += 1
+        # Removing all additional characters in the end. Making a+2+ into a+2
+        output_eval = output_eval[:-1]
+        output_for_python = output_for_python[:-1]
         # If for_python can be evaluated, then just store the value. Otherwise we keep the original form
         try:
             exec("self.temp =" + output_for_python)
@@ -443,7 +447,7 @@ class MainWindow(QMainWindow):
             output_eval = str(float(output_eval))
         except:
             pass
-        return (output_eval[:-1], output_for_python[:-1], is_scanned) #Since we added an additional sign we need to remove it
+        return (output_eval, output_for_python, is_scanned) #Since we added an additional sign we need to remove it
 
 
     def remove_restricted_characters(self, text):
@@ -476,6 +480,7 @@ class MainWindow(QMainWindow):
             table_item = self.sequence_table.item(row,col)
             if col == 1: # edge name changed
                 edge.name = table_item.text()
+                update.from_object(self)
             elif col == 3: # edge time expression changed
                 if table_item.text() == "":
                     #previous edge values
@@ -855,9 +860,10 @@ class MainWindow(QMainWindow):
         in the console of the VS Code and observing how parameters are being changed.
         '''
         for edge_num, edge in enumerate(self.experiment.sequence):
-            print("edge number", edge_num)
-            for index, channel in enumerate(edge.analog):
-                print("channel", channel.value, channel.for_python)
+            print("edge number", edge_num, "value", edge.value, "for python", edge.for_python)
+            
+            # for index, channel in enumerate(edge.analog):
+            #     print("channel", channel.value, channel.for_python)
         # print(self.server_thread.is_alive())
         # print(self.server_thread._return)
         # current_experiment = self.CustomThread(target=os.system, args=["conda activate %s && artic_client scheduler.rid"%config.artiq_environment_name])
@@ -1156,7 +1162,7 @@ class MainWindow(QMainWindow):
                         #updating the values and scanning states of the new scanning  variable
                         variable.name = new_variable_name
                         self.experiment.variables[variable.name] = self.Variable(variable.name, variable.min_val, variable.min_val, True) #add a new variable with updated name
-                        self.experiment.variables[variable.name].for_python = variable.name
+                        self.experiment.variables[variable.name].for_python = "self." + variable.name + "[step]"
                         self.experiment.new_variables[index].is_scanned = True
                     else: # if index == None it means that the variable name entered is not defined in a variables tab
                         self.error_message("The variable name you entered was not defined in variables tab", "Not defined variable")
@@ -1396,7 +1402,7 @@ class MainWindow(QMainWindow):
                     self.experiment.sequence[edge_num].dds[channel].changed = False
                     self.update_on()
                     update.dds_tab(self)
-            else:   #User entered a new state
+            else:   #User entered a new input value
                 try:
                     #Checking whether the expression can be evaluated and the value is within allowed range                     
                     expression = self.dds_table.item(row,col).text()

@@ -2,6 +2,7 @@ __pycache__/
 default/
 repository/
 results/
+sequences/
 go_to_edge.py
 init_hardware.py
 run_experiment.py
