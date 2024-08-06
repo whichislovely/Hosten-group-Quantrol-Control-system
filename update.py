@@ -62,10 +62,11 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
             channel = self.experiment.sequence[row].digital[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
             col = channel_index + 4
+            table_item = self.digital_table.item(row,col)
             if channel.changed: #Channel state needs to be updated
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
-                    channel.expression = self.digital_table.item(row,col).text()
+                    channel.expression = table_item.text()
                     try:
                         (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(channel.expression)
                     except:
@@ -78,11 +79,12 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                         return "digital channel %d, edge %d" %(channel_index, row)
                     #Color coding the values
                     if channel.value == 1:
-                        self.digital_table.item(row,col).setBackground(self.green)
+                        table_item.setBackground(self.green)
                     elif channel.value == 0:
-                        self.digital_table.item(row,col).setBackground(self.red)
+                        table_item.setBackground(self.red)
                     else: # the value is out of the allowed range
                         return "digital channel %d, edge %d" %(channel_index, row)
+                    table_item.setToolTip(str(channel.value))
                 #Saving the current state of the channel
                 current_expression = channel.expression
                 current_evaluation = channel.evaluation
@@ -97,10 +99,10 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                 #Updating values and table entries
                 if update_values_and_table:
                     channel.value = int(current_value)
-                    self.digital_table.item(row,col).setText(channel.expression + " ") # Updating digital table entries 
-                    self.digital_table.item(row,col).setToolTip(str(channel.value))
+                    table_item.setText(channel.expression + " ") # Updating digital table entries 
+                    table_item.setToolTip(str(channel.value))
                 #Color coding the values
-                self.digital_table.item(row,col).setBackground(self.white)   
+                table_item.setBackground(self.white)   
                                  
     self.update_on()
 
@@ -116,28 +118,37 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
             channel = self.experiment.sequence[row].analog[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
             col = channel_index + 4
+            table_item = self.analog_table.item(row,col)
             if channel.changed: #Channel state needs to be updated
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
-                    channel.expression = self.analog_table.item(row,col).text()
+                    channel.expression = table_item.text()
+                    #If a number is convertible to float display only up to first 3 digits
+                    try:
+                        channel.expression = str(int(float(channel.expression) * 1000)/1000)
+                    except:
+                        pass
                     try:
                         (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(channel.expression)
                     except:
                         return "analog channel %d, edge %d" %(channel_index, row)
                 #Updating values and table
                 if update_values_and_table:
+                    #Check if the expression can be evaluated
                     try:
                         exec("channel.value = " + channel.evaluation)
                     except:
                         return "analog channel %d, edge %d" %(channel_index, row)
                     #Color coding the values
-                    if channel.value >= -10 and channel.value <= 10:
+                    if channel.value >= -9.9 and channel.value <= 9.9:
                         if channel.value != 0:
-                            self.analog_table.item(row,col).setBackground(self.green)
+                            table_item.setBackground(self.green)
                         else:
-                            self.analog_table.item(row,col).setBackground(self.red)
+                            table_item.setBackground(self.red)
                     else:
                         return "analog channel %d, edge %d" %(channel_index, row)
+                    table_item.setText(channel.expression)
+                    table_item.setToolTip(str(channel.value))
                 #Saving the current state of the channel
                 current_expression = channel.expression
                 current_evaluation = channel.evaluation
@@ -152,10 +163,10 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                 #Updating values
                 if update_values_and_table:
                     channel.value = current_value     
-                    self.analog_table.item(row,col).setText(current_expression + " ")  # Updating analog table entries                       
-                    self.analog_table.item(row,col).setToolTip(str(channel.value))
+                    table_item.setText(current_expression + " ")  # Updating analog table entries                       
+                    table_item.setToolTip(str(channel.value))
                 #Color coding the values
-                self.analog_table.item(row,col).setBackground(self.white)                       
+                table_item.setBackground(self.white)                       
 
     self.update_on()
 
@@ -179,11 +190,25 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                     #Updating expressions and evaluations
                     if update_expressions_and_evaluations:
                         channel_entry.expression = table_item.text()
+                        #If a value is convertible to float perform the conversion as Artiq parameters for dds channel are required to be floats not integers
+                        try:
+                            if setting == 0: #frequency
+                                channel_entry.expression = str(float(channel_entry.expression))
+                            elif setting == 1: #amplitude
+                                channel_entry.expression = str(int(float(channel_entry.expression)*1000)/1000) # Keep only up to 3rd digit (0.1234 --> 0.123)
+                            elif setting == 2: #attenuation
+                                channel_entry.expression = str(round(float(channel_entry.expression)*2)/2) #Round up to 0.5
+                            elif setting == 3: #phase
+                                channel_entry.expression = str(float(channel_entry.expression))
+                            elif setting == 4: #state
+                                channel_entry.expression = str(int(channel_entry.expression))
+                        except:
+                            pass
                         try:
                             (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned) = self.decode_input(channel_entry.expression)
                         except:
                             return "dds channel %d, edge %d" %(channel_index, row)
-                    #Updating values
+                    #Updating values and table entries
                     if update_values_and_table:
                         try:
                             exec("channel_entry.value =" + channel_entry.evaluation)
@@ -196,6 +221,9 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                                 table_item.setBackground(self.green)
                             else:
                                 table_item.setBackground(self.red)
+                            #Updating the entry of table to convert to float or integer. (Only state is being converted to integer)
+                            table_item.setText(channel_entry.expression)
+                            table_item.setToolTip(str(channel_entry.value))
                         else:
                             return "dds channel %d, edge %d" %(channel_index, row)
                     #Saving the current state of the channel
@@ -363,10 +391,10 @@ def from_object(self):
             col = channel_index + 4
             if channel.changed:
                 self.analog_table.setItem(row, col, QTableWidgetItem(channel.expression))
-                if channel.value == 1:
-                    self.analog_table.item(row,col).setBackground(self.green)
-                else:
+                if channel.value == 0:
                     self.analog_table.item(row,col).setBackground(self.red)
+                else:
+                    self.analog_table.item(row,col).setBackground(self.green)
                 #Saving the current state of the channel
                 current_expression = channel.expression
                 current_evaluation = channel.evaluation

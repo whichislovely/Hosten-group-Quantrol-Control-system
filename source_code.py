@@ -1394,7 +1394,7 @@ class MainWindow(QMainWindow):
                     self.update_off()
                     exec("self.dds_table.item(row,col).setText(str(self.experiment.sequence[edge_num].dds[channel].%s.expression))" %self.setting_dict[setting])
                     self.update_on()
-                else:
+                else: #Other than a default edge
                     #Removing background color
                     self.update_off()
                     for index_setting in range(5):
@@ -1419,7 +1419,7 @@ class MainWindow(QMainWindow):
                         update.dds_tab(self)
                     else:
                         #Reverting back the previously accepted expression                            
-                        self.error_message("Only values between %d and %d are expected" %(minimum, maximum), "Wrong entry")
+                        self.error_message("Only values between %.1f and %.1f are expected" %(minimum, maximum), "Wrong entry")
                         self.update_off()
                         exec("self.dds_table.item(row,col).setText(str(self.experiment.sequence[edge_num].dds[channel].%s.expression))" %self.setting_dict[setting])
                         self.update_on()
