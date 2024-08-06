@@ -728,7 +728,7 @@ class MainWindow(QMainWindow):
             write_to_python.create_go_to_edge(self, edge_num=edge_num)
             self.message_to_logger("Go to edge file generated")
             try:
-                if os.system("conda activate %s && artiq_client submit go_to_edge.py"%config.artiq_environment_name) == 0:
+                if os.system("conda activate %s && artiq_run go_to_edge.py"%config.artiq_environment_name) == 0:
                     self.message_to_logger("Went to edge")
                     #unhighlighting the previously highlighted edge if it was previously highlighted
                     if self.experiment.go_to_edge_num != -1:
@@ -769,7 +769,7 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Python file generated")
             try:
                 #initialize environment and submit the experiment to the scheduler
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_client submit run_experiment.py"%config.artiq_environment_name])
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -793,7 +793,7 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Init_hardware.py file generated")
             try:
                 #initialize environment and submit the experiment to the scheduler
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_client submit init_hardware.py"%config.artiq_environment_name])
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -839,7 +839,7 @@ class MainWindow(QMainWindow):
         if os.path.exists(file_name):
             try:
                 #initialize environment and submit the experiment to the scheduler
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_client submit run_experiment.py"%config.artiq_environment_name])
+                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -935,7 +935,7 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Python file generated")
             try:
                 #initialize environment and submit the experiment to run continuously unless it is stopped
-                submit_run_continuously_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_client submit run_experiment.py"%config.artiq_environment_name])
+                submit_run_continuously_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
                 submit_run_continuously_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -1056,7 +1056,7 @@ class MainWindow(QMainWindow):
         Function is used when the user wants to add a scanned variable. It adds a variable with the name "None" and updates the 
         scan_table to display the changes
         '''
-        self.experiment.scanned_variables.append(self.Scanned_variable("None", 0, 0))
+        self.experiment.scanned_variables.append(self.Scanned_variable("None", 0.0, 0.0))
         update.scan_table(self)
 
 
@@ -1173,14 +1173,16 @@ class MainWindow(QMainWindow):
             elif col == 1: #min_val of the scanned variable changed
                 try:
                     variable.min_val = float(table_item.text())
+                    table_item.setText(str(variable.min_val))
                     if self.scan_table_parameters.item(row, 0).text() != "None": # this makes sure that we do not have to deal with "None" named variable
                         # we use the min values in order to use in sorting of the sequence tab
-                        self.experiment.variables[variable.name].value = float(table_item.text())
+                        self.experiment.variables[variable.name].value = variable.min_val
                 except:
                     self.error_message("Expression can not be evaluated", "Wrong entry")
             elif col == 2: #max_val of the scanned variable changed
                 try:
                     variable.max_val = float(table_item.text())
+                    table_item.setText(str(variable.max_val))
                 except:
                     self.error_message("Expression can not be evaluated", "Wrong entry")
             update.variables_tab(self)

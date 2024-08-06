@@ -123,9 +123,9 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = table_item.text()
-                    #If a number is convertible to float display only up to first 3 digits
+                    #If a number is convertible to float display only up to first 6 digits (micro volt level)
                     try:
-                        channel.expression = str(int(float(channel.expression) * 1000)/1000)
+                        channel.expression = str(int(float(channel.expression) * 1000000)/1000000)
                     except:
                         pass
                     try:
@@ -193,13 +193,14 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                         #If a value is convertible to float perform the conversion as Artiq parameters for dds channel are required to be floats not integers
                         try:
                             if setting == 0: #frequency
-                                channel_entry.expression = str(float(channel_entry.expression))
+                                channel_entry.expression = str(float(channel_entry.expression)) #Was checked to have at least a 1 Hz level resolution
                             elif setting == 1: #amplitude
                                 channel_entry.expression = str(int(float(channel_entry.expression)*1000)/1000) # Keep only up to 3rd digit (0.1234 --> 0.123)
                             elif setting == 2: #attenuation
-                                channel_entry.expression = str(round(float(channel_entry.expression)*2)/2) #Round up to 0.5
+                                channel_entry.expression = str(round(float(channel_entry.expression)/0.5)*0.5) #Round up to 0.5
                             elif setting == 3: #phase
-                                channel_entry.expression = str(float(channel_entry.expression))
+                                channel_entry.expression = str(round(float(channel_entry.expression)/0.36)*0.36) # Keep only up to 3rd digit (0.1234 --> 0.123) of phase that is represented as 1 -- > 360. 0.001 --> 0.36 in degrees 
+                                round(num * 100 / 36) * 0.36
                             elif setting == 4: #state
                                 channel_entry.expression = str(int(channel_entry.expression))
                         except:

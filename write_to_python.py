@@ -139,7 +139,7 @@ def create_experiment(self, run_continuous = False):
                     if channel.is_scanned:
                         file.write(indentation + "self.zotino0.write_dac(%d, %s)\n" %(index,channel.for_python))
                     else:
-                        file.write(indentation + "self.zotino0.write_dac(%d, %.4f)\n" %(index, channel.value))
+                        file.write(indentation + "self.zotino0.write_dac(%d, %.6f)\n" %(index, channel.value))
             if flag_zotino_change_needed:
                 file.write(indentation + "self.zotino0.load()\n")
                 
@@ -154,7 +154,7 @@ def create_experiment(self, run_continuous = False):
                     if channel.is_scanned:
                         file.write(indentation + "self.fastino0.set_dac(%d, %s)\n" %(index,channel.for_python))
                     else:
-                        file.write(indentation + "self.fastino0.set_dac(%d, %.4f)\n" %(index, channel.value))
+                        file.write(indentation + "self.fastino0.set_dac(%d, %.6f)\n" %(index, channel.value))
             #Moving the time cursor back
             if number_of_channels_changed > 1:
                 file.write(indentation + "delay(-%d0*ns)\n" %(number_of_channels_changed))
@@ -165,7 +165,7 @@ def create_experiment(self, run_continuous = False):
                 urukul_num = int(index // 4)
                 channel_num = int(index % 4)
                 file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att((" + str(channel.attenuation.for_python) + ")*dB) \n")    
-                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = (" + str(channel.frequency.for_python) + ")*MHz, amplitude = " + str(channel.amplitude.for_python) + ", phase = " + str(channel.phase.for_python) + ")\n")    
+                file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = (" + str(channel.frequency.for_python) + ")*MHz, amplitude = " + str(channel.amplitude.for_python) + ", phase = (" + str(channel.phase.for_python) + ")/360)\n")    
                 if channel.state.value == 1:
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
                 else:
@@ -235,21 +235,21 @@ def create_go_to_edge(self, edge_num, to_default = False):
     # Assigning zotino card changes
     if config.analog_card == "zotino":
         for index, channel in enumerate(self.experiment.sequence[edge].analog):
-            file.write(indentation + "self.zotino0.write_dac(%d, %.4f)\n" %(index, channel.value))
+            file.write(indentation + "self.zotino0.write_dac(%d, %.6f)\n" %(index, channel.value))
         file.write(indentation + "self.zotino0.load()\n")
     # Assigning fastino card changes
     elif config.analog_card == "fastino":
         #Since we do not care about timing here we can add a redundant delay of 10 ns
         for index, channel in enumerate(self.experiment.sequence[edge].analog):
             file.write(indentation + "delay(10*ns)\n")    
-            file.write(indentation + "self.fastino0.set_dac(%d, %.4f)\n" %(index, channel.value))         
+            file.write(indentation + "self.fastino0.set_dac(%d, %.6f)\n" %(index, channel.value))         
 
     # DDS CHANNEL CHANGES
     for index, channel in enumerate(self.experiment.sequence[edge].dds):
         urukul_num = int(index // 4)
         channel_num = int(index % 4)
         file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set_att(" + str(channel.attenuation.value) + "*dB) \n")    
-        file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.value) + "*MHz, amplitude = " + str(channel.amplitude.value) + ", phase = " + str(channel.phase.value) + ")\n")    
+        file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.value) + "*MHz, amplitude = " + str(channel.amplitude.value) + ", phase = (" + str(channel.phase.value) + ")/360)\n")    
         if channel.state.value == 1:
             file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
         elif channel.state.value == 0:
