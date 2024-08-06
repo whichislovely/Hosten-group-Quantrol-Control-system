@@ -954,23 +954,41 @@ class MainWindow(QMainWindow):
         '''
         Function is used when the user wants to stop continuous run. It will stop anything and run the init_hardware.py file
         '''
-        try:
-            write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
-            self.message_to_logger("Init_hardware.py file generated")
+        self.dialog = QDialog()
+        self.dialog.setGeometry(710, 435, 400, 120)
+        self.dialog.setFont(QFont('Arial', 14))
+        value_input = QLabel("Are you sure that you want to stop continuous run?")
+        dialog_layout = QVBoxLayout()
+        button_update = QPushButton("Yes")
+        button_cancel = QPushButton("No")
+        dialog_layout.addWidget(value_input)
+        dialog_buttons_layout = QHBoxLayout()
+        dialog_buttons_layout.addWidget(button_update)
+        dialog_buttons_layout.addWidget(button_cancel)
+        dialog_layout.addLayout(dialog_buttons_layout)
+        self.dialog.setLayout(dialog_layout)
+        button_update.clicked.connect(lambda:self.dialog.accept())
+        button_cancel.clicked.connect(lambda:self.dialog.reject())
+        self.dialog.setWindowTitle("Warning!") 
+        self.dialog.exec_()
+        if self.dialog.accepted:
             try:
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
-                submit_experiment_thread.start()
-                self.message_to_logger("Experiment was stopped. Hardware is set to the default values")
-                #unhighlighting the previously highlighted edge
-                if self.experiment.go_to_edge_num != -1:
-                    self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
-                #Highlighting the default edge and setting the go_to_edge_num to the default edge value (0)
-                self.experiment.go_to_edge_num = 0
-                self.set_color_of_the_edge(self.green, 0)
+                write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
+                self.message_to_logger("Init_hardware.py file generated")
+                try:
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
+                    submit_experiment_thread.start()
+                    self.message_to_logger("Experiment was stopped. Hardware is set to the default values")
+                    #unhighlighting the previously highlighted edge
+                    if self.experiment.go_to_edge_num != -1:
+                        self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                    #Highlighting the default edge and setting the go_to_edge_num to the default edge value (0)
+                    self.experiment.go_to_edge_num = 0
+                    self.set_color_of_the_edge(self.green, 0)
+                except:
+                    self.message_to_logger("Could not stop the experiment.")
             except:
-                self.message_to_logger("Could not stop the experiment.")
-        except:
-            self.message_to_logger("Could not generate init_hardware.py file")
+                self.message_to_logger("Could not generate init_hardware.py file")
 
 
     def save_default_button_clicked(self):

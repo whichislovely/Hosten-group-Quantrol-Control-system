@@ -62,25 +62,29 @@ def sequence_tab_build(self):
     self.save_sequence_button.setGeometry(width_of_table + 50, 30, 200, 30)
     self.save_sequence_button.setText("Save sequence")
     self.save_sequence_button.clicked.connect(self.save_sequence_button_clicked)
+    self.save_sequence_button.setToolTip("Save sequence button saves the experimental description to a file. Everything in the user interface will be saved including the title names, states of scanning table, and all tabs. The only difference will be the logger. It will not be saved. If a sequence was saved or loaded, it will overwrite the open sequence file! Therefore, be careful when pressing this button or you risk loosing the previous state of the experiment.")
     #button to load new sequence
     self.load_sequence_button = QPushButton(self.sequence_tab_widget)
     self.load_sequence_button.setFont(QFont('Arial', 14))
     self.load_sequence_button.setGeometry(width_of_table + 50, 80, 200, 30)
     self.load_sequence_button.setText("Load sequence")
     self.load_sequence_button.clicked.connect(self.load_sequence_button_clicked)
+    self.load_sequence_button.setToolTip("Load sequence button allows user to load the presaved sequences. It will load the full state of the experimental sequence leaving the logger at the same state as before loading the sequence. Do save your sequences before loading new ones in order to not lose them. The newly loaded sequence file will be linked with the current state of the Quantrol. By pressing the save sequence button the user can overwrite the loaded sequence!")
     #button to insert edge
     self.insert_edge_button = QPushButton(self.sequence_tab_widget)
     self.insert_edge_button.setFont(QFont('Arial', 14))
     self.insert_edge_button.setGeometry(width_of_table + 50, 180, 200, 30)
     self.insert_edge_button.setText("Insert Edge")
     self.insert_edge_button.clicked.connect(self.insert_edge_button_clicked)
+    self.insert_edge_button.setToolTip("Insert edge button inserts an edge in the edge of the sequence with a blank name and time expression exactly the same as the leading edge. All channels parameters will be not be user entered and therefore will display the previously set states. In other words, their changed parameters will be False meaning that they do not require the update of the hardware states at the newly inserted Edge.")
     #button to delete edge
     self.delete_edge_button = QPushButton(self.sequence_tab_widget)
     self.delete_edge_button.setFont(QFont('Arial', 14))
     self.delete_edge_button.setGeometry(width_of_table + 50, 230, 200, 30)
     self.delete_edge_button.setText("Delete Edge")
     self.delete_edge_button.clicked.connect(self.delete_edge_button_clicked)
-
+    self.delete_edge_button.setToolTip("Delete edge button requires the user to choose the edge that needs to be deleted by right clicking it in the Timing Sequence table. It checks if the corresponding ID variable of the edge that needs to be deleted is used anywhere and will not allow deletion in case it is used by showing the first instance it was found to be used at. Otherwise, it deletes the selected edge and updates the Timing Sequence table.")
+    
     if config.allow_skipping_images:
         #trigger camera 10 times
         self.skip_images_button = QPushButton(self.sequence_tab_widget)
@@ -88,7 +92,8 @@ def sequence_tab_build(self):
         self.skip_images_button.setGeometry(width_of_table + 50, 330, 200, 30)
         self.skip_images_button.setText("Skip images")
         self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
-        self.skip_images_button.setStyleSheet("background-color : green; color : white") 
+        self.skip_images_button.setStyleSheet("background-color : green; color : black") 
+        self.skip_images_button.setToolTip("Skip images button allows on demand triggering the camera acquisition 10 times in the beginning of experiment. Button's color represents current state where green indicates that the image triggering should be done, and red, when it should be avoided. Modify the write_to_python.py in order to change the triggering digital channels. The option of removing the button is in the config.py file. If not needed, set the allow_skipping_images to False")
         self.experiment.skip_images = True
 
     #button to save current sequence as
@@ -97,6 +102,7 @@ def sequence_tab_build(self):
     self.save_sequence_as_button.setGeometry(width_of_table + 50, 380, 200, 30)
     self.save_sequence_as_button.setText("Save sequence as")
     self.save_sequence_as_button.clicked.connect(self.save_sequence_as_button_clicked)
+    self.save_sequence_as_button.setToolTip("Save sequence as button allows the user to save sequences as a separate files. The currently open file will not be altered.")
 
     #button to save default
     self.save_default = QPushButton(self.sequence_tab_widget)
@@ -104,6 +110,7 @@ def sequence_tab_build(self):
     self.save_default.setGeometry(width_of_table + 50, 480, 200, 30)
     self.save_default.setText("Save default")
     self.save_default.clicked.connect(self.save_default_button_clicked)
+    self.save_default.setToolTip("Save default button allows the user to overwrite the default state which includes the Default edge, corresponding digital, analog, and dds channels values, and channels titles. Once the default is being overwritten, next time the program is initialized with the updated default values. However, when the seqeunce is being loaded it will overwrite accodring to the saved sequence definitions.")
 
     #button to load default
     self.load_default = QPushButton(self.sequence_tab_widget)
@@ -111,6 +118,7 @@ def sequence_tab_build(self):
     self.load_default.setGeometry(width_of_table + 50, 530, 200, 30)
     self.load_default.setText("Load default")
     self.load_default.clicked.connect(self.load_default_button_clicked)
+    self.load_default.setToolTip("Load default button allows the user to enforce the default state on the Default edge, corresponding digital, analog, and dds channels values, and channels titles. It is useful in case some older sequences are loaded and the user wants to quickly update their default edge and title names to the new default values. For example, if there is a sequence for cooling the atoms where a channel A11 was not used at all. Imagine with time the channel A11 started being used as something, for example MOT coils current voltage control. Then the user can load the old sequence, press Load default button and add whatever description was required for the A11.")
 
     #button to initialize the hardware
     self.init_hardware = QPushButton(self.sequence_tab_widget)
@@ -118,6 +126,7 @@ def sequence_tab_build(self):
     self.init_hardware.setGeometry(width_of_table + 50, 580, 200, 30)
     self.init_hardware.setText("Init. hardware")
     self.init_hardware.clicked.connect(self.init_hardware_button_clicked)
+    self.init_hardware.setToolTip("Init. hardware button initializes the hardware and sets its state to the default edge values. Check the init_hardware.py file in order to explicitly see what it does. In some cases the user might want to use additional functionality of Artiq that is beyond Quantrol, then the user should modify write_to_python.py go_to_edge function to include the things that require initialization. Same goes to the set_att definitions.")
     
     #button to create the run_experiment.py without running the sequence. An option nice to have in case of troubleshooting
     self.generate_run_experiment_py_button = QPushButton(self.sequence_tab_widget)
@@ -125,6 +134,7 @@ def sequence_tab_build(self):
     self.generate_run_experiment_py_button.setGeometry(width_of_table + 50, 630, 200, 30)
     self.generate_run_experiment_py_button.setText("Generate experiment")
     self.generate_run_experiment_py_button.clicked.connect(self.generate_run_experiment_py_button_clicked)
+    self.generate_run_experiment_py_button.setToolTip("Generate experiment button is used to generate the python like description of the experimental sequence that is displayed in the Quantrol. It will generate the run_experiment.py file in the same directory of the source_code.py. It is useful for debugging the experimental sequence descriptions without asking to run it. If something does not work first check if you are asking Artiq to do the correct thing by looking at the generated run_experiment.py.")
 
     #button to submit the run_experiment.py without updating it with the current experimental description. It is useful in case one needs to hard code something in the sequence and wants to just run it
     self.submit_run_experiment_py_button = QPushButton(self.sequence_tab_widget)
@@ -132,13 +142,15 @@ def sequence_tab_build(self):
     self.submit_run_experiment_py_button.setGeometry(width_of_table + 260, 630, 200, 30)
     self.submit_run_experiment_py_button.setText("Submit experiment")
     self.submit_run_experiment_py_button.clicked.connect(self.submit_run_experiment_py_button_clicked)
-
+    self.submit_run_experiment_py_button.setToolTip("Submit experiment button runs the current state of the run_experiment.py file without updating it with the experimental description shown in the Quantrol. It is useful when the user wants to make manual changes in the experimental sequence and run the updated run_experiment.py. For example, user can generate a two variable scan and then hardcore it to make a 2D scan with different setp sizes. Such run_experiment.py files should be properly named and saved in a separate folder for future use. Otherwise, the run_experiment.py will be overwritten by the Quantrol.")
+    
     #dummy button for troubleshooting 
     self.dummy_button = QPushButton(self.sequence_tab_widget)
     self.dummy_button.setFont(QFont('Arial', 14))
     self.dummy_button.setGeometry(width_of_table + 50, 680, 200, 30)
     self.dummy_button.setText("Dummy button")
     self.dummy_button.clicked.connect(self.dummy_button_clicked)
+    self.dummy_button.setToolTip("Dummy button is used for the debugging purposes. In the source_code.py there is a dummy_button_clicked fucntion that can be used to print various parameters at different times in order to trace the reason if something is misbehaving. Commented out portions of code are good hints for how the user could use that dummy button for debugging. So in case the debugging is required modify the dummy_button_clicked function in the source_code.py and observe the values of interest in the console of the VS Code.")
         
     #BUTTONS AT THE BOTTOM
     #button to stop continuous run
@@ -147,6 +159,7 @@ def sequence_tab_build(self):
     self.stop_continuous_run_button_sequence.setGeometry(10, 1060, 200, 30)
     self.stop_continuous_run_button_sequence.setText("Stop continuous run")
     self.stop_continuous_run_button_sequence.clicked.connect(self.stop_continuous_run_button_clicked)
+    self.stop_continuous_run_button_sequence.setToolTip("Stop continuous run button stops whatever experiment was running before. It generates the init_hardware.py according to the latest default edge values and sets the hardware to that state. Again, it does not only stop continuous run, it stops any experiment and can be used to interrupt whatever was running.")
    
     #button to start continuous run
     self.continuous_run_button_sequence = QPushButton(self.sequence_tab_widget)
@@ -154,6 +167,7 @@ def sequence_tab_build(self):
     self.continuous_run_button_sequence.setGeometry(220, 1060, 200, 30)
     self.continuous_run_button_sequence.setText("Continuous run")
     self.continuous_run_button_sequence.clicked.connect(self.continuous_run_button_clicked)
+    self.continuous_run_button_sequence.setToolTip("Continuous run button generates the experimental sequence description according to the current state of the Quatnrol as a run_experiment.py file and then runs that experimental sequence indefinitely.")
  
     #run experiment
     self.run_experiment_button_sequence = QPushButton(self.sequence_tab_widget)
@@ -161,6 +175,7 @@ def sequence_tab_build(self):
     self.run_experiment_button_sequence.setGeometry(430, 1060, 200, 30)
     self.run_experiment_button_sequence.setText("Run experiment")
     self.run_experiment_button_sequence.clicked.connect(self.run_experiment_button_clicked) 
+    self.run_experiment_button_sequence.setToolTip("Run experiment button generates the experimental sequence description accodring to the current state of the Quantrol as a run_experiment.py file and then runs that experimental sequence once.")
     
     #go to edge
     self.go_to_edge_button_sequence = QPushButton(self.sequence_tab_widget)
@@ -168,6 +183,7 @@ def sequence_tab_build(self):
     self.go_to_edge_button_sequence.setGeometry(640, 1060, 200, 30)
     self.go_to_edge_button_sequence.setText("Go to Edge")
     self.go_to_edge_button_sequence.clicked.connect(self.go_to_edge_button_clicked)
+    self.go_to_edge_button_sequence.setToolTip("Go to Edge button is used to set the state of the hardware to a specific state at a particular edge. The user first needs to choose the edge to go by right clicking the sequence table on the left")
     
     #TABLE OF SCANNING PARAMETERS
     self.scan_table_parameters = QTableWidget()
@@ -187,12 +203,14 @@ def sequence_tab_build(self):
     self.add_scanned_variable_button.resize(200, 50)
     self.add_scanned_variable_button.setText("Add scanned variable")
     self.add_scanned_variable_button.clicked.connect(self.add_scanned_variable_button_pressed)#this should be modified
+    self.add_scanned_variable_button.setToolTip("Add scanned variable button is used to add variables that require scanning. First the user should define the variables in the variblas tab and then add scanned variable and overwrite the name of the variable from None to the name of the variable that needs to be scanned. After that the variable value will be disabled and will display 'scanned'. The value of the scanned variable will be assigned to be the min value in order to allow sorting the time edges.")
 
     #Delete scanned variable button
     self.delete_scanned_variable_button = QPushButton()
     self.delete_scanned_variable_button.setFont(QFont('Arial', 14))
     self.delete_scanned_variable_button.setText("Delete scanned variable")
     self.delete_scanned_variable_button.clicked.connect(self.delete_scanned_variable_button_pressed)#this should be modified
+    self.delete_scanned_variable_button.setToolTip("Delete scanned variable button is used to delete variables from the scanning table and hence disable their scans. The user should first right click the variable that needs to be deleted. The Quantrol will set the values of the deleted scanned variables to the values that were defined before the variable was set to scan.")
 
     #Step size input
     self.number_of_steps_label = QLabel()
@@ -228,6 +246,7 @@ def sequence_tab_build(self):
     self.scan_table.setLayout(vBox)
     vBox.addWidget(temp)
     vBox.addWidget(self.scan_table_parameters)
+    self.scan_table.setToolTip("This Scan checkbox is used to enable or disable the variables scan. In case of the scan was unchecked the state of the table will be disabled but the previously set parameters of the scan will remain in place. This allows the user to quickly scan and not scan variables on demand. In order to change the parameters of the scan the user should check the Scan checkbox first. Disables scanning table looks a little faded.")
 
     #show logger of the program
     self.logger = QPlainTextEdit(self.sequence_tab_widget)
@@ -327,6 +346,7 @@ def digital_tab_build(self):
     self.stop_continuous_run_button_digital.setGeometry(10, 1060, 200, 30)
     self.stop_continuous_run_button_digital.setText("Stop continuous run")
     self.stop_continuous_run_button_digital.clicked.connect(self.stop_continuous_run_button_clicked)
+    self.stop_continuous_run_button_digital.setToolTip("Stop continuous run button stops whatever experiment was running before. It generates the init_hardware.py according to the latest default edge values and sets the hardware to that state. Again, it does not only stop continuous run, it stops any experiment and can be used to interrupt whatever was running.")
    
     #button to start continuous run
     self.continuous_run_button_digital = QPushButton(self.digital_tab_widget)
@@ -334,6 +354,8 @@ def digital_tab_build(self):
     self.continuous_run_button_digital.setGeometry(220, 1060, 200, 30)
     self.continuous_run_button_digital.setText("Continuous run")
     self.continuous_run_button_digital.clicked.connect(self.continuous_run_button_clicked)
+    self.continuous_run_button_digital.setToolTip("Continuous run button generates the experimental sequence description according to the current state of the Quatnrol as a run_experiment.py file and then runs that experimental sequence indefinitely.")
+    
  
     #run experiment
     self.run_experiment_button_digital = QPushButton(self.digital_tab_widget)
@@ -341,14 +363,15 @@ def digital_tab_build(self):
     self.run_experiment_button_digital.setGeometry(430, 1060, 200, 30)
     self.run_experiment_button_digital.setText("Run experiment")
     self.run_experiment_button_digital.clicked.connect(self.run_experiment_button_clicked) 
+    self.run_experiment_button_digital.setToolTip("Run experiment button generates the experimental sequence description accodring to the current state of the Quantrol as a run_experiment.py file and then runs that experimental sequence once.")
     
     #go to edge
     self.go_to_edge_button_digital = QPushButton(self.digital_tab_widget)
     self.go_to_edge_button_digital.setFont(QFont('Arial', 14))
     self.go_to_edge_button_digital.setGeometry(640, 1060, 200, 30)
     self.go_to_edge_button_digital.setText("Go to Edge")
-    # self.go_to_edge_button_digital.clicked.connect(self.go_to_edge_button_clicked)
     self.go_to_edge_button_digital.clicked.connect(self.go_to_edge_button_clicked)
+    self.go_to_edge_button_digital.setToolTip("Go to Edge button is used to set the state of the hardware to a specific state at a particular edge. The user first needs to choose the edge to go by right clicking the sequence table on the left")
 
 
 #ANALOG TAB
@@ -434,6 +457,7 @@ def analog_tab_build(self):
     self.stop_continuous_run_button_analog.setGeometry(10, 1060, 200, 30)
     self.stop_continuous_run_button_analog.setText("Stop continuous run")
     self.stop_continuous_run_button_analog.clicked.connect(self.stop_continuous_run_button_clicked)
+    self.stop_continuous_run_button_analog.setToolTip("Stop continuous run button stops whatever experiment was running before. It generates the init_hardware.py according to the latest default edge values and sets the hardware to that state. Again, it does not only stop continuous run, it stops any experiment and can be used to interrupt whatever was running.")
    
     #button to start continuous run
     self.continuous_run_button_analog = QPushButton(self.analog_tab_widget)
@@ -441,6 +465,7 @@ def analog_tab_build(self):
     self.continuous_run_button_analog.setGeometry(220, 1060, 200, 30)
     self.continuous_run_button_analog.setText("Continuous run")
     self.continuous_run_button_analog.clicked.connect(self.continuous_run_button_clicked)
+    self.continuous_run_button_analog.setToolTip("Continuous run button generates the experimental sequence description according to the current state of the Quatnrol as a run_experiment.py file and then runs that experimental sequence indefinitely.")
  
     #run experiment
     self.run_experiment_button_analog = QPushButton(self.analog_tab_widget)
@@ -448,6 +473,7 @@ def analog_tab_build(self):
     self.run_experiment_button_analog.setGeometry(430, 1060, 200, 30)
     self.run_experiment_button_analog.setText("Run experiment")
     self.run_experiment_button_analog.clicked.connect(self.run_experiment_button_clicked) 
+    self.run_experiment_button_analog.setToolTip("Run experiment button generates the experimental sequence description accodring to the current state of the Quantrol as a run_experiment.py file and then runs that experimental sequence once.")
     
     #go to edge
     self.go_to_edge_button_analog = QPushButton(self.analog_tab_widget)
@@ -455,6 +481,7 @@ def analog_tab_build(self):
     self.go_to_edge_button_analog.setGeometry(640, 1060, 200, 30)
     self.go_to_edge_button_analog.setText("Go to Edge")
     self.go_to_edge_button_analog.clicked.connect(self.go_to_edge_button_clicked)
+    self.go_to_edge_button_analog.setToolTip("Go to Edge button is used to set the state of the hardware to a specific state at a particular edge. The user first needs to choose the edge to go by right clicking the sequence table on the left")
 
 
 def dds_tab_build(self):
@@ -655,6 +682,7 @@ def dds_tab_build(self):
     self.stop_continuous_run_button_dds.setGeometry(10, 1060, 200, 30)
     self.stop_continuous_run_button_dds.setText("Stop continuous run")
     self.stop_continuous_run_button_dds.clicked.connect(self.stop_continuous_run_button_clicked)
+    self.stop_continuous_run_button_dds.setToolTip("Stop continuous run button stops whatever experiment was running before. It generates the init_hardware.py according to the latest default edge values and sets the hardware to that state. Again, it does not only stop continuous run, it stops any experiment and can be used to interrupt whatever was running.")
    
     #button to start continuous run
     self.continuous_run_button_dds = QPushButton(self.dds_tab_widget)
@@ -662,6 +690,7 @@ def dds_tab_build(self):
     self.continuous_run_button_dds.setGeometry(220, 1060, 200, 30)
     self.continuous_run_button_dds.setText("Continuous run")
     self.continuous_run_button_dds.clicked.connect(self.continuous_run_button_clicked)
+    self.continuous_run_button_dds.setToolTip("Continuous run button generates the experimental sequence description according to the current state of the Quatnrol as a run_experiment.py file and then runs that experimental sequence indefinitely.")
  
     #run experiment
     self.run_experiment_button_dds = QPushButton(self.dds_tab_widget)
@@ -669,6 +698,7 @@ def dds_tab_build(self):
     self.run_experiment_button_dds.setGeometry(430, 1060, 200, 30)
     self.run_experiment_button_dds.setText("Run experiment")
     self.run_experiment_button_dds.clicked.connect(self.run_experiment_button_clicked) 
+    self.run_experiment_button_dds.setToolTip("Run experiment button generates the experimental sequence description accodring to the current state of the Quantrol as a run_experiment.py file and then runs that experimental sequence once.")
     
     #go to edge
     self.go_to_edge_button_dds = QPushButton(self.dds_tab_widget)
@@ -676,6 +706,7 @@ def dds_tab_build(self):
     self.go_to_edge_button_dds.setGeometry(640, 1060, 200, 30)
     self.go_to_edge_button_dds.setText("Go to Edge")
     self.go_to_edge_button_dds.clicked.connect(self.go_to_edge_button_clicked)
+    self.go_to_edge_button_dds.setToolTip("Go to Edge button is used to set the state of the hardware to a specific state at a particular edge. The user first needs to choose the edge to go by right clicking the sequence table on the left")
 
 
 def variables_tab_build(self):

@@ -200,7 +200,6 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                                 channel_entry.expression = str(round(float(channel_entry.expression)/0.5)*0.5) #Round up to 0.5
                             elif setting == 3: #phase
                                 channel_entry.expression = str(round(float(channel_entry.expression)/0.36)*0.36) # Keep only up to 3rd digit (0.1234 --> 0.123) of phase that is represented as 1 -- > 360. 0.001 --> 0.36 in degrees 
-                                round(num * 100 / 36) * 0.36
                             elif setting == 4: #state
                                 channel_entry.expression = str(int(channel_entry.expression))
                         except:
