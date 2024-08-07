@@ -27,12 +27,13 @@ In order to use or scan a variable, one first needs to create it in a variables 
 The color coding of the channel state is used for better visualization of the sequence. White background values show the previously set values and hence the current state of the hardware. Green and red background specifies the changes user introduced at a specific time edge.
 
 The program was not optimized for adaptive resizing and was designed for the full window size use only.
+Most of the important buttons have some descriptions. Simply hover the mouse of the button and read it carefully before using Quantrol.
 ![image](https://github.com/user-attachments/assets/77d4592d-d760-41c6-a12e-1dfd2940d377)
-
+Experimental description is done in a form of a table of time edges. Each edge describes what changes in the digital, analog, and DDS outputs should be performed. An example of the far detuned cooling is shown below.
 ![digital](https://github.com/user-attachments/assets/49c4bad1-39ee-48b5-829e-0a4c9cdb46df)
 
 
-And a corresponding hardcoded version that Quantrol generates and schedules is shown below:
+And a corresponding hardcoded version that Quantrol generates and runs is shown below:
 ![Code](https://github.com/user-attachments/assets/7194862f-944f-466b-b695-9390eb0d1008)
 
 
