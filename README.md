@@ -101,7 +101,7 @@ Title names of the DDS channels can be modified as a simple texts.
 ### Description of DDS parameters
 Frequency of the DDS should be within the 500 MHz range that is the half of the reference clock due to Nyquist criteria. Shortly, it requires at least two samples per cycle to reconstruct a desired output waveform. Approaching 400 MHz already shows a significant sideband.
 
-Frequency of the DDS was measured to be up to 1 Hz level. Therefore, the user is restricted to enter values up to 0.000001 MHz.
+Frequency of the DDS was measured to be up to 1 Hz level. However, the precision might be even better.
 
 Amplitude of the DDS is between 1.0 and 0.0 with the precision of 0.001. It means if the user enters 0.123456789 it will be updated to 0.123. It was measured that the changes lower that can't be even registered on the spectrum analyzer.
 
