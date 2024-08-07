@@ -12,19 +12,23 @@ In the terminal of VS Code type following command to install the required librar
 
 pip install -r requirements.txt
 
-Alternatively, you can open the requirements.txt file and the pop-up window will suggest you to configure the virtual environment. After downloading the required libraries copy your device_db.py into the same folder.
-Run the source.py in order to start the program.
+Alternatively, you can open the requirements.txt file and the pop-up window will suggest you to configure the virtual environment. After downloading the required libraries copy your device_db.py into the same folder and edit the config.py file to match your hardware. Since there might be different versions of cards, the way Quantrol generates python like experimental descriptions can be modified in write_to_python.py file.
+
+Once device_db.py and config.py are set, run the source.py in order to start the program.
 
 ## User guide
 Quantrol is a user friendly interface that helps describing experimental sequences without coding. 
-It allows using mathematical expressions, define variable, scan multiple variables in a 1D scan, use default variables such as id0, id1, ... etc.
+It allows using simple mathematical expressions, define variables, scan multiple variables in a 1D scan, use default variables such as id0, id1, ... etc.
 
 In order to describe the sequence user introduces time edges where the changes in the hardware state are required. 
 
 In order to use or scan a variable, one first needs to create it in a variables tab. After that the user can add defined variables in mathematical expressions or Scanning table.
+
 The color coding of the channel state is used for better visualization of the sequence. White background values show the previously set values and hence the current state of the hardware. Green and red background specifies the changes user introduced at a specific time edge.
 
 The program was not optimized for adaptive resizing and was arranged for the full window size.
+
+
 ![Sequence](https://github.com/user-attachments/assets/06027f10-ba52-4671-86e9-9eeb7ece3912)
 ![Digital](https://github.com/user-attachments/assets/43dffc20-9fe3-44db-862e-e0e2e3d12f9f)
 ![DDS](https://github.com/user-attachments/assets/12187028-77be-4559-a312-a844503b2f24)
