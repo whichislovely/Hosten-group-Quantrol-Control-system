@@ -1,10 +1,18 @@
 # Quantrol
-
 Quantrol is a high level solution built on top of the open access Artiq infrastructure. It allows researchers to use most of the Artiq features without coding.
 The current state of the GUI is adopted for the specific hardware used in Hosten group at Institure of Science and Technology Austria. However, it can be relatively easily adopted for any type of Sinara based hardware.
 
-## Installation
+## Python requirements
+The GUI was written using python 9.x. At the time of writing this note, some PyQt features and syntax supported by python 9 are not supported by python >=10. 
+	
+At the time of writing this note, python has officially stopped distributing installers, and only has source files. 
 
+Building python versions from source on windows can be a bit painful, so there is a neat package called pyenv which allows one to manage different python versions. 
+
+See the github page of pyenv-win for more details.
+https://github.com/pyenv-win/pyenv-win/blob/master/README.md#installation
+
+## Installation
 This program was built and has been used on Windows based OS. 
 In order to get started simply copy the entire repository on your local machine. The program was tested with VS Code but other code editors might also work as well. Open the entire repository folder in VS Code to be able to use it properly.
 Use Ctrl+Shift+P and type Python Interpreter. Chose the python you want to use. Make sure that you close the terminal and open it again for changes to take action. You can type which python to make sure that the correct python is used.
@@ -19,12 +27,14 @@ Once device_db.py and config.py are set, run the source.py in order to start the
 ## User guide
 Quantrol is a user friendly interface that helps describing experimental sequences without coding. 
 It allows using simple mathematical expressions, define variables, scan multiple variables in a 1D scan, use default variables such as id0, id1, ... etc.
+
 ### Starting Quantrol
 Open VS Code, that is usually pinned to the task bar, or press Windows button and type VS code. Expand the VS code to the full size for easier navigation.
 
 In the left top corner click the File tab and choose Open folder. Navigate to the Quantrol folder, that should be located on the Desktop.
 
 After opening the Quantrol folder run the source_code.py file by clicking the run (triangle) in the right top corner. You should see the Quantrol application window.
+
 ### Quantrol application
 ![image](https://github.com/user-attachments/assets/f8e69350-b616-49ae-b183-730589f3ed4c)
 Quantrol application window was not designed to be adaptive for different sizes. Only use it with the full screen (maximum allowed size). Most of the buttons and important things have user friendly descriptions. Hover the mouse over the element or a button of interest and the hint explaining its functionality will pop up as shown in the figure above. 
@@ -34,6 +44,7 @@ It is advised to read all the descriptions of each button before starting to wor
 The experimental sequence is being described in terms of time edges, each of which has the information of the changes that should be performed at different time stamps. Quantrol initializes itself with only single default Edge that can be overwritten by Save default button.
 
 At the top left corner there are five different tabs. Quantrol initializes at the sequence tab by default and the user should go to different tabs to describe the experimental sequence.
+
 ### Sequence tab
 To start experimental description press the Insert Edge button. You should see the new edge created as shown in the figure below.
 ![image](https://github.com/user-attachments/assets/a7f460fc-2058-4cb2-9c9e-c8e60cf969fa)
@@ -42,6 +53,7 @@ Each edge has a descriptive name, unique ID, time expression, and time value in 
 The edge following the default edge should not be requested at the same time as the default edge. Therefore first edge is at 1 ms. This is required to avoid requesting too many changes at single time stamp. More about it will be described later in this guide, but for more details please refer to the Artiq manual or ask someone more experienced.
 
 As can be seen from the example above the time expression allows some mathematical expressions to be used. However, the user is not allowed to use brackets. In principle it allows basic addition, subtraction, multiplication, and division operations. More complicated expressions might cause issues as Quantrol allows using variables. Therefore, it is advised to keep it as simple as possible.
+
 ### Digital tab
 ![image](https://github.com/user-attachments/assets/feab481a-6f8c-4648-90a1-ff3d88746b34)
 Digital tab is used to set the states of the digital channels at different time edges created in sequence tab. It allows only values 1 or 0 for high and low states of the channels. 
@@ -51,6 +63,7 @@ The color coding is used to help user quickly understand what sequence is suppos
 User can delete the edge by entering an empty ("") text as the input in order to remove any change requests from the particular channel at given time. Quantrol will automatically display the previously set state in the table. 
 
 Digital channel titles can be updated by right clicking on them and typing in the name of the channel. In case the purpose of the channel was changed the default state should also be overwritten so the Quantrol will be initialized with the updated title names and default edge values.
+
 ### Analog tab
 ![image](https://github.com/user-attachments/assets/d0a67da4-990e-439f-b8ff-acaaf361f35f)
 Analog tab is very similar to the Digital tab. The entries of analog tab represent the voltage in volts to be set to output from analog channels. 
@@ -64,6 +77,7 @@ The precision of the analog channels was set to 1 micro volt. The user entry as 
 Allowed values range for the analog channel are between -9.9 and 9.9 inclusive.
 
 Title of the analog tab can be renamed same as in digital tab.
+
 ### DDS tab
 ![image](https://github.com/user-attachments/assets/7eb6bfce-6130-4eb9-937b-100f01884e44)
 DDS tab is also similar to digital and analog tabs but a little more different. Each channel has five different self-explanatory names. State represents if the DDS channel should be ON or OFF
@@ -73,6 +87,7 @@ Green color of the edge means that the DDS channel should be turned ON, red colo
 User can delete the any edge parameter by entering an empty ("") text as the input in order to remove any change requests from the particular channel at given time. Quantrol will automatically display the previously set state in the table. 
 
 Title names of the DDS channels can be modified as a simple texts.
+
 ### Description of DDS parameters
 Frequency of the DDS should be within the 500 MHz range that is the half of the reference clock due to Nyquist criteria. Shortly, it requires at least two samples per cycle to reconstruct a desired output waveform. Approaching 400 MHz already shows a significant sideband.
 
@@ -85,6 +100,7 @@ Attenuation of the DDS is between 0.0 and 31.5 with the precision of 0.5. Lower 
 Phase of the DDS is between 0.0 and 360.0 with steps of 0.36 degrees as was empirically measured on oscilloscope.
 
 State of the DDS turns the channel ON and OFF at 1 and 0 input values.
+
 ### Variables tab
 ![image](https://github.com/user-attachments/assets/22408a56-dd06-4bd7-a007-5b15d3bc0821)
 Variables tab allows user to create new variables and then use them in parameters expressions. In the example above there are three new variables that are created by pressing Create new variable button. The last one was renamed into dt and its values was assigned to 10.0. Now this can be used for example to set a variable offset between time Edges as shown in the example below.
@@ -124,9 +140,7 @@ The Quantrol has 23 rows of a nice interpretable table instead of almost 300 lin
 
 ## Developer guide
 The entire description will all parameters is stored in an object self.experiment. Chart describing its parameters and their descriptions is shown below. Purple blocks are objects, yellow blocks are the parameters of objects, and green blocks are descriptions of those parameters.
-
 ![image](https://github.com/user-attachments/assets/961ba603-9d25-430d-8be5-7bb2a8c50788)
-
 
  ### Description of the logic behind some design decisions
  The user entered values are processed and stored in four forms 
