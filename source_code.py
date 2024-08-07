@@ -419,9 +419,9 @@ class MainWindow(QMainWindow):
             if text[index] == "-" or text[index] == "+" or text[index] == "/" or text[index] == "*":
                 current.replace(" ", "")
                 try: #If the current convertible to float type of value
-                    float(current)
-                    output_eval += current + text[index]
-                    output_for_python += current + text[index]
+                    float_current = float(current)
+                    output_eval += str(float_current) + text[index]
+                    output_for_python += str(float_current) + text[index]
                 except: #If the current is a variable name
                     output_eval += "self.experiment.variables['" + current + "'].value" + text[index]
                     variable = self.experiment.variables[current]
@@ -1550,6 +1550,7 @@ class MainWindow(QMainWindow):
                     return_value = update.all_tabs(self, update_expressions_and_evaluations=False) # we do not need to update expressions only update values.
                     if return_value == None: #The value can be updated
                         variable.value = self.experiment.variables[variable.name].value
+                        table_item.setText(str(variable.value))
                     else: #The value can not be updated, reverting every evaluation done before.
                         self.error_message("Evaluation is out of allowed range occured in %s. Variable value can not be assigned" %return_value, "Wrong entry")
                         self.experiment.variables[variable.name].value = variable.value 
@@ -1558,6 +1559,10 @@ class MainWindow(QMainWindow):
                         self.update_on()
                         update.all_tabs(self, update_expressions_and_evaluations=False)
                 except: #Restricting the user from using anything but the integer values and floating numbers
+                    self.update_off()
+                    table_item.setText(str(variable.value))
+                    self.update_on()
+                    update.all_tabs(self, update_expressions_and_evaluations=False)                    
                     self.error_message("Only integers and floating numbers are allowed.", "Wrong entry")
 
 
