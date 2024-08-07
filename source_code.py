@@ -292,9 +292,6 @@ class MainWindow(QMainWindow):
         self.main_window.addTab(self.variables_tab_widget, "Variables")
         self.to_update = True
         
-        #starting artiq server (artiq_master)
-        self.server_thread = self.CustomThread(target=os.system, args=["conda activate %s && artiq_master"%config.artiq_environment_name])
-        self.server_thread.start()  
     '''
     ||||||  ||    ||  ||    ||  |||||| |||||||| ||||||   |||||   ||    ||  ||||||||  ||  ||  ||
     ||      ||    ||  |||   ||  ||  ||    ||      ||    ||   ||  |||   ||  ||    ||  ||  ||  ||
@@ -760,7 +757,7 @@ class MainWindow(QMainWindow):
         '''
         Function is used when the user wants to run the experiment. By calling update.all_tabs(self) it updates every expression
         to make sure that all scanning variables are taken into account. After that it generates the run_experiment.py file and 
-        submits the experimental description to the scheduler through artiq_client function.
+        submits the experimental description to the scheduler through artiq_run function.
         '''
         self.count_scanned_variables()
         update.all_tabs(self) #updating all expressions in particular for_pythons of each parameter
