@@ -38,16 +38,51 @@ And a corresponding hardcoded version that Quantrol generates and runs is shown 
 
 
 ## Developer guide
+The entire description will all parameters is stored in an object self.experiment. Chart describing its parameters and their descriptions is shown below. Purple blocks are objects, yellow blocks are the parameters of objects, and green blocks are descriptions of those parameters.
+
+![image](https://github.com/user-attachments/assets/961ba603-9d25-430d-8be5-7bb2a8c50788)
+
+
+ ### Description of the logic behind some design decisions
+ The user entered values are processed and stored in four forms 
+	1) Expression used to evaluate the value
+	2) Evaluation used in the python code to evaluate the value if it is not scanned and there is a specific value to be used for each variable in the expression
+	3) Value of the parameter in case it is not scanned and there is a specific value to be used
+	4) For python version that is going to be used in the python like description of the experimental sequence
+The reason for evaluation being different from the expression is the ability of using the variables. Since the variable "delay" will be used as self.experiment.variables['delay'] there is a need of processing each variable accordingly and create an evaluation that can be executed to evaluate the parameter. The reason for having for_python is the ability of scanning variables. In case the parameter include a variable that is going to be scanned there is no specific value that is corresponding to that parameter. Instead the form such as scanned_variable_name is used as in the python like description there will be an iterable object that will be iterated over as "for a in self.a:". If the variable expression does not have any scanned variables, then the for_python is simply the value of the parameter.
+
+### The need for variables and new_variables
+Self.experiment.variables is a dictionary of all variables including the default variables that are created when the new edge is being inserted (id0, id1, etc.). The use of dictionaries is good for faster retrieval of the variable values. However, it does not preserve any ordering that is required in rebuilding the variables tab. Otherwise, each time the variable is being created the order will be randomly changing, that might be confusing for the user. I could have used ordered dictionary, but self.experiment.new_variables proved to be useful to store the ordered user defined variables is handy when the variable is being scanned. When a variable is chosen to be scanned its value for the sorting of sequence table is being assigned to be the minimum value of the scanning range. However, after the tests with the scan one would like to retrieve the value of the variable that was used prior to scanning it. Self.experiment.new_variables comes handy as variables previous values can be easily retrieved from there.
+
+### Updating of the for_python
+For_python is only being updated only when the run experiment button is pressed. This was done to avoid decoding of each expression present in the experimental sequence to find out if the expression including the scanned variable or not. Since the for_python is only used when the python like description is being generated. This might confuse the developer as some of the for_python values might appear as not being updated.
+
+## Description of the files and their relation to each other
 The program consists of several files that will be described in this section. 
+
+### config.py
+The config file contains the information that is specific to the hardware. The contents have self-explanatory names. Number of channels, name of artiq environment, analog card type can be set in a config file.
 
 ### source_code.py
 The main file is the source_code.py It initializes the artiq server, communicates with the scheduler, creates and displays the main window, defines used objects such as self.experiment, self.edge, ... etc. And finally, it has many utility functions that are used when buttons are clicked or entries are changed.
+
 ### tabs.py
 The tabs.py is a file that is used to build all tabs. It has a description of tables, buttons and their relative orientations. 
+
 ### update.py
 The update.py is a file that consists of fairly optimized udpating functions that are required in different cases. 
+
 ### write_to_python.py
 The write_to_python.py is a file that consists of functions required to generate the python like description of the experimental sequence.
+
+### run_experiment.py 
+The file is generated and updated by Quantrol. It is a python like description of the experimental sequence. In order to change the way it is being generated modify write_to_python.py file.
+
+### go_to_edge.py
+The file is generated and updated by Quantrol. It is a python like description of the experimental sequence that sets the hardware at a specific state. In order to change the way it is being generated modify write_to_python.py file.
+
+### init_hardware.py
+The file is generated and updated by Quantrol. It is a python like desciprion of the experiment that initializes the hardware and sets its state to the defaul edge values. The user should initialize the hardware every time after power cycling Sinara hardware. In order to add different objects modify the write_to_python.py file.
 
 ## License
 This is an open source project that was developed for the use in Hosten group (https://hostenlab.pages.ist.ac.at/). It was made public as we believed that other groups might benefit from what we have built.
