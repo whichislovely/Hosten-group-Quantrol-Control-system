@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/a8e0938a-0c78-4b0d-be02-3a1b8a42b206)# Quantrol
+# Quantrol
 
 Quantrol is a high level solution built on top of the open access Artiq infrastructure. It allows researchers to use most of the Artiq features without coding.
 The current state of the GUI is adopted for the specific hardware used in Hosten group at Institure of Science and Technology Austria. However, it can be relatively easily adopted for any type of Sinara based hardware.
