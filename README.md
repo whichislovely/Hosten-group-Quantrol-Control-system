@@ -2,6 +2,16 @@
 Quantrol is a high level solution built on top of the open access Artiq infrastructure. It allows researchers to use most of the Artiq features without coding.
 The current state of the GUI is adopted for the specific hardware used in Hosten group at Institure of Science and Technology Austria. However, it can be relatively easily adopted for any type of Sinara based hardware.
 
+## Example of cooling seuqence
+Here is an example of the experimental description of the cooling sequence in Quantrol
+![image](https://github.com/user-attachments/assets/8bad5e63-a737-473f-ac95-21885abd28a4)
+![image](https://github.com/user-attachments/assets/1e735e6e-2473-488a-ad76-7f0c1559353c)
+![image](https://github.com/user-attachments/assets/2079a59d-661d-4a17-992a-7f8632831262)
+
+And a corresponding hardcoded version that Quantrol generates and runs is shown below:
+![Code](https://github.com/user-attachments/assets/7194862f-944f-466b-b695-9390eb0d1008)
+The Quantrol has 23 rows of a nice interpretable table instead of almost 300 lines of code that are hard to interpret.
+
 ## Python requirements
 The GUI was written using python 9.x. At the time of writing this note, some PyQt features and syntax supported by python 9 are not supported by python >=10. 
 	
@@ -127,16 +137,6 @@ The sequences should be saved in the Sequences folder which is located in the Qu
 
 ### Troubleshooting Quantrol
 In case the user needs to troubleshoot the behavior of the Quantrol, first look at the VS Code terminal for warnings and errors. After that, check if the experimental description is correct. For example, for Init. hardware, Stop continuous run it is init_hardware.py, for Continuous run, Run experiment, Generate experiment, and Submit experiment it is run_experiment.py, and for Go_to_Edge it is go_to_edge.py. If the descriptions are correct, then check the direct output of the Quantrol. For example, if you want to turn ON the laser by driving an AOM with an RF signal and it didn't turn ON. Before blaming the Quantrol, check if it outputs what you requested. It might happen that the AOM drive amplifier is not powered making it impossible to drive the AOM from Quantrol. So always break down the process into smallest pieces and check every suspect one by one. It requires creative tests to isolate each of the components that might cause problem of the whole system operation. In most of the cases, Artiq guarantees all or nothing degree of precision. Therefore, if Quantrol generates correct experimental sequence descriptions, it is either the connection problem with the hardware or it might require a power cycle as some of the cards might be stuck in some weird state.
-
-## Example of cooling seuqence
-Here is an example of the experimental description of the cooling sequence in Quantrol
-![image](https://github.com/user-attachments/assets/8bad5e63-a737-473f-ac95-21885abd28a4)
-![image](https://github.com/user-attachments/assets/1e735e6e-2473-488a-ad76-7f0c1559353c)
-![image](https://github.com/user-attachments/assets/2079a59d-661d-4a17-992a-7f8632831262)
-
-And a corresponding hardcoded version that Quantrol generates and runs is shown below:
-![Code](https://github.com/user-attachments/assets/7194862f-944f-466b-b695-9390eb0d1008)
-The Quantrol has 23 rows of a nice interpretable table instead of almost 300 lines of code that are hard to interpret.
 
 ## Developer guide
 The entire description will all parameters is stored in an object self.experiment. Chart describing its parameters and their descriptions is shown below. Purple blocks are objects, yellow blocks are the parameters of objects, and green blocks are descriptions of those parameters.
