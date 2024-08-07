@@ -28,14 +28,17 @@ The color coding of the channel state is used for better visualization of the se
 
 The program was not optimized for adaptive resizing and was designed for the full window size use only.
 Most of the important buttons have some descriptions. Simply hover the mouse of the button and read it carefully before using Quantrol.
-![image](https://github.com/user-attachments/assets/77d4592d-d760-41c6-a12e-1dfd2940d377)
-Experimental description is done in a form of a table of time edges. Each edge describes what changes in the digital, analog, and DDS outputs should be performed. An example of the far detuned cooling is shown below.
-![digital](https://github.com/user-attachments/assets/49c4bad1-39ee-48b5-829e-0a4c9cdb46df)
+![image](https://github.com/user-attachments/assets/88a9534a-555a-4564-a8d0-b80aedf21069)
 
+Experimental description is done in a form of a table of time edges. Each edge describes what changes in the digital, analog, and DDS outputs should be performed. An example of the far detuned cooling is shown below.
+![image](https://github.com/user-attachments/assets/8bad5e63-a737-473f-ac95-21885abd28a4)
+![image](https://github.com/user-attachments/assets/1e735e6e-2473-488a-ad76-7f0c1559353c)
+![image](https://github.com/user-attachments/assets/2079a59d-661d-4a17-992a-7f8632831262)
 
 And a corresponding hardcoded version that Quantrol generates and runs is shown below:
 ![Code](https://github.com/user-attachments/assets/7194862f-944f-466b-b695-9390eb0d1008)
 
+The Quantrol has 23 rows of a nice interpretable table instead of 
 
 ## Developer guide
 The entire description will all parameters is stored in an object self.experiment. Chart describing its parameters and their descriptions is shown below. Purple blocks are objects, yellow blocks are the parameters of objects, and green blocks are descriptions of those parameters.
