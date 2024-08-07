@@ -26,12 +26,11 @@ In order to use or scan a variable, one first needs to create it in a variables 
 
 The color coding of the channel state is used for better visualization of the sequence. White background values show the previously set values and hence the current state of the hardware. Green and red background specifies the changes user introduced at a specific time edge.
 
-The program was not optimized for adaptive resizing and was arranged for the full window size.
+The program was not optimized for adaptive resizing and was designed for the full window size use only.
+![image](https://github.com/user-attachments/assets/77d4592d-d760-41c6-a12e-1dfd2940d377)
 
+![digital](https://github.com/user-attachments/assets/49c4bad1-39ee-48b5-829e-0a4c9cdb46df)
 
-![Sequence](https://github.com/user-attachments/assets/06027f10-ba52-4671-86e9-9eeb7ece3912)
-![Digital](https://github.com/user-attachments/assets/43dffc20-9fe3-44db-862e-e0e2e3d12f9f)
-![DDS](https://github.com/user-attachments/assets/12187028-77be-4559-a312-a844503b2f24)
 
 And a corresponding hardcoded version that Quantrol generates and schedules is shown below:
 ![Code](https://github.com/user-attachments/assets/7194862f-944f-466b-b695-9390eb0d1008)
