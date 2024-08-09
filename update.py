@@ -5,7 +5,7 @@ import config
 
 def sequence_tab(self):
     self.update_off()
-    #Update expressions and evaluations
+    #Update expressions and evaluations   
     something_changed = True
     iterations = 0 
     iterations_limit = 100 #after the maximum number of iterations it will throw a warning message

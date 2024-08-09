@@ -1,5 +1,10 @@
-from artiq.experiment import *
+'''
+LED.py is a nice quick check if your communication with Sinara hardware is operating properly. Run this experiment and check if the LED is blinking.
 
+Check if the led name "led0" is defined the same way in your device_db.py
+'''
+
+from artiq.experiment import *
 
 class LED(EnvExperiment):
     def build(self):

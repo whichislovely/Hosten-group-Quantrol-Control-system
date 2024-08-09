@@ -5,7 +5,7 @@ import config
 
 def create_experiment(self, run_continuous = False):
     '''
-    Function is used to create the description of the experimental sequence.
+    Function is used to create the description of the experimental sequence.   
     Python like description is saved as run_experiment.py
     run_continuous is used as a flag to indicate if the continuous run is required.
     '''
@@ -118,7 +118,7 @@ def create_experiment(self, run_continuous = False):
 
         #DIGITAL CHANNEL CHANGES
         for index, channel in enumerate(self.experiment.sequence[edge].digital):
-            if edge == 0 and index == 8: #adding a 5 ms delay to make changes into TTL channels
+            if edge == 0 and index % 8 == 0: #adding a 5 ms delay to make changes into TTL channels
                 file.write(indentation + "delay(5*ms)\n")
 
             if channel.changed == True:
@@ -224,7 +224,7 @@ def create_go_to_edge(self, edge_num, to_default = False):
 
     # DIGITAL CHANNEL CHANGES
     for index, channel in enumerate(self.experiment.sequence[edge].digital):
-        if index == 8: #adding a 5 ms delay to make changes for more than 8 TTL channels. There is a limit of the buffer size
+        if index % 8 == 0: #adding a 5 ms delay to make changes for more than 8 TTL channels. There is a limit of the buffer size
             file.write(indentation + "delay(5*ms)\n")
         if channel.value == 0:
             file.write(indentation + "self.ttl" + str(index) + ".off()\n")

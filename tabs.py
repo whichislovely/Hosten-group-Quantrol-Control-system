@@ -6,7 +6,7 @@ import config
 
 class ReadOnlyDelegate(QStyledItemDelegate):
     '''
-    Function is used to make some rows and columns read only
+    Function is used to make some rows and columns read only   
     Example :   delegate = ReadOnlyDelegate(self)
                 self.edges_table.setItemDelegateForColumn(2,delegate)
     '''

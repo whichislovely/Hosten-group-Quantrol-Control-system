@@ -15,6 +15,7 @@ Author  :   Vyacheslav Li
 Email   :   vyacheslav.li.1991@gmail.com
 Date    :   07.30.2024
 Version :   1.0
+Contact :   https://hostenlab.pages.ist.ac.at/contact/
 '''
 
 from os import error
