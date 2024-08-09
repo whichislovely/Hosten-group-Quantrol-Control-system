@@ -99,14 +99,12 @@ def create_experiment(self, run_continuous = False):
             flag_init = 1
         else:
             #Brackets are needed to take into account that for_python can be a mathematical expression with signs
-            print(1)
             try:
                 temp_text = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
                 # print(temp_text)
                 self.delta_t = str(simplify(temp_text))
             except:
                 self.delta_t = temp_text
-            print(2, self.delta_t)
             # self.delta_t = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
             try: #this try is used to try evaluating the expression. It will only be able to do so in case it is scanned
                 exec("self.delta_t = " + self.delta_t)
