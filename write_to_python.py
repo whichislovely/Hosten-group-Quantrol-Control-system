@@ -118,7 +118,7 @@ def create_experiment(self, run_continuous = False):
 
         #DIGITAL CHANNEL CHANGES
         for index, channel in enumerate(self.experiment.sequence[edge].digital):
-            if edge == 0 and index == 8: #adding a 5 ms delay to make changes into TTL channels
+            if edge == 0 and index % 8 == 0: #adding a 5 ms delay to make changes into TTL channels
                 file.write(indentation + "delay(5*ms)\n")
 
             if channel.changed == True:
@@ -224,7 +224,7 @@ def create_go_to_edge(self, edge_num, to_default = False):
 
     # DIGITAL CHANNEL CHANGES
     for index, channel in enumerate(self.experiment.sequence[edge].digital):
-        if index == 8: #adding a 5 ms delay to make changes for more than 8 TTL channels. There is a limit of the buffer size
+        if index % 8 == 0: #adding a 5 ms delay to make changes for more than 8 TTL channels. There is a limit of the buffer size
             file.write(indentation + "delay(5*ms)\n")
         if channel.value == 0:
             file.write(indentation + "self.ttl" + str(index) + ".off()\n")
