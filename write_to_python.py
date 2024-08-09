@@ -5,7 +5,7 @@ import config
 
 def create_experiment(self, run_continuous = False):
     '''
-    Function is used to create the description of the experimental sequence.
+    Function is used to create the description of the experimental sequence.   
     Python like description is saved as run_experiment.py
     run_continuous is used as a flag to indicate if the continuous run is required.
     '''
