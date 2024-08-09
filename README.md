@@ -3,7 +3,7 @@ Quantrol is a high level solution built on top of the open access Artiq infrastr
 The current state of the GUI is adopted for the specific hardware used in Hosten group at Institure of Science and Technology Austria. However, it can be relatively easily adopted for any type of Sinara based hardware.
 
 ## Example of cooling sequence   
-Here is an example of the experimental description of the cooling sequence in Quantrol
+Here is an example of the experimental description of the cooling sequence in Quantrol 
 
 ![image](https://github.com/user-attachments/assets/8bad5e63-a737-473f-ac95-21885abd28a4)
 ![image](https://github.com/user-attachments/assets/1e735e6e-2473-488a-ad76-7f0c1559353c)
