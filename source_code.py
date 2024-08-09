@@ -725,16 +725,18 @@ class MainWindow(QMainWindow):
             write_to_python.create_go_to_edge(self, edge_num=edge_num)
             self.message_to_logger("Go to edge file generated")
             try:
-                if os.system("conda activate %s && artiq_run go_to_edge.py"%config.artiq_environment_name) == 0:
-                    self.message_to_logger("Went to edge")
-                    #unhighlighting the previously highlighted edge if it was previously highlighted
-                    if self.experiment.go_to_edge_num != -1:
-                        self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
-                    #highlighting newly selected edge to go
-                    self.set_color_of_the_edge(self.green, edge_num)
-                    self.experiment.go_to_edge_num = edge_num
-                else:
-                    self.message_to_logger("Couldn't go to edge")        
+                if config.package_manager == "conda":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run go_to_edge.py"%config.artiq_environment_name])
+                elif config.package_manager == "clang64":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["go_to_edge.bat"])
+                submit_experiment_thread.start()
+                self.message_to_logger("Went to edge")
+                #unhighlighting the previously highlighted edge if it was previously highlighted
+                if self.experiment.go_to_edge_num != -1:
+                    self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                #highlighting newly selected edge to go
+                self.set_color_of_the_edge(self.green, edge_num)
+                self.experiment.go_to_edge_num = edge_num
             except:
                 self.message_to_logger("Couldn't go to edge")    
         except:
@@ -766,7 +768,10 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Python file generated")
             try:
                 #initialize environment and submit the experiment to the scheduler
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
+                if config.package_manager == "conda":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
+                elif config.package_manager == "clang64":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["run_experiment.bat"])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -790,7 +795,10 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Init_hardware.py file generated")
             try:
                 #initialize environment and submit the experiment to the scheduler
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
+                if config.package_manager == "conda":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
+                elif config.package_manager == "clang64":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["init_hardware.bat"])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -836,7 +844,10 @@ class MainWindow(QMainWindow):
         if os.path.exists(file_name):
             try:
                 #initialize environment and submit the experiment to the scheduler
-                submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
+                if config.package_manager == "conda":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
+                elif config.package_manager == "clang64":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["init_hardware.bat"])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -932,7 +943,10 @@ class MainWindow(QMainWindow):
             self.message_to_logger("Python file generated")
             try:
                 #initialize environment and submit the experiment to run continuously unless it is stopped
-                submit_run_continuously_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
+                if config.package_manager == "conda":
+                    submit_run_continuously_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
+                elif config.package_manager == "clang64":
+                    submit_run_continuously_thread = threading.Thread(target=os.system, args=["run_experiment.bat"])
                 submit_run_continuously_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
@@ -973,7 +987,10 @@ class MainWindow(QMainWindow):
                 write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
                 self.message_to_logger("Init_hardware.py file generated")
                 try:
-                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
+                    if config.package_manager == "conda":
+                        submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
+                    elif config.package_manager == "clang64":
+                        submit_experiment_thread = threading.Thread(target=os.system, args=["init_hardware.bat"])
                     submit_experiment_thread.start()
                     self.message_to_logger("Experiment was stopped. Hardware is set to the default values")
                     #unhighlighting the previously highlighted edge
