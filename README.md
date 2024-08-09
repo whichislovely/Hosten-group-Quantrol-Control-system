@@ -171,6 +171,9 @@ It was also observed that in our setup the first analog channel following 16 dig
 ### Additional features
 Quantrol can be used to generate python like experimental descriptions with a limited amount of features. Anything beyond of Quantrol capabilities can be hardcoded by modifying the generated run_experiment.py. For example, it is possible to create a 1D multiparameter scan using Quantrol. After that, the user can change the number of steps for each iterable object create by Quantrol, add additional for loops and easily make a multidimensional scan much.
 
+### MSYS2 clang64 and conda
+Initially the Quantrol was developed for conda package manager. Later after realizing that Artiq is going to deprecate conda based maintenance it was quickly adopted for MSYS2 clang64. In order to use it move the entire contents of the Quantrol repository to the location where msys2 is installed. In our case it is "C:\msys64\home\hostenlab". Then, specify in the config.py file that your package_manager = 'clang64'. Quantrol then will invoke clang64 file and run corresponding files with artiq_run. There should be better ways of doing this, but it was beyond my scope of expertise.
+
 ## Developer guide
 The entire description will all parameters is stored in an object self.experiment. Chart describing its parameters and their descriptions is shown below. Purple blocks are objects, yellow blocks are the parameters of objects, and green blocks are descriptions of those parameters.
 
