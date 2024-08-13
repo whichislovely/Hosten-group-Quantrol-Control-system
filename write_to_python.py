@@ -174,11 +174,13 @@ def create_experiment(self, run_continuous = False):
         for index, channel in enumerate(self.experiment.sequence[edge].sampler):
             if channel != "0":
                 input_readout_is_requested = True
+        print(self.experiment.sequence[edge].sampler)
         if input_readout_is_requested == True:
             file.write(indentation + "# Sampler input readout\n")
             file.write(indentation + "self.sampler0.sample(inputs)\n")
             for index, channel in enumerate(self.experiment.sequence[edge].sampler):
                 if channel != "0":
+                    print(123123123)
                     file.write(indentation + "%s = inputs[%d]\n" %(channel, index))
     file.close()
 

@@ -875,9 +875,9 @@ class MainWindow(QMainWindow):
             try:
                 #initialize environment and submit the experiment to the scheduler
                 if config.package_manager == "conda":
-                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run run_experiment.py"%config.artiq_environment_name])
                 elif config.package_manager == "clang64":
-                    submit_experiment_thread = threading.Thread(target=os.system, args=["init_hardware.bat"])
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["run_experiment.bat"])
                 submit_experiment_thread.start()
                 #unhighlighting the previously highlighted edge
                 if self.experiment.go_to_edge_num != -1:
