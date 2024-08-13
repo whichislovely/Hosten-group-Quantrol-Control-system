@@ -897,9 +897,9 @@ class MainWindow(QMainWindow):
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
         in the console of the VS Code and observing how parameters are being changed.
         '''
-        # print("SAMPLER")
-        # for edge in self.experiment.sequence:
-        #     print(edge.name, edge.sampler)    
+        print("SAMPLER")
+        for edge in self.experiment.sequence:
+            print(edge.name, edge.sampler)    
 
         # print(self.experiment.sampler_variables)
 
@@ -1000,31 +1000,33 @@ class MainWindow(QMainWindow):
         dialog_buttons_layout.addWidget(button_cancel)
         dialog_layout.addLayout(dialog_buttons_layout)
         self.dialog.setLayout(dialog_layout)
-        button_update.clicked.connect(lambda:self.dialog.accept())
+        button_update.clicked.connect(lambda:self.stop_continuous_run())
         button_cancel.clicked.connect(lambda:self.dialog.reject())
         self.dialog.setWindowTitle("Warning!") 
         self.dialog.exec_()
-        if self.dialog.accepted:
+ 
+    def stop_continuous_run(self):
+        try:
+            write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
+            self.message_to_logger("Init_hardware.py file generated")
             try:
-                write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
-                self.message_to_logger("Init_hardware.py file generated")
-                try:
-                    if config.package_manager == "conda":
-                        submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
-                    elif config.package_manager == "clang64":
-                        submit_experiment_thread = threading.Thread(target=os.system, args=["init_hardware.bat"])
-                    submit_experiment_thread.start()
-                    self.message_to_logger("Experiment was stopped. Hardware is set to the default values")
-                    #unhighlighting the previously highlighted edge
-                    if self.experiment.go_to_edge_num != -1:
-                        self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
-                    #Highlighting the default edge and setting the go_to_edge_num to the default edge value (0)
-                    self.experiment.go_to_edge_num = 0
-                    self.set_color_of_the_edge(self.green, 0)
-                except:
-                    self.message_to_logger("Could not stop the experiment.")
+                if config.package_manager == "conda":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run init_hardware.py"%config.artiq_environment_name])
+                elif config.package_manager == "clang64":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["init_hardware.bat"])
+                submit_experiment_thread.start()
+                self.message_to_logger("Experiment was stopped. Hardware is set to the default values")
+                #unhighlighting the previously highlighted edge
+                if self.experiment.go_to_edge_num != -1:
+                    self.set_color_of_the_edge(self.white, self.experiment.go_to_edge_num)
+                #Highlighting the default edge and setting the go_to_edge_num to the default edge value (0)
+                self.experiment.go_to_edge_num = 0
+                self.set_color_of_the_edge(self.green, 0)
             except:
-                self.message_to_logger("Could not generate init_hardware.py file")
+                self.message_to_logger("Could not stop the experiment.")
+        except:
+            self.message_to_logger("Could not generate init_hardware.py file")    
+        self.dialog.accept()    
 
 
     def save_default_button_clicked(self):
@@ -1046,18 +1048,20 @@ class MainWindow(QMainWindow):
         dialog_buttons_layout.addWidget(button_cancel)
         dialog_layout.addLayout(dialog_buttons_layout)
         self.dialog.setLayout(dialog_layout)
-        button_update.clicked.connect(lambda:self.dialog.accept())
+        button_update.clicked.connect(lambda:self.saving_default())
         button_cancel.clicked.connect(lambda:self.dialog.reject())
         self.dialog.setWindowTitle("Warning!") 
         self.dialog.exec_()
-        if self.dialog.accepted:
-            try:
-                with open("./default/default", 'wb') as file:
-                    pickle.dump(self.experiment, file)
-                self.message_to_logger("Default saved at %s" %self.experiment.file_name)
-            except:
-                self.message_to_logger("Saving attempt was not successful")
+
  
+    def saving_default(self):
+        try:
+            with open("./default/default", 'wb') as file:
+                pickle.dump(self.experiment, file)
+            self.message_to_logger("Default saved at %s" %self.experiment.file_name)
+        except:
+            self.message_to_logger("Saving attempt was not successful")
+        self.dialog.accept()
     
     def load_default_button_clicked(self):
         '''
@@ -1178,7 +1182,7 @@ class MainWindow(QMainWindow):
     def check_if_already_scanned(self, name):
         '''
         Function takes a variable name as an input and checks if it already exists in a scanned variables list.
-        This is used to avoid providing two same scanned variable. Returns True in case of dublicates and False otherwise
+        This is used to avoid providing two same scanned variable. Returns True in case of duplicates and False otherwise
         '''
         for variable in self.experiment.scanned_variables:
             if variable.name == name:
@@ -1226,7 +1230,7 @@ class MainWindow(QMainWindow):
                         table_item.setText(variable.name)
                         self.update_on()
                 else:
-                    self.error_message("The variable name you entered was already used for scanning.", "Scanning variable dublicate")
+                    self.error_message("The variable name you entered was already used for scanning.", "Scanning variable duplicate")
                 self.count_scanned_variables()
             elif col == 1: #min_val of the scanned variable changed
                 try:
@@ -1544,7 +1548,7 @@ class MainWindow(QMainWindow):
                     self.update_off()
                     table_item.setText(variable.name)       
                     self.update_on()             
-                elif new_name in self.experiment.variables:#Restricting the user from defining the variable name as already defined variable names to avoid having dublicates
+                elif new_name in self.experiment.variables:#Restricting the user from defining the variable name as already defined variable names to avoid having duplicates
                     self.error_message('Variable name is already used', 'Invalid variable name')
                     self.update_off()
                     table_item.setText(variable.name)       
@@ -1700,7 +1704,7 @@ class MainWindow(QMainWindow):
                             self.update_off()
                             table_item.setText(str(channel))
                             self.update_on()
-                            self.error_message("Variable you entered is already used in sampler. Dublicates are not allowed.", "Reuse of the variable")        
+                            self.error_message("Variable you entered is already used in sampler. Duplicates are not allowed.", "Reuse of the variable")        
                     else:
                         self.update_off()
                         table_item.setText(str(channel))
@@ -1711,6 +1715,8 @@ class MainWindow(QMainWindow):
                     table_item.setText(str(channel))
                     self.update_on()
                     self.error_message("Variable you entered is not found in the variables table. First create the variable there.", "No variable found")
+              
+                
 
 def run():
     '''

@@ -452,10 +452,10 @@ def from_object(self):
             channel = self.experiment.sequence[row].sampler[channel_index]
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
             col = channel_index + 4
-            if channel != 0:
+            if channel != "0":
                 self.sampler_table.setItem(row, col, QTableWidgetItem(str(channel)))
                 self.sampler_table.item(row, col).setBackground(self.green)
-            elif channel == 0:
+            elif channel == "0":
                 self.sampler_table.setItem(row, col, QTableWidgetItem(str(0)))
                 self.sampler_table.item(row, col).setBackground(self.white)
     

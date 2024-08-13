@@ -34,7 +34,7 @@ def create_experiment(self, run_continuous = False):
     for _ in range(number_of_ttls):
         file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
     file.write(indentation + "self.setattr_device('%s0')\n" %config.analog_card)
-    
+    file.write(indentation + "self.setattr_device('sampler0')\n")
     if run_continuous:
         file.write(indentation + "self.setattr_device('scheduler')\n")
 
@@ -55,7 +55,7 @@ def create_experiment(self, run_continuous = False):
     indentation += "    "
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
-
+    file.write(indentation + "inputs = [0.0]*8\n")
     file.write(indentation + "delay(1*s)\n") # this delay is added since our reference clock is 1GHz and self.core.break_realtime moves it forward by 15000 clock cycles
     
     # This is used to trigger the camera 10 times and discard those images
@@ -176,11 +176,10 @@ def create_experiment(self, run_continuous = False):
                 input_readout_is_requested = True
         if input_readout_is_requested == True:
             file.write(indentation + "# Sampler input readout\n")
-            file.write(indentation + "self.inputs = [0.0]*8\n")
-            file.write(indentation + "self.sampler0.sample(self.inputs)\n")
+            file.write(indentation + "self.sampler0.sample(inputs)\n")
             for index, channel in enumerate(self.experiment.sequence[edge].sampler):
                 if channel != "0":
-                    file.write(indentation + "self.%s = self.inputs[%d]\n" %(channel, index))
+                    file.write(indentation + "%s = inputs[%d]\n" %(channel, index))
     file.close()
 
 

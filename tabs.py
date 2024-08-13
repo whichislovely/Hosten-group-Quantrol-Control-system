@@ -781,7 +781,7 @@ def sampler_tab_build(self):
         if channel != "0":
             self.sampler_table.item(0, col).setBackground(self.green)
         else:
-            self.sampler_table.item(0, col).setBackground(self.red)
+            self.sampler_table.item(0, col).setBackground(self.white)
     #Binding functions
     self.sampler_table.itemChanged.connect(self.sampler_table_changed)
     self.sampler_table.horizontalHeader().sectionClicked.connect(self.sampler_table_header_clicked)
