@@ -897,51 +897,42 @@ class MainWindow(QMainWindow):
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
         in the console of the VS Code and observing how parameters are being changed.
         '''
-        # for edge_num, edge in enumerate(self.experiment.sequence):
-        #     print("edge number", edge_num, "value", edge.value, "for python", edge.for_python)
-        for edge in self.experiment.sequence:
-            print(edge.name, edge.sampler)    
+        # print("SAMPLER")
+        # for edge in self.experiment.sequence:
+        #     print(edge.name, edge.sampler)    
+
         # print(self.experiment.sampler_variables)
-        # for index, channel in enumerate(edge.analog):
-        #     print("channel", channel.value, channel.for_python)
-        # print(self.server_thread.is_alive())
-        # print(self.server_thread._return)
-        # current_experiment = self.CustomThread(target=os.system, args=["conda activate %s && artic_client scheduler.rid"%config.artiq_environment_name])
-        # write_to_python.create_experiment(self, run_continuous=True)
-        # print(self.experiment.sequence[0].dds[9].phase.for_python, self.experiment.sequence[0].dds[9].phase.value)
+
         # print("analog channel values")
         # for edge in self.experiment.sequence:
         #     for ind, channel in enumerate(edge.analog):
         #         print("Channel", ind, "val", channel.value, "evaluation", channel.evaluation, "for_python", channel.for_python)
 
-
-
         # print("NEW variables")
         # for item in self.experiment.new_variables:
         #     print("name: ", item.name, "value: ", item.value, "for python: ", item.for_python)
+        
         # print("VARIABLES")
         # for key, item in self.experiment.variables.items():
         #     print("name: ", item.name, "value: ", item.value, "for python: ", item.for_python)
 
+        # print("EDGES")
         # for ind, edge in enumerate(self.experiment.sequence):
         #     print("edge", ind)
         #     print("    chanel", ind,"evaluation", edge.evaluation, "for_python", edge.for_python, "scanned", edge.is_scanned)
         # print("END")
 
-#        print("analog channel values")
-#        for edge in self.experiment.sequence:
-#            for ind, channel in enumerate(edge.analog):
-#                print("Channel", ind, "val", channel.value, "evaluation", channel.evaluation)
-#        print("scanned_variables")
-#        for item in self.experiment.scanned_variables:
-#            print(item.name, item.min_val, item.max_val)
-#        print("new variables")
-#        for item in self.experiment.new_variables:
-#            print(item.name, item.value, item.is_scanned)
+        # print("analog channel values")
         # for edge in self.experiment.sequence:
-        #     print("edge id:", edge.id, "val:", edge.value, "evaluation:", edge.evaluation, "for_python:", edge.for_python, "is scanned:", edge.is_scanned)
-            
+        #     for ind, channel in enumerate(edge.analog):
+        #         print("Channel", ind, "val", channel.value, "evaluation", channel.evaluation)
 
+        # print("scanned_variables")
+        # for item in self.experiment.scanned_variables:
+        #     print(item.name, item.min_val, item.max_val)
+        # print("new variables")
+        # for item in self.experiment.new_variables:
+        #     print(item.name, item.value, item.is_scanned)
 
 
     def save_sequence_as_button_clicked(self):
