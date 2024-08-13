@@ -168,6 +168,19 @@ def create_experiment(self, run_continuous = False):
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
                 else:
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
+                    
+        #SAMPLER CHANNELS
+        input_readout_is_requested = False
+        for index, channel in enumerate(self.experiment.sequence[edge].sampler):
+            if channel != "0":
+                input_readout_is_requested = True
+        if input_readout_is_requested == True:
+            file.write(indentation + "# Sampler input readout\n")
+            file.write(indentation + "self.inputs = [0.0]*8\n")
+            file.write(indentation + "self.sampler0.sample(self.inputs)\n")
+            for index, channel in enumerate(self.experiment.sequence[edge].sampler):
+                if channel != "0":
+                    file.write(indentation + "self.%s = self.inputs[%d]\n" %(channel, index))
     file.close()
 
 
