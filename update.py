@@ -16,7 +16,7 @@ def sequence_tab(self):
         for row, edge in enumerate(self.experiment.sequence):
             expression = self.sequence_table.item(row,3).text()
             try:
-                (edge.evaluation, edge.for_python, edge.is_scanned) = self.decode_input(expression)
+                (edge.evaluation, edge.for_python, edge.is_scanned, is_sampled) = self.decode_input(expression)
                 if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
                     if self.experiment.variables[edge.id].is_scanned != edge.is_scanned or self.experiment.variables[edge.id].for_python != edge.for_python:
                         something_changed = True
@@ -68,7 +68,7 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                 if update_expressions_and_evaluations:
                     channel.expression = table_item.text()
                     try:
-                        (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(channel.expression)
+                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled) = self.decode_input(channel.expression)
                     except:
                         return "digital channel %d, edge %d" %(channel_index, row)
                 #Updating values and table
@@ -107,6 +107,22 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
     self.update_on()
 
 
+def sampler_tab(self):
+    self.update_off()
+    #note that in order to display numbers you first need to convert them to string
+    for channel_index in range(config.sampler_channels_number):
+        for row in range(self.sequence_num_rows):
+            # plus 4 is because first 4 columns are used by number, name, time of edge and separator
+            col = channel_index + 4
+            table_item = self.sampler_table.item(row,col)
+            self.experiment.sequence[row].sampler[channel_index] = table_item.text()
+            if table_item.text() != "0":
+                table_item.setBackground(self.green)
+            else:
+                table_item.setBackground(self.white)
+                                 
+    self.update_on()
+
 def analog_tab(self, update_expressions_and_evaluations = True, update_values_and_table = True):
     '''
     This function updates expressions, evaluations, values and entries of analog table
@@ -130,31 +146,36 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                     except:
                         pass
                     try:
-                        (channel.evaluation, channel.for_python, channel.is_scanned) = self.decode_input(channel.expression)
+                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled) = self.decode_input(channel.expression)
                     except:
                         return "analog channel %d, edge %d" %(channel_index, row)
-                #Updating values and table
-                if update_values_and_table:
-                    #Check if the expression can be evaluated
-                    try:
-                        exec("channel.value = " + channel.evaluation)
-                    except:
-                        return "analog channel %d, edge %d" %(channel_index, row)
-                    #Color coding the values
-                    if channel.value >= -9.9 and channel.value <= 9.9:
-                        if channel.value != 0:
-                            table_item.setBackground(self.green)
-                        else:
-                            table_item.setBackground(self.red)
-                    else:
-                        return "analog channel %d, edge %d" %(channel_index, row)
+                if is_sampled:
+                    table_item.setBackground(self.grey)
                     table_item.setText(channel.expression)
-                    table_item.setToolTip(str(channel.value))
-                #Saving the current state of the channel
-                current_expression = channel.expression
-                current_evaluation = channel.evaluation
-                current_value = channel.value
-                current_for_python = channel.for_python
+                    table_item.setToolTip("sampled")                    
+                else:
+                    #Updating values and table
+                    if update_values_and_table:
+                        #Check if the expression can be evaluated
+                        try:
+                            exec("channel.value = " + channel.evaluation)
+                        except:
+                            return "analog channel %d, edge %d" %(channel_index, row)
+                        #Color coding the values
+                        if channel.value >= -9.9 and channel.value <= 9.9:
+                            if channel.value != 0:
+                                table_item.setBackground(self.green)
+                            else:
+                                table_item.setBackground(self.red)
+                        else:
+                            return "analog channel %d, edge %d" %(channel_index, row)
+                        table_item.setText(channel.expression)
+                        table_item.setToolTip(str(channel.value))
+                    #Saving the current state of the channel
+                    current_expression = channel.expression
+                    current_evaluation = channel.evaluation
+                    current_value = channel.value
+                    current_for_python = channel.for_python
             else: #Update the value according to the previously set state
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
@@ -206,7 +227,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                         except:
                             pass
                         try:
-                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned) = self.decode_input(channel_entry.expression)
+                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled) = self.decode_input(channel_entry.expression)
                         except:
                             return "dds channel %d, edge %d" %(channel_index, row)
                     #Updating values and table entries
@@ -259,6 +280,7 @@ def variables_tab(self):
             item.setFlags(Qt.NoItemFlags)
             self.variables_table.setItem(row, 1, item) 
         elif variable.name in self.experiment.sampler_variables:
+            self.experiment.variables[variable.name].value = 0
             item = QTableWidgetItem("sampled")
             item.setFlags(Qt.NoItemFlags)
             self.variables_table.setItem(row, 1, item) 
@@ -298,6 +320,7 @@ def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_
             return digital_tab_return    
     else:
         variables_tab(self)
+        sampler_tab(self)
         self.update_on()
         return sequence_tab_return                
 
@@ -456,7 +479,7 @@ def from_object(self):
                 self.sampler_table.setItem(row, col, QTableWidgetItem(str(channel)))
                 self.sampler_table.item(row, col).setBackground(self.green)
             elif channel == "0":
-                self.sampler_table.setItem(row, col, QTableWidgetItem(str(0)))
+                self.sampler_table.setItem(row, col, QTableWidgetItem("0"))
                 self.sampler_table.item(row, col).setBackground(self.white)
     
     #building variables table from the self.experiment.new_variables array

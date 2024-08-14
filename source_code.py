@@ -122,6 +122,7 @@ class MainWindow(QMainWindow):
                 self.for_python = for_python
                 self.changed = changed
                 self.is_scanned = is_scanned
+                self.is_sampled = False
 
 
         class DDS:
@@ -287,10 +288,14 @@ class MainWindow(QMainWindow):
         
         self.init_default_values() #Reads the default state file and initializes the values
         tabs.sequence_tab_build(self)
-        tabs.digital_tab_build(self)
-        tabs.analog_tab_build(self)
-        tabs.dds_tab_build(self)
-        tabs.sampler_tab_build(self)
+        if config.digital_channels_number > 0:
+            tabs.digital_tab_build(self)
+        if config.analog_channels_number > 0:
+            tabs.analog_tab_build(self)
+        if config.dds_channels_number > 0:
+            tabs.dds_tab_build(self)
+        if config.sampler_channels_number > 0:
+            tabs.sampler_tab_build(self)
         tabs.variables_tab_build(self)
         self.making_separator()
        
@@ -334,10 +339,14 @@ class MainWindow(QMainWindow):
             self.experiment.title_sampler_tab = deepcopy(default_experiment.title_sampler_tab)
         except:
             self.experiment.sequence[0] = self.Edge(name="Default")
-            self.experiment.title_digital_tab = ["#", "Name", "Time (ms)", ""] + [f"D{i}" for i in range(config.digital_channels_number)]
-            self.experiment.title_analog_tab = ["#", "Name", "Time (ms)", ""] + [f"A{i}" for i in range(config.analog_channels_number)]
-            self.experiment.title_dds_tab = ["#", "Name", "Time (ms)", ""] + [f"DDS{i}" for i in range(config.dds_channels_number)]            
-            self.experiment.title_sampler_tab = ["#", "Name", "Time (ms)", ""] + [f"S{i}" for i in range(config.sampler_channels_number)]            
+            if config.digital_channels_number > 0:
+                self.experiment.title_digital_tab = ["#", "Name", "Time (ms)", ""] + [f"D{i}" for i in range(config.digital_channels_number)]
+            if config.analog_channels_number > 0:
+                self.experiment.title_analog_tab = ["#", "Name", "Time (ms)", ""] + [f"A{i}" for i in range(config.analog_channels_number)]
+            if config.dds_channels_number > 0:
+                self.experiment.title_dds_tab = ["#", "Name", "Time (ms)", ""] + [f"DDS{i}" for i in range(config.dds_channels_number)]            
+            if config.sampler_channels_number > 0:
+                self.experiment.title_sampler_tab = ["#", "Name", "Time (ms)", ""] + [f"S{i}" for i in range(config.sampler_channels_number)]            
             if incompatible:
                 self.error_message('Default file is incompatible. Initializing the DEFAULT default values and updating the default file.', 'Error')
             else:
@@ -426,6 +435,7 @@ class MainWindow(QMainWindow):
         output_for_python = ""
         current = ""
         is_scanned = False
+        is_sampled = False
         text = text.replace(" ", "") # removing spaces
         text += "+" #Adding a plus in the end of the text in order to avoid typing additional operation for the last element
         while index < len(text):
@@ -444,8 +454,9 @@ class MainWindow(QMainWindow):
                     if self.experiment.do_scan and variable.is_scanned:#if scanned assign the python form else assign the value
                         is_scanned = True
                         output_for_python += str(self.experiment.variables[current].for_python) + text[index]
-                    elif current in self.experiment.sampler_variables: #if scanned assign the python form else assign the value
-                        output_for_python += "self.%s" %current + text[index]
+                    elif current in self.experiment.sampler_variables: #if sampled assign the name itself
+                        output_for_python += "%s" %current + text[index]
+                        is_sampled = True
                     else:
                         output_for_python += str(variable.value) + text[index]
                 current = ""
@@ -464,7 +475,7 @@ class MainWindow(QMainWindow):
             output_eval = str(float(output_eval))
         except:
             pass
-        return (output_eval, output_for_python, is_scanned) #Since we added an additional sign we need to remove it
+        return (output_eval, output_for_python, is_scanned, is_sampled) #Since we added an additional sign we need to remove it
 
 
     def remove_restricted_characters(self, text):
@@ -512,7 +523,7 @@ class MainWindow(QMainWindow):
                 else:                        
                     try:
                         expression = table_item.text()
-                        (evaluation, for_python, is_scanned) = self.decode_input(expression)
+                        (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
                         exec("self.value = " + str(evaluation)) # this is done here to be able to assign value of the id# type variable
                         if self.value < 0: #restricting negative values for time
                             self.error_message("Negative values are not allowed", "Negative time value")
@@ -992,20 +1003,25 @@ class MainWindow(QMainWindow):
         self.dialog.setFont(QFont('Arial', 14))
         value_input = QLabel("Are you sure that you want to stop continuous run?")
         dialog_layout = QVBoxLayout()
-        button_update = QPushButton("Yes")
-        button_cancel = QPushButton("No")
+        button_yes = QPushButton("Yes")
+        button_no = QPushButton("No")
         dialog_layout.addWidget(value_input)
         dialog_buttons_layout = QHBoxLayout()
-        dialog_buttons_layout.addWidget(button_update)
-        dialog_buttons_layout.addWidget(button_cancel)
+        dialog_buttons_layout.addWidget(button_yes)
+        dialog_buttons_layout.addWidget(button_no)
         dialog_layout.addLayout(dialog_buttons_layout)
         self.dialog.setLayout(dialog_layout)
-        button_update.clicked.connect(lambda:self.stop_continuous_run())
-        button_cancel.clicked.connect(lambda:self.dialog.reject())
+        button_yes.clicked.connect(lambda:self.stop_continuous_run())
+        button_no.clicked.connect(lambda:self.dialog.reject())
         self.dialog.setWindowTitle("Warning!") 
         self.dialog.exec_()
  
     def stop_continuous_run(self):
+        '''
+        This function is used to trigger the event of button_yes for stop_continuous_run_button_clicked. When using it to accept the dialog and then
+        having a flag of self.dialog.accepted in case the window was closed by clicking the close button at the 
+        right top corner, the dialog was accepted by default.
+        '''
         try:
             write_to_python.create_go_to_edge(self, edge_num=0, to_default=True)
             self.message_to_logger("Init_hardware.py file generated")
@@ -1055,6 +1071,12 @@ class MainWindow(QMainWindow):
 
  
     def saving_default(self):
+        '''
+        This function is used to trigger the event of button_yes for save_default_button_clicked. When using it to accept the dialog and then
+        having a flag of self.dialog.accepted in case the window was closed by clicking the close button at the 
+        right top corner, the dialog was accepted by default.
+        '''
+        
         try:
             with open("./default/default", 'wb') as file:
                 pickle.dump(self.experiment, file)
@@ -1104,7 +1126,8 @@ class MainWindow(QMainWindow):
                     #there is no need for manually making the variables is_scanned attribute False since it is done in decode_input as self.experiment.do_scan is false
             else: #User checked the scan. Assign the scanned variables values to the minimum value. This is required in case they are used in edge time expression to allow sorting
                 for variable in self.experiment.scanned_variables:
-                    self.experiment.variables[variable.name].value = variable.min_val
+                    if variable.name != "None":
+                        self.experiment.variables[variable.name].value = variable.min_val
             update.all_tabs(self)
             update.variables_tab(self)
         
@@ -1166,7 +1189,7 @@ class MainWindow(QMainWindow):
         if self.to_update: 
             try:
                 expression = self.number_of_steps_input.text()
-                (evaluation, for_python, is_scanned) = self.decode_input(expression)
+                (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
                 exec("self.value = " + str(evaluation))
                 if self.value > 0: #check whether it is a positive integer
                     self.experiment.number_of_steps = int(self.value)
@@ -1329,7 +1352,7 @@ class MainWindow(QMainWindow):
                 try: 
                     #Checking whether the expression can be evaluated and the value is within allowed range
                     expression = table_item.text()
-                    (evaluation, for_python, is_scanned) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
                     exec("self.value = " + evaluation)
                     if (self.value == 0 or self.value == 1):
                         channel.changed = True
@@ -1414,7 +1437,7 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking whether the expression can be evaluated and the value is within allowed range                    
                     expression = table_item.text()
-                    (evaluation, for_python, is_scanned) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
                     exec("self.value =" + evaluation)
                     if (self.value <= 9.9 and self.value >= -9.9):
                         channel.expression = expression
@@ -1469,7 +1492,7 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking whether the expression can be evaluated and the value is within allowed range                     
                     expression = self.dds_table.item(row,col).text()
-                    (evaluation, for_python, is_scanned) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
                     exec("self.dummy_val =" + evaluation)
                     maximum, minimum = self.max_dict[setting], self.min_dict[setting]
                     if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
@@ -1695,6 +1718,7 @@ class MainWindow(QMainWindow):
                     if self.experiment.variables[table_entry].is_scanned == False: #Check if the variable name is not scanned
                         if table_entry not in self.experiment.sampler_variables:
                             #Remove the previous variable from the sampler variables if it was not 0 before the human entry
+                            print(channel, type(channel), self.experiment.sampler_variables, type(self.experiment.sampler_variables))
                             if channel in self.experiment.sampler_variables:
                                 self.experiment.sampler_variables.remove(channel)
                             self.experiment.sequence[row].sampler[col-4] = table_entry #Updating the sampler value
@@ -1715,7 +1739,7 @@ class MainWindow(QMainWindow):
                     table_item.setText(str(channel))
                     self.update_on()
                     self.error_message("Variable you entered is not found in the variables table. First create the variable there.", "No variable found")
-              
+            update.sampler_tab(self)  
                 
 
 def run():

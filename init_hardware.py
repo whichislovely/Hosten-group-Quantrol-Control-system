@@ -18,6 +18,11 @@ class init_hardware(EnvExperiment):
         self.setattr_device('urukul2_ch1')
         self.setattr_device('urukul2_ch2')
         self.setattr_device('urukul2_ch3')
+        self.setattr_device('urukul3_cpld')
+        self.setattr_device('urukul3_ch0')
+        self.setattr_device('urukul3_ch1')
+        self.setattr_device('urukul3_ch2')
+        self.setattr_device('urukul3_ch3')
         self.setattr_device('ttl0')
         self.setattr_device('ttl1')
         self.setattr_device('ttl2')
@@ -35,6 +40,7 @@ class init_hardware(EnvExperiment):
         self.setattr_device('ttl14')
         self.setattr_device('ttl15')
         self.setattr_device('zotino0')
+        self.setattr_device('sampler0')
 
     @kernel
     def run(self):
@@ -111,4 +117,4 @@ class init_hardware(EnvExperiment):
         self.urukul2_ch2.sw.off() 
         self.urukul2_ch3.set_att(0.0*dB) 
         self.urukul2_ch3.set(frequency = 0.0*MHz, amplitude = 0.0, phase = (0.0)/360)
-        self.urukul2_ch3.sw.off()    
+        self.urukul2_ch3.sw.off() 
