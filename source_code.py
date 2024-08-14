@@ -713,7 +713,7 @@ class MainWindow(QMainWindow):
                 backup = deepcopy(self.experiment.variables[name]) #backup is a variable copy in case we would need to restore changes and not allow deleting edge
                 #the following is a check whether the edge has been used somewhere. First we delete a corresponding variable and then try to evaluate all the entries
                 del self.experiment.variables[name]
-                return_value = update.all_tabs(self)
+                return_value = update.digital_analog_dds_tabs(self)
                 if return_value == None: #no errors, means that the edge can be deleted
                     del self.experiment.sequence[row]
                     self.sequence_table.setCurrentCell(row-1, 0)
@@ -798,12 +798,12 @@ class MainWindow(QMainWindow):
 
     def run_experiment_button_clicked(self): 
         '''
-        Function is used when the user wants to run the experiment. By calling update.all_tabs(self) it updates every expression
+        Function is used when the user wants to run the experiment. By calling update.digital_analog_dds_tabs(self) it updates every expression
         to make sure that all scanning variables are taken into account. After that it generates the run_experiment.py file and 
         submits the experimental description to the scheduler through artiq_run function.
         '''
         self.count_scanned_variables()
-        update.all_tabs(self) #updating all expressions in particular for_pythons of each parameter
+        update.digital_analog_dds_tabs(self) #updating all expressions in particular for_pythons of each parameter
         try:
             write_to_python.create_experiment(self)
             self.message_to_logger("Python file generated")
@@ -859,7 +859,7 @@ class MainWindow(QMainWindow):
         Function is used to generate the run_experiment.py according to the experimental descirption without
         running it. It is usefull for debugging purposes.
         '''
-        update.all_tabs(self) #specifically used to update for_python version of each parameter in the sequence
+        update.digital_analog_dds_tabs(self) #specifically used to update for_python version of each parameter in the sequence
         try:
             write_to_python.create_experiment(self)
             self.message_to_logger("Python file generated")
@@ -970,7 +970,7 @@ class MainWindow(QMainWindow):
         It passes the run_continuous flag into the write_to_python.create_experiment and the rest is handled there
         '''
         self.count_scanned_variables()
-        update.all_tabs(self) #updating all expressions in particular for_pythons of each parameter
+        update.digital_analog_dds_tabs(self) #updating all expressions in particular for_pythons of each parameter
         try:
             write_to_python.create_experiment(self, run_continuous=True)
             self.message_to_logger("Python file generated")
@@ -1128,7 +1128,7 @@ class MainWindow(QMainWindow):
                 for variable in self.experiment.scanned_variables:
                     if variable.name != "None":
                         self.experiment.variables[variable.name].value = variable.min_val
-            update.all_tabs(self)
+            update.digital_analog_dds_tabs(self)
             update.variables_tab(self)
         
 
@@ -1159,7 +1159,7 @@ class MainWindow(QMainWindow):
             #First update the variables tab in order to update the values for evaluation in following update steps
             update.variables_tab(self)
             update.scan_table(self)
-            update.all_tabs(self)
+            update.digital_analog_dds_tabs(self)
             if row != 0:
                 self.scan_table_parameters.setCurrentCell(row-1, 0)
         except:
@@ -1240,7 +1240,9 @@ class MainWindow(QMainWindow):
                                 self.experiment.new_variables[prev_index].is_scanned = False
                             #updating the values and scanning states of the new scanning  variable
                             variable.name = new_variable_name
-                            self.experiment.variables[variable.name] = self.Variable(variable.name, variable.min_val, "self." + variable.name + "[step]", True) #add a new variable with updated name
+                            self.experiment.variables[variable.name].value = variable.min_val
+                            self.experiment.variables[variable.name].for_python = "self." + variable.name + "[step]"
+                            self.experiment.variables[variable.name].is_scanned = True
                             self.experiment.new_variables[index].is_scanned = True
                         else: #The variable name enteres is used in sampler tab
                             self.error_message("The variable name you entered was already used in sampler tab", "Used variable name")
@@ -1270,7 +1272,8 @@ class MainWindow(QMainWindow):
                     table_item.setText(str(variable.max_val))
                 except:
                     self.error_message("Expression can not be evaluated", "Wrong entry")
-            update.all_tabs(self)
+            update.digital_analog_dds_tabs(self)
+            update.variables_tab(self)
             update.scan_table(self)       
         else:
             pass
@@ -1593,7 +1596,7 @@ class MainWindow(QMainWindow):
                         #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
                         backup = deepcopy(self.experiment.variables[variable.name])
                         del self.experiment.variables[variable.name]
-                        return_value = update.all_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
+                        return_value = update.digital_analog_dds_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
                         if return_value == None: #The previous variable was not used anywhere and can be changed
                             self.experiment.variables[new_name] = backup
                             self.experiment.variables[new_name].name = new_name
@@ -1613,7 +1616,7 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking if the new value resulting in the values allowed for each parameter it is used in
                     self.experiment.variables[variable.name].value = float(table_item.text())
-                    return_value = update.all_tabs(self, update_expressions_and_evaluations=False) # we do not need to update expressions only update values.
+                    return_value = update.digital_analog_dds_tabs(self) # we do not need to update expressions only update values.
                     if return_value == None: #The value can be updated
                         variable.value = self.experiment.variables[variable.name].value
                         table_item.setText(str(variable.value))
@@ -1623,12 +1626,12 @@ class MainWindow(QMainWindow):
                         self.update_off()
                         table_item.setText(str(variable.value))
                         self.update_on()
-                        update.all_tabs(self, update_expressions_and_evaluations=False)
+                        update.digital_analog_dds_tabs(self)
                 except: #Restricting the user from using anything but the integer values and floating numbers
                     self.update_off()
                     table_item.setText(str(variable.value))
                     self.update_on()
-                    update.all_tabs(self, update_expressions_and_evaluations=False)                    
+                    update.digital_analog_dds_tabs(self, update_expressions_and_evaluations=False)                    
                     self.error_message("Only integers and floating numbers are allowed.", "Wrong entry")
 
 
@@ -1641,17 +1644,21 @@ class MainWindow(QMainWindow):
         try:
             row = self.variables_table.selectedIndexes()[0].row()
             name = self.variables_table.item(row,0).text()
-            backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
-            del self.experiment.variables[name]
-            self.variables_table.setCurrentCell(row-1,0)
-            return_value = update.all_tabs(self, update_expressions_and_evaluations=False) #we need to update only values not expressions
-            if return_value == None: #Variable can be deleted
-                del self.experiment.new_variables[row]
-                update.variables_tab(self)
-            else: #Variable can not be deleted. Reverting all changes back to previous state
-                self.experiment.variables[name] = backup
-                update.all_tabs(self) 
-                self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+            if name not in self.experiment.sampler_variables:
+                backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
+                del self.experiment.variables[name]
+                self.variables_table.setCurrentCell(row-1,0)
+                return_value = update.digital_analog_dds_tabs(self) #we need to update only values not expressions
+                if return_value == None: #Variable can be deleted
+                    del self.experiment.new_variables[row]
+                    update.variables_tab(self)
+                else: #Variable can not be deleted. Reverting all changes back to previous state
+                    self.experiment.variables[name] = backup
+                    update.digital_analog_dds_tabs(self) 
+                    update.variables_tab(self)
+                    self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+            else:
+                self.error_message("The variable is sampled. Remove it from the sampler tab before deleting.", "Sampled variable")
         except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
 
@@ -1718,7 +1725,6 @@ class MainWindow(QMainWindow):
                     if self.experiment.variables[table_entry].is_scanned == False: #Check if the variable name is not scanned
                         if table_entry not in self.experiment.sampler_variables:
                             #Remove the previous variable from the sampler variables if it was not 0 before the human entry
-                            print(channel, type(channel), self.experiment.sampler_variables, type(self.experiment.sampler_variables))
                             if channel in self.experiment.sampler_variables:
                                 self.experiment.sampler_variables.remove(channel)
                             self.experiment.sequence[row].sampler[col-4] = table_entry #Updating the sampler value

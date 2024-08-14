@@ -299,7 +299,7 @@ def scan_table(self):
     self.update_on()
 
 
-def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_tables = True):
+def digital_analog_dds_tabs(self, update_expressions_and_evaluations = True, update_values_and_tables = True):
     '''
     This function updates all tabs. It just calls an update of each tab one by one
     '''
@@ -319,10 +319,9 @@ def all_tabs(self, update_expressions_and_evaluations = True, update_values_and_
             self.update_on()
             return digital_tab_return    
     else:
-        variables_tab(self)
-        sampler_tab(self)
         self.update_on()
         return sequence_tab_return                
+
 
 def from_object(self):
     '''

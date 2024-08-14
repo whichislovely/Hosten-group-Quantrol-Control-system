@@ -15,7 +15,6 @@ class LED(EnvExperiment):
     def run(self):
         self.core.reset()
         self.core.break_realtime()
-        print(123)
         for i in range(10):
             self.led0.on()
             delay(0.5*s)

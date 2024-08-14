@@ -91,7 +91,6 @@ def create_experiment(self, run_continuous = False):
             #Brackets are needed to take into account that for_python can be a mathematical expression with signs
             try:
                 temp_text = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
-                # print(temp_text)
                 self.delta_t = str(simplify(temp_text))
             except:
                 self.delta_t = temp_text
