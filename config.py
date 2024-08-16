@@ -6,7 +6,7 @@ In case you do not have digital, analog, dds, or sampler channels simply set the
 Skipping images is a functionality very specific to our experimental setup. It triggers the image acquisition
 camera as we observed that first several images might probabilistically be faulty. Feel free to set it to False
 
-For the list_of_devices you can have a look at your device_db.py file to see what options do you have
+For the list_of_devices_for_initialization you can have a look at your device_db.py file to see what options do you have
 '''
 
 digital_channels_number = 16
@@ -18,7 +18,7 @@ artiq_environment_name = "artiq_5" # it can be either artiq or artiq_5 for Hoste
 analog_card = "zotino" # it can be either fastino or zotino for Hosten lab systems
 research_group_name = "Hosten"
 allow_skipping_images = True
-list_of_devices = [
+list_of_devices_for_initialization = [
     "core",
     "urukul0_cpld",
     "urukul0_ch0",
