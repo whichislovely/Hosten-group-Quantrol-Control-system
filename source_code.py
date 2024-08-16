@@ -908,9 +908,9 @@ class MainWindow(QMainWindow):
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
         in the console of the VS Code and observing how parameters are being changed.
         '''
-        print("SAMPLER")
-        for edge in self.experiment.sequence:
-            print(edge.name, edge.sampler)    
+        # print("SAMPLER")
+        # for edge in self.experiment.sequence:
+        #     print(edge.name, edge.sampler)    
 
         # print(self.experiment.sampler_variables)
 
@@ -941,6 +941,7 @@ class MainWindow(QMainWindow):
         # print("scanned_variables")
         # for item in self.experiment.scanned_variables:
         #     print(item.name, item.min_val, item.max_val)
+        
         # print("new variables")
         # for item in self.experiment.new_variables:
         #     print(item.name, item.value, item.is_scanned)
@@ -1647,19 +1648,28 @@ class MainWindow(QMainWindow):
         try:
             row = self.variables_table.selectedIndexes()[0].row()
             name = self.variables_table.item(row,0).text()
-            if name not in self.experiment.sampler_variables:
-                backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
-                del self.experiment.variables[name]
-                self.variables_table.setCurrentCell(row-1,0)
-                return_value = update.digital_analog_dds_tabs(self) #we need to update only values not expressions
-                if return_value == None: #Variable can be deleted
-                    del self.experiment.new_variables[row]
-                    update.variables_tab(self)
-                else: #Variable can not be deleted. Reverting all changes back to previous state
-                    self.experiment.variables[name] = backup
-                    update.digital_analog_dds_tabs(self) 
-                    update.variables_tab(self)
-                    self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+            if name not in self.experiment.sampler_variables: # Check if the variable is being sampled 
+                #Checking if the variable is being scanned
+                variable_scanned = False
+                for variable in self.experiment.scanned_variables:
+                    if name == variable.name:
+                        variable_scanned = True
+                        break
+                if variable_scanned == False:
+                    backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
+                    del self.experiment.variables[name]
+                    self.variables_table.setCurrentCell(row-1,0)
+                    return_value = update.digital_analog_dds_tabs(self) #we need to update only values not expressions
+                    if return_value == None: #Variable can be deleted
+                        del self.experiment.new_variables[row]
+                        update.variables_tab(self)
+                    else: #Variable can not be deleted. Reverting all changes back to previous state
+                        self.experiment.variables[name] = backup
+                        update.digital_analog_dds_tabs(self) 
+                        update.variables_tab(self)
+                        self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                else:
+                    self.error_message("The variable is scanned. Remove it from the scan table before deleting.", "Scanned variable")
             else:
                 self.error_message("The variable is sampled. Remove it from the sampler tab before deleting.", "Sampled variable")
         except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
