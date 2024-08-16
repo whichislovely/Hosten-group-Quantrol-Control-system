@@ -25,7 +25,7 @@ def create_experiment(self, run_continuous = False):
     file.write(indentation + "def build(self):\n")
     indentation += "    "
     # Setting the devices to be used 
-    for device in config.list_of_devices:
+    for device in config.list_of_devices_for_initialization:
         file.write(indentation + "self.setattr_device('%s')\n" %device)
 
     # If scan is needed prepare the variables
@@ -194,7 +194,7 @@ def create_go_to_edge(self, edge_num, to_default = False):
     file.write(indentation + "def build(self):\n")
     indentation += "    "
     # Setting the devices to be used 
-    for device in config.list_of_devices:
+    for device in config.list_of_devices_for_initialization:
         file.write(indentation + "self.setattr_device('%s')\n" %device)
     
     file.write("\n")
