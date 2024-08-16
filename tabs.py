@@ -740,8 +740,8 @@ def variables_tab_build(self):
     self.delete_variable = QPushButton(self.variables_tab_widget)
     self.delete_variable.setFont(QFont('Arial', 14))
     self.delete_variable.setGeometry(width_of_table_variables + 50, 90, 200, 30)
-    self.delete_variable.setText("Delete a variable")
-    self.delete_variable.clicked.connect(self.delete_new_variable_clicked)
+    self.delete_variable.setText("Delete variable")
+    self.delete_variable.clicked.connect(self.delete_variable_button_clicked)
     
     
 # SAMPLER TAB

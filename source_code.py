@@ -1635,7 +1635,7 @@ class MainWindow(QMainWindow):
                     self.error_message("Only integers and floating numbers are allowed.", "Wrong entry")
 
 
-    def delete_new_variable_clicked(self):
+    def delete_variable_button_clicked(self):
         '''
         Function is used when the user wants to delete the variable from the variables table.
         It checks if the variable is used in any expression by deleting it and trying to evaluate every expression.
