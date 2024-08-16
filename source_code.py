@@ -1297,7 +1297,10 @@ class MainWindow(QMainWindow):
         '''
         Fucntion is used to update the digital table title name. It takes the index of the title and the name and updates it
         '''
-        self.experiment.title_digital_tab[index] = self.experiment.title_digital_tab[index][0:3] + "\n" + name
+        if name != "":
+            self.experiment.title_digital_tab[index] = "D%d"%(index - 4) + "\n" + name
+        else:
+            self.experiment.title_digital_tab[index] = "D%d"%(index - 4)
         self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
         self.dialog.accept()
 
@@ -1382,10 +1385,10 @@ class MainWindow(QMainWindow):
         '''
         Fucntion is used to update the analog table title name. It takes the index of the title and the name and updates it
         '''
-        if "\n" in self.experiment.title_analog_tab[index]:
-            self.experiment.title_analog_tab[index] = self.experiment.title_analog_tab[index][0:3] + "\n" + name
+        if name != "":
+            self.experiment.title_analog_tab[index] = "A%d"%(index - 4) + "\n" + name
         else:
-            self.experiment.title_analog_tab[index] += "\n" + name
+            self.experiment.title_analog_tab[index] = "A%d"%(index - 4)
         self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
         self.dialog.accept()
 
@@ -1668,7 +1671,10 @@ class MainWindow(QMainWindow):
         '''
         Fucntion is used to update the sampler table title name. It takes the index of the title and the name and updates it
         '''
-        self.experiment.title_sampler_tab[index] = self.experiment.title_sampler_tab[index][0:3] + "\n" + name
+        if name != "":
+            self.experiment.title_sampler_tab[index] = "S%d"%(index - 4) + "\n" + name
+        else:
+            self.experiment.title_sampler_tab[index] = "S%d"%(index - 4)        
         self.sampler_table.setHorizontalHeaderLabels(self.experiment.title_sampler_tab)
         self.dialog.accept()
 
