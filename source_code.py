@@ -1569,52 +1569,70 @@ class MainWindow(QMainWindow):
             variable = self.experiment.new_variables[row]
             table_item = self.variables_table.item(row,col)
             if col == 0: #Variable name was changed
-                new_name = self.remove_restricted_characters(table_item.text())
-                #Restricting the user from using the reserved default variable names in the form of id1, id2, etc.
-                if new_name[0:2] == "id" and new_name[2] in "0123456789":
-                    self.error_message("Variable names starting with id and following with integers are reserved for default edge time variables", "Invalid variable name")
-                elif new_name == "None": #Restricting the user from defining the variable name "None" as it is reserved by the Scan table
-                    self.error_message("Variable name None is reserved by the scan table. Please choose another name", "Invalid variable name")
-                    self.update_off()
-                    table_item.setText(variable.name)       
-                    self.update_on()             
-                elif new_name in self.experiment.variables:#Restricting the user from defining the variable name as already defined variable names to avoid having duplicates
-                    self.error_message('Variable name is already used', 'Invalid variable name')
-                    self.update_off()
-                    table_item.setText(variable.name)       
-                    self.update_on()                         
-                else: # The varibable name is almost among allowed, only the integer or float without other caracters should be checked.
-                    only_numbers = False
-                    try:
-                        float(new_name) #does not allow defining variable names that contains only integers without characters
-                        only_numbers = True
-                    except:
-                        pass
-                    if only_numbers: #Restricting the user from defining a variable name using only numbers
-                        self.update_off()
-                        table_item.setText(variable.name)       
-                        self.update_on()                         
-                        self.error_message('Variable name can not be in a form of a number', 'Invalid variable name')
+                if variable.name not in self.experiment.sampler_variables: # Check if the variable is being sampled 
+                    #Checking if the variable is being scanned
+                    variable_scanned = False
+                    for item in self.experiment.scanned_variables:
+                        if variable.name == item.name:
+                            variable_scanned = True
+                            break
+                    if variable_scanned == False:
+                        new_name = self.remove_restricted_characters(table_item.text())
+                        #Restricting the user from using the reserved default variable names in the form of id1, id2, etc.
+                        if new_name[0:2] == "id" and new_name[2] in "0123456789":
+                            self.error_message("Variable names starting with id and following with integers are reserved for default edge time variables", "Invalid variable name")
+                        elif new_name == "None": #Restricting the user from defining the variable name "None" as it is reserved by the Scan table
+                            self.error_message("Variable name None is reserved by the scan table. Please choose another name", "Invalid variable name")
+                            self.update_off()
+                            table_item.setText(variable.name)       
+                            self.update_on()             
+                        elif new_name in self.experiment.variables:#Restricting the user from defining the variable name as already defined variable names to avoid having duplicates
+                            self.error_message('Variable name is already used', 'Invalid variable name')
+                            self.update_off()
+                            table_item.setText(variable.name)       
+                            self.update_on()                         
+                        else: # The varibable name is almost among allowed, only the integer or float without other caracters should be checked.
+                            only_numbers = False
+                            try:
+                                float(new_name) #does not allow defining variable names that contains only integers without characters
+                                only_numbers = True
+                            except:
+                                pass
+                            if only_numbers: #Restricting the user from defining a variable name using only numbers
+                                self.update_off()
+                                table_item.setText(variable.name)       
+                                self.update_on()                         
+                                self.error_message('Variable name can not be in a form of a number', 'Invalid variable name')
+                            else:
+                                #Allowed variable name. Now checking if it is used in any expression or not. It is done by deleting the variable and trying to evaluate every expression
+                                #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
+                                backup = deepcopy(self.experiment.variables[variable.name])
+                                del self.experiment.variables[variable.name]
+                                return_value = update.digital_analog_dds_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
+                                if return_value == None: #The previous variable was not used anywhere and can be changed
+                                    self.experiment.variables[new_name] = backup
+                                    self.experiment.variables[new_name].name = new_name
+                                    self.experiment.variables[new_name].is_scanned = False
+                                    variable.name = new_name
+                                    self.update_off()
+                                    table_item.setText(variable.name)
+                                    self.update_on()                            
+                                else: #The previous variable was used somewhere. Reverting the name to the previous 
+                                    self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                                    self.experiment.variables[backup.name] = backup
+                                    self.update_off()
+                                    table_item.setText(backup.name)
+                                    self.update_on()
                     else:
-                        #Allowed variable name. Now checking if it is used in any expression or not. It is done by deleting the variable and trying to evaluate every expression
-                        #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
-                        backup = deepcopy(self.experiment.variables[variable.name])
-                        del self.experiment.variables[variable.name]
-                        return_value = update.digital_analog_dds_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
-                        if return_value == None: #The previous variable was not used anywhere and can be changed
-                            self.experiment.variables[new_name] = backup
-                            self.experiment.variables[new_name].name = new_name
-                            self.experiment.variables[new_name].is_scanned = False
-                            variable.name = new_name
-                            self.update_off()
-                            table_item.setText(variable.name)
-                            self.update_on()                            
-                        else: #The previous variable was used somewhere. Reverting the name to the previous 
-                            self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
-                            self.experiment.variables[backup.name] = backup
-                            self.update_off()
-                            table_item.setText(backup.name)
-                            self.update_on()
+                        self.update_off()
+                        table_item.setText(variable.name)
+                        self.update_on()                          
+                        self.error_message("The variable is scanned. Remove it from the scan table before changing its name.", "Scanned variable")
+                else:
+                    self.update_off()
+                    table_item.setText(variable.name)
+                    self.update_on()                      
+                    self.error_message("The variable is sampled. Remove it from the sampler tab before changing its name.", "Sampled variable")
             elif col == 1: #variable value was changed
                 #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
                 try:
