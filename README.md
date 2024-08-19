@@ -135,7 +135,7 @@ Variables tab allows user to create new variables and then use them in parameter
 
 ![image](https://github.com/user-attachments/assets/418cf9ce-b814-4914-a31f-2d54f3148bd0)
 
-It allows user to change that time offset easily by changing the value of the dt variable in the variables tab. Same variables can be used in multiple places. For example, the user can create a variable state for several channels that should turn ON and OFF together and then toggle their state in variables tab. User can delete the unused variables by right clicking them in the variables tab and pressing Delete a variable button.
+It allows user to change that time offset easily by changing the value of the dt variable in the variables tab. Same variables can be used in multiple places. For example, the user can create a variable state for several channels that should turn ON and OFF together and then toggle their state in variables tab. User can delete the unused variables by right clicking them in the variables tab and pressing Delete variable button.
 
 ### Scanning variables
 After a variable dt is created in the variables tab the user has an option to scan the variable. In order to do so, fist check the Scan checkbox in the sequence tab. Then press Add scanned variable button and rename it from None to the variable that needs to be scanned. Quantrol will not allow using variable names that has not been created in the variable tab. After that change the min and max values of the scan and enter the Number of steps. Quantrol will create an experimental sequence that will linearly span the variables values between its min and max values inclusively with number of steps. In the example below it will make a scan for values 0, 1, 2, 3, 4, 5.

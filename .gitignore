@@ -8,8 +8,7 @@ init_hardware.py
 run_experiment.py
 last_rid.pyon
 dataset_db.pyon
-device_db.py
-config.py
+/device_db.py
 dataset_db*
 
 

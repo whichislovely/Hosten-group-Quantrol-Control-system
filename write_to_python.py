@@ -24,19 +24,9 @@ def create_experiment(self, run_continuous = False):
     indentation += "    "
     file.write(indentation + "def build(self):\n")
     indentation += "    "
-    file.write(indentation + "self.setattr_device('core')\n")
-    number_of_urukuls = int(config.dds_channels_number)//4
-    for _ in range(number_of_urukuls):
-        file.write(indentation + "self.setattr_device('urukul%d_cpld')\n" %_) 
-        for i in range(4):
-            file.write(indentation + "self.setattr_device('urukul%d_ch%d')\n" %(_,i)) 
-    number_of_ttls = int(config.digital_channels_number)        
-    for _ in range(number_of_ttls):
-        file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
-    file.write(indentation + "self.setattr_device('%s0')\n" %config.analog_card)
-    
-    if run_continuous:
-        file.write(indentation + "self.setattr_device('scheduler')\n")
+    # Setting the devices to be used 
+    for device in config.list_of_devices_for_initialization:
+        file.write(indentation + "self.setattr_device('%s')\n" %device)
 
     # If scan is needed prepare the variables
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
@@ -55,7 +45,7 @@ def create_experiment(self, run_continuous = False):
     indentation += "    "
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
-
+    file.write(indentation + "inputs = [0.0]*8\n")
     file.write(indentation + "delay(1*s)\n") # this delay is added since our reference clock is 1GHz and self.core.break_realtime moves it forward by 15000 clock cycles
     
     # This is used to trigger the camera 10 times and discard those images
@@ -101,7 +91,6 @@ def create_experiment(self, run_continuous = False):
             #Brackets are needed to take into account that for_python can be a mathematical expression with signs
             try:
                 temp_text = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
-                # print(temp_text)
                 self.delta_t = str(simplify(temp_text))
             except:
                 self.delta_t = temp_text
@@ -134,10 +123,7 @@ def create_experiment(self, run_continuous = False):
             for index, channel in enumerate(self.experiment.sequence[edge].analog):
                 if channel.changed == True:
                     flag_zotino_change_needed = True
-                    if channel.is_scanned:
-                        file.write(indentation + "self.zotino0.write_dac(%d, %s)\n" %(index,channel.for_python))
-                    else:
-                        file.write(indentation + "self.zotino0.write_dac(%d, %.6f)\n" %(index, channel.value))
+                    file.write(indentation + "self.zotino0.write_dac(%d, %s)\n" %(index,channel.for_python))
             if flag_zotino_change_needed:
                 file.write(indentation + "self.zotino0.load()\n")
                 
@@ -149,10 +135,7 @@ def create_experiment(self, run_continuous = False):
                 if channel.changed == True:
                     number_of_channels_changed += 1
                     file.write(indentation + "delay(10*ns)\n")    
-                    if channel.is_scanned:
-                        file.write(indentation + "self.fastino0.set_dac(%d, %s)\n" %(index,channel.for_python))
-                    else:
-                        file.write(indentation + "self.fastino0.set_dac(%d, %.6f)\n" %(index, channel.value))
+                    file.write(indentation + "self.fastino0.set_dac(%d, %s)\n" %(index,channel.for_python))
             #Moving the time cursor back
             if number_of_channels_changed > 1:
                 file.write(indentation + "delay(-%d0*ns)\n" %(number_of_channels_changed))
@@ -168,6 +151,18 @@ def create_experiment(self, run_continuous = False):
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
                 else:
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
+                    
+        #SAMPLER CHANNELS
+        input_readout_is_requested = False
+        for index, channel in enumerate(self.experiment.sequence[edge].sampler):
+            if channel != "0":
+                input_readout_is_requested = True
+        if input_readout_is_requested == True:
+            file.write(indentation + "# Sampler input readout\n")
+            file.write(indentation + "self.sampler0.sample(inputs)\n")
+            for index, channel in enumerate(self.experiment.sequence[edge].sampler):
+                if channel != "0":
+                    file.write(indentation + "%s = inputs[%d]\n" %(channel, index))
     file.close()
 
 
@@ -198,17 +193,10 @@ def create_go_to_edge(self, edge_num, to_default = False):
     indentation += "    "
     file.write(indentation + "def build(self):\n")
     indentation += "    "
-    file.write(indentation + "self.setattr_device('core')\n")
-    number_of_urukuls = int(config.dds_channels_number)//4
-    for _ in range(number_of_urukuls):
-        file.write(indentation + "self.setattr_device('urukul%d_cpld')\n" %_) 
-        for i in range(4):
-            file.write(indentation + "self.setattr_device('urukul%d_ch%d')\n" %(_,i)) 
-    number_of_ttls = int(config.digital_channels_number)
-    for _ in range(number_of_ttls):
-        file.write(indentation + "self.setattr_device('ttl%d')\n" %_)
+    # Setting the devices to be used 
+    for device in config.list_of_devices_for_initialization:
+        file.write(indentation + "self.setattr_device('%s')\n" %device)
     
-    file.write(indentation + "self.setattr_device('%s0')\n" %config.analog_card)
     file.write("\n")
     indentation = indentation[:-4]
     # Overwriting the run method
@@ -217,9 +205,7 @@ def create_go_to_edge(self, edge_num, to_default = False):
     indentation += "    "
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
-    file.write(indentation + "delay(5*ms)\n")
-    
-
+   
     # DIGITAL CHANNEL CHANGES
     for index, channel in enumerate(self.experiment.sequence[edge].digital):
         if index % 8 == 0: #adding a 5 ms delay to make changes for more than 8 TTL channels. There is a limit of the buffer size
@@ -235,6 +221,7 @@ def create_go_to_edge(self, edge_num, to_default = False):
         for index, channel in enumerate(self.experiment.sequence[edge].analog):
             file.write(indentation + "self.zotino0.write_dac(%d, %.6f)\n" %(index, channel.value))
         file.write(indentation + "self.zotino0.load()\n")
+        
     # Assigning fastino card changes
     elif config.analog_card == "fastino":
         #Since we do not care about timing here we can add a redundant delay of 10 ns

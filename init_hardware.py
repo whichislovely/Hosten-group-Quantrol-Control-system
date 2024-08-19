@@ -18,6 +18,11 @@ class init_hardware(EnvExperiment):
         self.setattr_device('urukul2_ch1')
         self.setattr_device('urukul2_ch2')
         self.setattr_device('urukul2_ch3')
+        self.setattr_device('urukul3_cpld')
+        self.setattr_device('urukul3_ch0')
+        self.setattr_device('urukul3_ch1')
+        self.setattr_device('urukul3_ch2')
+        self.setattr_device('urukul3_ch3')
         self.setattr_device('ttl0')
         self.setattr_device('ttl1')
         self.setattr_device('ttl2')
@@ -34,7 +39,12 @@ class init_hardware(EnvExperiment):
         self.setattr_device('ttl13')
         self.setattr_device('ttl14')
         self.setattr_device('ttl15')
+<<<<<<< HEAD
         self.setattr_device('fastino0')
+=======
+        self.setattr_device('zotino0')
+        self.setattr_device('sampler0')
+>>>>>>> 274e1d5a609295c0072a0b530bdc6d1aaf3fc4fb
 
     @kernel
     def run(self):

@@ -195,7 +195,7 @@ def sequence_tab_build(self):
     self.scan_table_parameters.setColumnWidth(0,250)
     self.scan_table_parameters.setColumnWidth(1,200)
     self.scan_table_parameters.setColumnWidth(2,200)
-    self.scan_table_parameters.itemChanged.connect(self.scan_table_parameters_changed)
+    self.scan_table_parameters.itemChanged.connect(self.scan_table_changed)
     
     #Add scanned variable button
     self.add_scanned_variable_button = QPushButton()
@@ -285,7 +285,7 @@ def digital_tab_build(self):
     self.digital_table.verticalHeader().setVisible(False)
     self.digital_table.horizontalHeader().setFixedHeight(60)
     self.digital_table.horizontalHeader().setFont(QFont('Arial', 12))
-    self.digital_table.setFont(QFont('Arial', 16))
+    self.digital_table.setFont(QFont('Arial', 12))
     self.digital_table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
     self.digital_table.horizontalHeader().setMinimumSectionSize(0)
     self.digital_table.setColumnWidth(0,50)
@@ -395,7 +395,7 @@ def analog_tab_build(self):
     self.analog_table.verticalHeader().setVisible(False)
     self.analog_table.horizontalHeader().setFixedHeight(60)
     self.analog_table.horizontalHeader().setFont(QFont('Arial', 12))
-    self.analog_table.setFont(QFont('Arial', 16))
+    self.analog_table.setFont(QFont('Arial', 12))
     self.analog_table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
     self.analog_table.horizontalHeader().setMinimumSectionSize(0)
     self.analog_table.setColumnWidth(0,50)
@@ -532,10 +532,8 @@ def dds_tab_build(self):
             exec("self.dds_table.setItem(2, col + setting, QTableWidgetItem(str(channel.%s.expression)))" %self.setting_dict[setting])
             exec("self.dds_table.item(2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
             if channel.state.value == 1:
-                # print(1)
                 self.dds_table.item(2, col + setting).setBackground(self.green)
             else:  
-                # print(2)
                 self.dds_table.item(2, col + setting).setBackground(self.red)
 
 
@@ -673,8 +671,7 @@ def dds_tab_build(self):
         scrollbar = tbl.horizontalScrollBar()
         scrollbar.valueChanged.connect(lambda idx,bar=scrollbar: move_other_scrollbars_horizontal(idx, bar))
 
-    self.making_separator()
-
+    
     #BUTTONS AT THE BOTTOM
     #button to stop continuous run
     self.stop_continuous_run_button_dds = QPushButton(self.dds_tab_widget)
@@ -743,5 +740,91 @@ def variables_tab_build(self):
     self.delete_variable = QPushButton(self.variables_tab_widget)
     self.delete_variable.setFont(QFont('Arial', 14))
     self.delete_variable.setGeometry(width_of_table_variables + 50, 90, 200, 30)
-    self.delete_variable.setText("Delete a variable")
-    self.delete_variable.clicked.connect(self.delete_new_variable_clicked)
+    self.delete_variable.setText("Delete variable")
+    self.delete_variable.clicked.connect(self.delete_variable_button_clicked)
+    
+    
+# SAMPLER TAB
+def sampler_tab_build(self):
+    self.sampler_tab_num_cols = config.sampler_channels_number + 4    
+    self.sampler_table_column_width = 196
+    #SAMPLER TAB WIDGET
+    self.sampler_tab_widget = QWidget()
+    sampler_lable = QLabel(self.sampler_tab_widget)
+    sampler_lable.setText("Sampler channels")
+    sampler_lable.setFont(QFont('Arial', 14))
+    sampler_lable.setGeometry(85, 0, 400, 30)
+    
+    #SAMPLER TAB LAYOUT
+    self.sampler_table = QTableWidget(self.sampler_tab_widget)
+    self.sampler_table.setGeometry(QRect(10, 30, 1905, 1020))  
+    self.sampler_table.setColumnCount(self.sampler_tab_num_cols)
+    self.sampler_table.setRowCount(1) 
+    self.sampler_table.setHorizontalHeaderLabels(self.experiment.title_sampler_tab)
+    self.sampler_table.verticalHeader().setVisible(False)
+    self.sampler_table.horizontalHeader().setFixedHeight(60)
+    self.sampler_table.horizontalHeader().setFont(QFont('Arial', 12))
+    self.sampler_table.setFont(QFont('Arial', 12))
+    self.sampler_table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+    self.sampler_table.horizontalHeader().setMinimumSectionSize(0)
+    self.sampler_table.setColumnWidth(0,50)
+    self.sampler_table.setColumnWidth(1,180)
+    self.sampler_table.setColumnWidth(2,100)
+    self.sampler_table.setColumnWidth(3,5)
+    self.sampler_table.setFrameStyle(QFrame.NoFrame)
+    for i in range(4, self.sampler_tab_num_cols):
+        exec("self.sampler_table.setColumnWidth(%d,%d)" % (i, self.sampler_table_column_width))
+
+    for index, channel in enumerate(self.experiment.sequence[0].sampler):
+        col = index + 4
+        self.sampler_table.setItem(0, col, QTableWidgetItem(str(channel)))
+        if channel != "0":
+            self.sampler_table.item(0, col).setBackground(self.green)
+        else:
+            self.sampler_table.item(0, col).setBackground(self.white)
+    #Binding functions
+    self.sampler_table.itemChanged.connect(self.sampler_table_changed)
+    self.sampler_table.horizontalHeader().sectionClicked.connect(self.sampler_table_header_clicked)
+
+    #Setting the left part of the SAMPLER table (edge number, name, time)
+    self.sampler_table.setItem(0, 0, QTableWidgetItem("0"))
+    self.sampler_table.setItem(0, 1, QTableWidgetItem(self.experiment.sequence[0].name))
+    self.sampler_table.setItem(0, 2, QTableWidgetItem(str(self.experiment.sequence[0].value)))
+    delegate = ReadOnlyDelegate(self)
+    for _ in range(3):
+        exec("self.sampler_table.setItemDelegateForColumn(%d,delegate)" %_)
+
+    
+    #BUTTONS AT THE BOTTOM
+    #button to stop continuous run
+    self.stop_continuous_run_button_sampler = QPushButton(self.sampler_tab_widget)
+    self.stop_continuous_run_button_sampler.setFont(QFont('Arial', 14))
+    self.stop_continuous_run_button_sampler.setGeometry(10, 1060, 200, 30)
+    self.stop_continuous_run_button_sampler.setText("Stop continuous run")
+    self.stop_continuous_run_button_sampler.clicked.connect(self.stop_continuous_run_button_clicked)
+    self.stop_continuous_run_button_sampler.setToolTip("Stop continuous run button stops whatever experiment was running before. It generates the init_hardware.py according to the latest default edge values and sets the hardware to that state. Again, it does not only stop continuous run, it stops any experiment and can be used to interrupt whatever was running.")
+   
+    #button to start continuous run
+    self.continuous_run_button_sampler = QPushButton(self.sampler_tab_widget)
+    self.continuous_run_button_sampler.setFont(QFont('Arial', 14))
+    self.continuous_run_button_sampler.setGeometry(220, 1060, 200, 30)
+    self.continuous_run_button_sampler.setText("Continuous run")
+    self.continuous_run_button_sampler.clicked.connect(self.continuous_run_button_clicked)
+    self.continuous_run_button_sampler.setToolTip("Continuous run button generates the experimental sequence description according to the current state of the Quatnrol as a run_experiment.py file and then runs that experimental sequence indefinitely.")
+    
+ 
+    #run experiment
+    self.run_experiment_button_sampler = QPushButton(self.sampler_tab_widget)
+    self.run_experiment_button_sampler.setFont(QFont('Arial', 14))
+    self.run_experiment_button_sampler.setGeometry(430, 1060, 200, 30)
+    self.run_experiment_button_sampler.setText("Run experiment")
+    self.run_experiment_button_sampler.clicked.connect(self.run_experiment_button_clicked) 
+    self.run_experiment_button_sampler.setToolTip("Run experiment button generates the experimental sequence description accodring to the current state of the Quantrol as a run_experiment.py file and then runs that experimental sequence once.")
+    
+    #go to edge
+    self.go_to_edge_button_sampler = QPushButton(self.sampler_tab_widget)
+    self.go_to_edge_button_sampler.setFont(QFont('Arial', 14))
+    self.go_to_edge_button_sampler.setGeometry(640, 1060, 200, 30)
+    self.go_to_edge_button_sampler.setText("Go to Edge")
+    self.go_to_edge_button_sampler.clicked.connect(self.go_to_edge_button_clicked)
+    self.go_to_edge_button_sampler.setToolTip("Go to Edge button is used to set the state of the hardware to a specific state at a particular edge. The user first needs to choose the edge to go by right clicking the sequence table on the left")
