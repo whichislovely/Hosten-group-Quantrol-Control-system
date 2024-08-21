@@ -235,7 +235,6 @@ class MainWindow(QMainWindow):
             self.edge_id = edge_id
             self.function = function
             
-            
               
     class Scanned_variable:
         '''
@@ -261,11 +260,12 @@ class MainWindow(QMainWindow):
             for_python  :   The version of the variable description that is used in the python like experimental sequence
                             generation. It is only used in write_to_python.py and only updated when the run_experiment_button_clicked
         '''         
-        def __init__(self, name, value, for_python, is_scanned = False):
+        def __init__(self, name, value, for_python, is_scanned = False, is_derived = False):
             self.name = name
             self.value = value
-            self.is_scanned = is_scanned
             self.for_python = for_python
+            self.is_scanned = is_scanned
+            self.is_derived = is_derived
             
             
     class CustomThread(threading.Thread):
@@ -306,6 +306,8 @@ class MainWindow(QMainWindow):
         self.red = QColor(247,120,120)
         self.grey = QColor(100,100,100)
         self.white = QColor(255,255,255)
+        self.yellow = QColor(255, 255, 0)
+        self.cyan = QColor(0, 255, 255)
         self.experiment.variables['id0'] = self.Variable(name = "id0", value = 0.0, for_python = 0.0)
         self.experiment.variables[''] = self.Variable(name = '', value = 0.0, for_python = 0.0)   #in order to be able to process expressions like -5 we need to have it as first item in decode will be "" that should be 0    
         self.experiment.sequence = [self.Edge("Default")]
@@ -460,6 +462,7 @@ class MainWindow(QMainWindow):
         current = ""
         is_scanned = False
         is_sampled = False
+        is_derived = False
         text = text.replace(" ", "") # removing spaces
         text += "+" #Adding a plus in the end of the text in order to avoid typing additional operation for the last element
         while index < len(text):
@@ -481,6 +484,9 @@ class MainWindow(QMainWindow):
                     elif current in self.experiment.sampler_variables: #if sampled assign the name itself
                         output_for_python += "%s" %current + text[index]
                         is_sampled = True
+                    elif variable.is_derived: #if derived assign the name itself
+                        output_for_python += "%s" %current + text[index]
+                        is_derived = True
                     else:
                         output_for_python += str(variable.value) + text[index]
                 current = ""
@@ -499,7 +505,7 @@ class MainWindow(QMainWindow):
             output_eval = str(float(output_eval))
         except:
             pass
-        return (output_eval, output_for_python, is_scanned, is_sampled) #Since we added an additional sign we need to remove it
+        return (output_eval, output_for_python, is_scanned, is_sampled, is_derived) #Since we added an additional sign we need to remove it
 
 
     def remove_restricted_characters(self, text):
@@ -547,7 +553,7 @@ class MainWindow(QMainWindow):
                 else:                        
                     try:
                         expression = table_item.text()
-                        (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
+                        (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
                         exec("self.value = " + str(evaluation)) # this is done here to be able to assign value of the id# type variable
                         if self.value < 0: #restricting negative values for time
                             self.error_message("Negative values are not allowed", "Negative time value")
@@ -927,8 +933,11 @@ class MainWindow(QMainWindow):
             self.message_to_logger("The file run_experiment.py is not found")
         
     def dummy_button_clicked(self):
+        
+        print("DERIVED VARIABLES")
         for variable in self.experiment.derived_variables:
             print(variable.name, variable.arguments, variable.function)
+            
         ''' 
         Function is used to debug the program. Can be used to check the variables at different time stamps.
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
@@ -949,9 +958,9 @@ class MainWindow(QMainWindow):
         # for item in self.experiment.new_variables:
         #     print("name: ", item.name, "value: ", item.value, "for python: ", item.for_python)
         
-        # print("VARIABLES")
-        # for key, item in self.experiment.variables.items():
-        #     print("name: ", item.name, "value: ", item.value, "for python: ", item.for_python)
+        print("VARIABLES")
+        for key, item in self.experiment.variables.items():
+            print("name: ", item.name, "value: ", item.value, "for python: ", item.for_python)
 
         # print("EDGES")
         # for ind, edge in enumerate(self.experiment.sequence):
@@ -1216,7 +1225,7 @@ class MainWindow(QMainWindow):
         if self.to_update: 
             try:
                 expression = self.number_of_steps_input.text()
-                (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
+                (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
                 exec("self.value = " + str(evaluation))
                 if self.value > 0: #check whether it is a positive integer
                     self.experiment.number_of_steps = int(self.value)
@@ -1385,7 +1394,7 @@ class MainWindow(QMainWindow):
                 try: 
                     #Checking whether the expression can be evaluated and the value is within allowed range
                     expression = table_item.text()
-                    (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
                     exec("self.value = " + evaluation)
                     if (self.value == 0 or self.value == 1):
                         channel.changed = True
@@ -1470,7 +1479,7 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking whether the expression can be evaluated and the value is within allowed range                    
                     expression = table_item.text()
-                    (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
                     exec("self.value =" + evaluation)
                     if (self.value <= 9.9 and self.value >= -9.9):
                         channel.expression = expression
@@ -1525,7 +1534,7 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking whether the expression can be evaluated and the value is within allowed range                     
                     expression = self.dds_table.item(row,col).text()
-                    (evaluation, for_python, is_scanned, is_sampled) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
                     exec("self.dummy_val =" + evaluation)
                     maximum, minimum = self.max_dict[setting], self.min_dict[setting]
                     if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
@@ -1739,6 +1748,7 @@ class MainWindow(QMainWindow):
         variable_name = self.find_derived_variable_name_unused()
         self.experiment.names_of_derived_variables.add(variable_name)
         self.experiment.derived_variables.append(self.Derived_variable(name = variable_name, edge_id = "", arguments = "", function = ""))
+        self.experiment.variables[variable_name] = self.Variable(name = variable_name, value = 0.0, for_python = 0.0, is_derived = True)
         update.variables_tab(self, new_variables = False)
 
 
@@ -1761,11 +1771,16 @@ class MainWindow(QMainWindow):
             if row == 0:
                 self.error_message("You can not delete a dummy example", "Protected variable")
             else:
+                print(1)
                 name = self.derived_variables_table.item(row,0).text()
                 edge_index = self.find_edge_index_by_id(self.derived_variables)
                 self.experiment.sequence[edge_index].derived_variable_requested = 0
                 self.experiment.names_of_derived_variables.remove(name)
+                print(2)
                 del self.experiment.derived_variables[row-1] # -1 is due to the dummy variable taking the first row
+                print(3)
+                del self.experiment.variables[name]
+                print(4)
                 update.variables_tab(self, new_variables = False)
         except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
@@ -1781,7 +1796,9 @@ class MainWindow(QMainWindow):
             table_item_text = self.derived_variables_table.item(row,col).text()
             self.derived_variables_table.item(row,col).setText(table_item_text.replace(" ",""))
             if col == 0: #Variable name was changed
-                variable.name = table_item_text
+                del self.experiment.variables[variable.name]
+                variable.name = table_item_text.replace(" ","")
+                self.experiment.variables[variable.name] = self.Variable(name = variable.name, value = 0.0, for_python = 0.0, is_derived = True)
             if col == 1: #Variable arguments were changed
                 variable.arguments = table_item_text.replace(" ","")
             if col == 2: #Variable execution edge was changed

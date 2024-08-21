@@ -16,7 +16,7 @@ def sequence_tab(self):
         for row, edge in enumerate(self.experiment.sequence):
             expression = self.sequence_table.item(row,3).text()
             try:
-                (edge.evaluation, edge.for_python, edge.is_scanned, is_sampled) = self.decode_input(expression)
+                (edge.evaluation, edge.for_python, edge.is_scanned, is_sampled, is_derived) = self.decode_input(expression)
                 if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
                     if self.experiment.variables[edge.id].is_scanned != edge.is_scanned or self.experiment.variables[edge.id].for_python != edge.for_python:
                         something_changed = True
@@ -68,7 +68,7 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                 if update_expressions_and_evaluations:
                     channel.expression = table_item.text()
                     try:
-                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled) = self.decode_input(channel.expression)
+                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled, is_derived) = self.decode_input(channel.expression)
                     except:
                         return "digital channel %d, edge %d" %(channel_index, row)
                 #Updating values and table
@@ -146,13 +146,17 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                     except:
                         pass
                     try:
-                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled) = self.decode_input(channel.expression)
+                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled, is_derived) = self.decode_input(channel.expression)
                     except:
                         return "analog channel %d, edge %d" %(channel_index, row)
                 if is_sampled:
-                    table_item.setBackground(self.grey)
+                    table_item.setBackground(self.yellow)
                     table_item.setText(channel.expression)
                     table_item.setToolTip("sampled")                    
+                elif is_derived:
+                    table_item.setBackground(self.cyan)
+                    table_item.setText(channel.expression)
+                    table_item.setToolTip("derived")                    
                 else:
                     #Updating values and table
                     if update_values_and_table:
@@ -227,7 +231,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                         except:
                             pass
                         try:
-                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled) = self.decode_input(channel_entry.expression)
+                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled, is_derived) = self.decode_input(channel_entry.expression)
                         except:
                             return "dds channel %d, edge %d" %(channel_index, row)
                     #Updating values and table entries
