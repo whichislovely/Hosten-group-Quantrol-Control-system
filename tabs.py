@@ -92,7 +92,7 @@ def sequence_tab_build(self):
         self.skip_images_button.setGeometry(width_of_table + 50, 330, 200, 30)
         self.skip_images_button.setText("Skip images")
         self.skip_images_button.clicked.connect(self.skip_images_button_clicked)
-        self.skip_images_button.setStyleSheet("background-color : green; color : black") 
+        self.skip_images_button.setStyleSheet("background-color : green; color : white") 
         self.skip_images_button.setToolTip("Skip images button allows on demand triggering the camera acquisition 10 times in the beginning of experiment. Button's color represents current state where green indicates that the image triggering should be done, and red, when it should be avoided. Modify the write_to_python.py in order to change the triggering digital channels. The option of removing the button is in the config.py file. If not needed, set the allow_skipping_images to False")
         self.experiment.skip_images = True
 
@@ -715,34 +715,81 @@ def variables_tab_build(self):
     variables_lable.setFont(QFont('Arial', 14))
     variables_lable.setGeometry(85, 0, 1000, 30)
 
-    #VARIABLES TAB LAYOUT
+    #VARIABLES TABLE LAYOUT
     self.variables_table = QTableWidget(self.variables_tab_widget)
-    width_of_table_variables = 400
-    self.variables_table.setGeometry(QRect(0, 30, width_of_table_variables, 1070))                                                #size of the table
+    width_of_table_variables = 410
+    self.variables_table.setGeometry(QRect(10, 30, width_of_table_variables, 1010))                                                #size of the table
     variables_num_columns = 2 #2 for proof of concept
     self.variables_table.setColumnCount(variables_num_columns)
-    self.variables_table.setHorizontalHeaderLabels(["Variable", "Value"])
+    self.variables_table.setHorizontalHeaderLabels(["Name", "Value"])
     self.variables_table.verticalHeader().setVisible(False)
     self.variables_table.horizontalHeader().setFixedHeight(50)
     self.variables_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.variables_table.setFont(QFont('Arial', 12))
-    self.variables_table.setColumnWidth(0,200)
-    self.variables_table.setColumnWidth(1,198)
+    self.variables_table.setColumnWidth(0,205)
+    self.variables_table.setColumnWidth(1,203)
+    #when table contents are changed
+    self.variables_table.itemChanged.connect(self.variables_table_changed)
     #button to create new variable
     self.create_new_variable = QPushButton(self.variables_tab_widget)
     self.create_new_variable.setFont(QFont('Arial', 14))
-    self.create_new_variable.setGeometry(width_of_table_variables + 50, 40, 200, 30)
+    self.create_new_variable.setGeometry(10, 1050, 200, 30)
     self.create_new_variable.setText("Create new variable")
-    self.create_new_variable.clicked.connect(self.create_new_variable_clicked)
-    #when table contents are changed
-    self.variables_table.itemChanged.connect(self.variables_table_changed)
+    self.create_new_variable.clicked.connect(self.create_new_variable_button_clicked)
     #button to delete a variable
     self.delete_variable = QPushButton(self.variables_tab_widget)
     self.delete_variable.setFont(QFont('Arial', 14))
-    self.delete_variable.setGeometry(width_of_table_variables + 50, 90, 200, 30)
+    self.delete_variable.setGeometry(220, 1050, 200, 30)
     self.delete_variable.setText("Delete variable")
     self.delete_variable.clicked.connect(self.delete_variable_button_clicked)
     
+    #DERIVED VARIABLES LABLE
+    variables_lable = QLabel(self.variables_tab_widget)
+    variables_lable.setText("Derived variables")
+    variables_lable.setFont(QFont('Arial', 14))
+    variables_lable.setGeometry(515, 0, 1000, 30)
+
+    #DERIVED VARIABLES TABLE LAYOUT
+    self.derived_variables_table = QTableWidget(self.variables_tab_widget)
+    width_of_table_variables = 420
+    self.derived_variables_table.setGeometry(QRect(440, 30, 1465, 1010))  #size of the table
+    variables_num_columns = 4 
+    self.derived_variables_table.setColumnCount(variables_num_columns)
+    self.derived_variables_table.setHorizontalHeaderLabels(["Derived variable", "Arguments", "Edge #","Function in python syntax"])
+    self.derived_variables_table.verticalHeader().setVisible(False)
+    self.derived_variables_table.horizontalHeader().setFixedHeight(50)
+    self.derived_variables_table.horizontalHeader().setFont(QFont('Arial', 12))
+    self.derived_variables_table.setFont(QFont('Arial', 12))
+    self.derived_variables_table.setColumnWidth(0,205)
+    self.derived_variables_table.setColumnWidth(1,123)
+    self.derived_variables_table.setColumnWidth(2,80)
+    self.derived_variables_table.setColumnWidth(3,1055)
+    self.derived_variables_table.setRowCount(1)
+    prototypeItem = QTableWidgetItem()
+    prototypeItem.setTextAlignment(Qt.AlignCenter)
+    self.derived_variables_table.setItemPrototype(prototypeItem)
+    #Disabling the first example row
+    delegate = ReadOnlyDelegate(self)
+    self.derived_variables_table.setItemDelegateForRow(0,delegate)
+    self.derived_variables_table.setItem(0, 0, QTableWidgetItem("dummy_derived_variable"))
+    self.derived_variables_table.setItem(0, 1, QTableWidgetItem("x,y"))
+    self.derived_variables_table.setItem(0, 2, QTableWidgetItem("id5"))
+    self.derived_variables_table.setItem(0, 3, QTableWidgetItem("np.sin(x) + 5*np.sqrt(y)"))
+    #when table contents are changed
+    self.derived_variables_table.itemChanged.connect(self.derived_variables_table_changed)
+
+    #button to create new derived variable
+    self.create_derived_variable = QPushButton(self.variables_tab_widget)
+    self.create_derived_variable.setFont(QFont('Arial', 14))
+    self.create_derived_variable.setGeometry(440, 1050, 200, 30)
+    self.create_derived_variable.setText("Create derived variable")
+    self.create_derived_variable.clicked.connect(self.create_derived_variable_button_clicked)
+    #button to delete a variable
+    self.delete_derived_variable = QPushButton(self.variables_tab_widget)
+    self.delete_derived_variable.setFont(QFont('Arial', 14))
+    self.delete_derived_variable.setGeometry(650, 1050, 200, 30)
+    self.delete_derived_variable.setText("Delete derived variable")
+    self.delete_derived_variable.clicked.connect(self.delete_derived_variable_button_clicked)
     
 # SAMPLER TAB
 def sampler_tab_build(self):

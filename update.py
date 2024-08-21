@@ -268,24 +268,34 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
 
     self.update_on()
 
-def variables_tab(self):
+def variables_tab(self, new_variables = True, derived_variables = True):
     #creating the variables tab from self.experiment.new_variables object
     self.update_off()
-    self.variables_table_row_count = len(self.experiment.new_variables)
-    self.variables_table.setRowCount(self.variables_table_row_count)
-    for row, variable in enumerate(self.experiment.new_variables):
-        self.variables_table.setItem(row, 0, QTableWidgetItem(variable.name))
-        if self.experiment.do_scan and variable.is_scanned: #Highlighting that the variable is used in a scan
-            item = QTableWidgetItem("scanned")
-            item.setFlags(Qt.NoItemFlags)
-            self.variables_table.setItem(row, 1, item) 
-        elif variable.name in self.experiment.sampler_variables:
-            self.experiment.variables[variable.name].value = 0
-            item = QTableWidgetItem("sampled")
-            item.setFlags(Qt.NoItemFlags)
-            self.variables_table.setItem(row, 1, item) 
-        else:
-            self.variables_table.setItem(row, 1, QTableWidgetItem(str(variable.value)))  
+    if new_variables:
+        self.variables_table_row_count = len(self.experiment.new_variables)
+        self.variables_table.setRowCount(self.variables_table_row_count)
+        for row, variable in enumerate(self.experiment.new_variables):
+            self.variables_table.setItem(row, 0, QTableWidgetItem(variable.name))
+            if self.experiment.do_scan and variable.is_scanned: #Highlighting that the variable is used in a scan
+                item = QTableWidgetItem("scanned")
+                item.setFlags(Qt.NoItemFlags)
+                self.variables_table.setItem(row, 1, item) 
+            elif variable.name in self.experiment.sampler_variables:
+                self.experiment.variables[variable.name].value = 0
+                item = QTableWidgetItem("sampled")
+                item.setFlags(Qt.NoItemFlags)
+                self.variables_table.setItem(row, 1, item) 
+            else:
+                self.variables_table.setItem(row, 1, QTableWidgetItem(str(variable.value)))  
+    if derived_variables:
+        self.derived_variables_row_count = len(self.experiment.derived_variables) + 1 #Since the first row is used for the dummy variable
+        self.derived_variables_table.setRowCount(self.derived_variables_row_count)
+        for index, variable in enumerate(self.experiment.derived_variables):
+            row = index + 1 #Since the first row is reserved for the dummy variable
+            self.derived_variables_table.setItem(row, 0, QTableWidgetItem(variable.name))
+            self.derived_variables_table.setItem(row, 1, QTableWidgetItem(variable.arguments))
+            self.derived_variables_table.setItem(row, 2, QTableWidgetItem(variable.edge_id))
+            self.derived_variables_table.setItem(row, 3, QTableWidgetItem(variable.function))
     self.update_on()
 
 def scan_table(self):

@@ -19,7 +19,7 @@ def create_experiment(self, run_continuous = False):
     file = open(file_name,'w')
     indentation = ""
     file.write(indentation + "from artiq.experiment import *\n\n")
-    file.write(indentation + "from numpy import linspace\n\n")
+    file.write(indentation + "import numpy as np\n\n")
     file.write(indentation + "class " + file_name[:-3] + "(EnvExperiment):\n")
     indentation += "    "
     file.write(indentation + "def build(self):\n")
@@ -34,11 +34,18 @@ def create_experiment(self, run_continuous = False):
         var_names = ""
         for variable in self.experiment.scanned_variables:
             if variable.name != "None":
-                file.write(indentation + "self.%s = linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.number_of_steps))
+                file.write(indentation + "self.%s = np.linspace(%f, %f, %d)\n"%(variable.name, variable.min_val, variable.max_val, self.experiment.number_of_steps))
                 var_names += variable.name + ", "
     file.write("\n")
     indentation = indentation[:-4]
-
+    
+    #Creating functions to calculate derived variables
+    for variable in self.experiment.derived_variables:
+        file.write(indentation + "def calculate_%s(%s) -> TFloat:\n"%(variable.name, variable.arguments))
+        indentation += "    "
+        file.write(indentation + "return %s \n\n" %variable.function)
+        indentation = indentation[:-4]
+    
     # Overwriting the run method
     file.write(indentation + "@kernel\n")
     file.write(indentation + "def run(self):\n")
@@ -83,14 +90,14 @@ def create_experiment(self, run_continuous = False):
 
     #flag_init is used to indicate that there is no need for a delay calculation for the first row
     flag_init = 0
-    for edge in range(self.sequence_num_rows):
-        file.write(indentation + "#Edge number " + str(edge) + " name of edge: " + self.experiment.sequence[edge].name + "\n")
+    for edge_index in range(self.sequence_num_rows):
+        file.write(indentation + "#Edge number " + str(edge_index) + " name of edge: " + self.experiment.sequence[edge_index].name + "\n")
         if flag_init == 0: # in the first iteration it does not need to do anything as delta_t is assigned to 0
             flag_init = 1
         else:
             #Brackets are needed to take into account that for_python can be a mathematical expression with signs
             try:
-                temp_text = "(" + str(self.experiment.sequence[edge].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge-1].for_python) + ")"
+                temp_text = "(" + str(self.experiment.sequence[edge_index].for_python) + ")" + "-" + "(" + str(self.experiment.sequence[edge_index-1].for_python) + ")"
                 self.delta_t = str(simplify(temp_text))
             except:
                 self.delta_t = temp_text
@@ -102,10 +109,16 @@ def create_experiment(self, run_continuous = False):
         #ADDING A DELAY
         if self.delta_t != 0:
             file.write(indentation + "delay((" + str(self.delta_t) + ")*ms)\n")
-
+        
+        #RPC for derived variable calculation
+        if edge_index > 0:
+            index_of_derived_variable = self.experiment.sequence[edge_index].derived_variable_requested
+            if index_of_derived_variable != -1:
+                variable = self.experiment.derived_variables[index_of_derived_variable]
+                file.write(indentation + "%s = calculate_%s(%s)\n"%(variable.name, variable.name, variable.arguments))
         #DIGITAL CHANNEL CHANGES
-        for index, channel in enumerate(self.experiment.sequence[edge].digital):
-            if edge == 0 and index % 8 == 0: #adding a 5 ms delay to make changes into TTL channels
+        for index, channel in enumerate(self.experiment.sequence[edge_index].digital):
+            if edge_index == 0 and index % 8 == 0: #adding a 5 ms delay to make changes into TTL channels
                 file.write(indentation + "delay(5*ms)\n")
 
             if channel.changed == True:
@@ -114,13 +127,13 @@ def create_experiment(self, run_continuous = False):
                 else:
                     file.write(indentation + "self.ttl" + str(index) + ".off()\n") 
         
-        if edge == 0: #adding a 10 ns delay after 8 ttl channels because otherwise it ignores the first analog channel
+        if edge_index == 0: #adding a 10 ns delay after 8 ttl channels because otherwise it ignores the first analog channel
             file.write(indentation + "delay(10*ns)\n")
         #ANALOG CHANNEL CHANGES
         #Assigning zotino card values
         if config.analog_card == "zotino":
             flag_zotino_change_needed = False      
-            for index, channel in enumerate(self.experiment.sequence[edge].analog):
+            for index, channel in enumerate(self.experiment.sequence[edge_index].analog):
                 if channel.changed == True:
                     flag_zotino_change_needed = True
                     file.write(indentation + "self.zotino0.write_dac(%d, %s)\n" %(index,channel.for_python))
@@ -131,7 +144,7 @@ def create_experiment(self, run_continuous = False):
         elif config.analog_card == "fastino":
             first_analog_channel = True          
             number_of_channels_changed = 0          
-            for index, channel in enumerate(self.experiment.sequence[edge].analog):
+            for index, channel in enumerate(self.experiment.sequence[edge_index].analog):
                 if channel.changed == True:
                     number_of_channels_changed += 1
                     file.write(indentation + "delay(10*ns)\n")    
@@ -141,7 +154,7 @@ def create_experiment(self, run_continuous = False):
                 file.write(indentation + "delay(-%d0*ns)\n" %(number_of_channels_changed))
             
         #DDS CHANNEL CHANGES
-        for index, channel in enumerate(self.experiment.sequence[edge].dds):
+        for index, channel in enumerate(self.experiment.sequence[edge_index].dds):
             if channel.changed == True:
                 urukul_num = int(index // 4)
                 channel_num = int(index % 4)
@@ -154,13 +167,13 @@ def create_experiment(self, run_continuous = False):
                     
         #SAMPLER CHANNELS
         input_readout_is_requested = False
-        for index, channel in enumerate(self.experiment.sequence[edge].sampler):
+        for index, channel in enumerate(self.experiment.sequence[edge_index].sampler):
             if channel != "0":
                 input_readout_is_requested = True
         if input_readout_is_requested == True:
             file.write(indentation + "# Sampler input readout\n")
             file.write(indentation + "self.sampler0.sample(inputs)\n")
-            for index, channel in enumerate(self.experiment.sequence[edge].sampler):
+            for index, channel in enumerate(self.experiment.sequence[edge_index].sampler):
                 if channel != "0":
                     file.write(indentation + "%s = inputs[%d]\n" %(channel, index))
     file.close()

@@ -63,8 +63,10 @@ class MainWindow(QMainWindow):
             dds         :   List of DDS objects used to describe the state of the dds channel
             sampler     :   List of sampler channel parameters. 0 indicates that there is no requested input read. Other than 0 it can be a
                             variable name that will be used for storing the value of the input
+            derived_variable_requested      :   Index of the derived variable for non zero values. -1 corresponds to no derived variables requested
+                                                
         '''
-        def __init__(self, name = "", id = "id0", expression = "0", evaluation = 0, for_python = 0, value = 0, is_scanned = False):
+        def __init__(self, name = "", id = "id0", expression = "0", evaluation = 0, for_python = 0, value = 0, is_scanned = False, derived_variable_requested = -1):
             self.expression = expression
             self.evaluation = evaluation
             self.value = value   
@@ -76,6 +78,7 @@ class MainWindow(QMainWindow):
             self.analog = [self.Analog() for i in range(config.analog_channels_number)]
             self.dds = [self.DDS() for i in range(config.dds_channels_number)]
             self.sampler = ['0']*8
+            self.derived_variable_requested = derived_variable_requested
 
 
         class Digital:
@@ -182,6 +185,9 @@ class MainWindow(QMainWindow):
                                             for easy check in case none of the edges has been selected yet
             new_variables               :   List of user defined variables. Used to build the variables tab and retieve the values 
                                             assigned before scanning a variable
+            derived_variables           :   List of Derived_variables. Used to be able to use sampled variables in more complex functions 
+                                            to allow feedback
+            names_of_derived_variables  :   Set of the derived variables names. Useful to check if a variable is a derived variable
             variables                   :   Dictionary of all variables. Used to look up the values of the variables in the execution of
                                             evaluation
             sampler_variables           :   Set of variable names used for being used in a samlper
@@ -205,14 +211,32 @@ class MainWindow(QMainWindow):
             self.new_variables = [] 
             self.variables = {}
             self.sampler_variables = set()
+            self.derived_variables = []
+            self.names_of_derived_variables = set()
             self.do_scan = False
             self.number_of_steps = 1
             self.file_name = ""
             self.scanned_variables = [] 
             self.scanned_variables_count = 0
             self.continously_running = False 
+
+
+    class Derived_variable:
+        '''
+        An object that is used to describe the derived variable parameters
+        Attributes description:
+            name        :   Name of the scanned variable
+            arguments   :   List of agruments for the function used to derive the variable
+            function    :   String of the python description of the function to derive the variable
+        ''' 
+        def __init__(self, name, arguments, edge_id, function):
+            self.name = name
+            self.arguments = arguments
+            self.edge_id = edge_id
+            self.function = function
             
             
+              
     class Scanned_variable:
         '''
         An object that is used to describe the scanned variable parameters
@@ -623,6 +647,7 @@ class MainWindow(QMainWindow):
         #appending a new edge with a unique id
         new_unique_id = self.find_unique_id()
         new_edge = deepcopy(self.experiment.sequence[-1]) #copying the last edge
+        new_edge.derived_variable_requested = -1
         new_edge.id = new_unique_id
         new_edge.name = ""
         self.experiment.sequence.append(new_edge)
@@ -902,7 +927,8 @@ class MainWindow(QMainWindow):
             self.message_to_logger("The file run_experiment.py is not found")
         
     def dummy_button_clicked(self):
-        pass
+        for variable in self.experiment.derived_variables:
+            print(variable.name, variable.arguments, variable.function)
         ''' 
         Function is used to debug the program. Can be used to check the variables at different time stamps.
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
@@ -1130,7 +1156,7 @@ class MainWindow(QMainWindow):
                     if variable.name != "None":
                         self.experiment.variables[variable.name].value = variable.min_val
             update.digital_analog_dds_tabs(self)
-            update.variables_tab(self)
+            update.variables_tab(self, derived_variables = False)
         
 
     def add_scanned_variable_button_pressed(self):
@@ -1158,7 +1184,7 @@ class MainWindow(QMainWindow):
                 self.experiment.variables[variable.name].for_python = self.experiment.variables[variable.name].value
             del self.experiment.scanned_variables[row]
             #First update the variables tab in order to update the values for evaluation in following update steps
-            update.variables_tab(self)
+            update.variables_tab(self, derived_variables = False)
             update.scan_table(self)
             update.digital_analog_dds_tabs(self)
             if row != 0:
@@ -1274,7 +1300,7 @@ class MainWindow(QMainWindow):
                 except:
                     self.error_message("Expression can not be evaluated", "Wrong entry")
             update.digital_analog_dds_tabs(self)
-            update.variables_tab(self)
+            update.variables_tab(self, derived_variables = False)
             update.scan_table(self)       
         else:
             pass
@@ -1544,15 +1570,53 @@ class MainWindow(QMainWindow):
             if name not in self.experiment.variables:
                 return name
 
-    def create_new_variable_clicked(self):
+
+    def delete_variable_button_clicked(self):
+        '''
+        Function is used when the user wants to delete the variable from the variables table.
+        It checks if the variable is used in any expression by deleting it and trying to evaluate every expression.
+        the backup is used in order to be able to revert the changes in case the variable is used somewhere.
+        '''
+        try:
+            row = self.variables_table.selectedIndexes()[0].row()
+            name = self.variables_table.item(row,0).text()
+            if name not in self.experiment.sampler_variables: # Check if the variable is being sampled 
+                #Checking if the variable is being scanned
+                variable_scanned = False
+                for variable in self.experiment.scanned_variables:
+                    if name == variable.name:
+                        variable_scanned = True
+                        break
+                if variable_scanned == False:
+                    backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
+                    del self.experiment.variables[name]
+                    self.variables_table.setCurrentCell(row-1,0)
+                    return_value = update.digital_analog_dds_tabs(self) #we need to update only values not expressions
+                    if return_value == None: #Variable can be deleted
+                        del self.experiment.new_variables[row]
+                        update.variables_tab(self)
+                    else: #Variable can not be deleted. Reverting all changes back to previous state
+                        self.experiment.variables[name] = backup
+                        update.digital_analog_dds_tabs(self) 
+                        update.variables_tab(self)
+                        self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                else:
+                    self.error_message("The variable is scanned. Remove it from the scan table before deleting.", "Scanned variable")
+            else:
+                self.error_message("The variable is sampled. Remove it from the sampler tab before deleting.", "Sampled variable")
+        except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
+            self.error_message("Select the variable that needs to be deleted", "No variable selected")
+
+
+    def create_new_variable_button_clicked(self):
         '''
         Function is used when the user wants to create a new user defined variable. It finds the lowest unused available variable name and 
-        creates it with initial value of 0.0. It also create the corresponding Variable objects  in new_variables and variables.
+        creates it with initial value of 0.0. It also creates the corresponding Variable objects  in new_variables and variables.
         '''
         variable_name = self.find_new_variable_name_unused()
         self.experiment.new_variables.append(self.Variable(variable_name, 0.0, 0.0))
         self.experiment.variables[variable_name] = self.Variable(variable_name, 0.0, 0.0)
-        update.variables_tab(self)
+        update.variables_tab(self, derived_variables = False)
 
 
     def variables_table_changed(self, item):
@@ -1657,41 +1721,84 @@ class MainWindow(QMainWindow):
                     self.error_message("Only integers and floating numbers are allowed.", "Wrong entry")
 
 
-    def delete_variable_button_clicked(self):
+    def find_derived_variable_name_unused(self):
         '''
-        Function is used when the user wants to delete the variable from the variables table.
-        It checks if the variable is used in any expression by deleting it and trying to evaluate every expression.
-        the backup is used in order to be able to revert the changes in case the variable is used somewhere.
+        Function itereates over the variable names of form derived_1, derived_2, etc. and returns the lowest available variable name
+        '''
+        for i in range(1, 1000):
+            name = "derived_" + str(i)
+            if name not in self.experiment.names_of_derived_variables:
+                return name
+
+
+    def create_derived_variable_button_clicked(self):
+        '''
+        Function is used when the user wants to create a new derived variable. It finds the lowest unused available variable name and 
+        creates it with initial value of 0.0. It also create the corresponding Variable objects  in new_variables and variables.
+        '''
+        variable_name = self.find_derived_variable_name_unused()
+        self.experiment.names_of_derived_variables.add(variable_name)
+        self.experiment.derived_variables.append(self.Derived_variable(name = variable_name, edge_id = "", arguments = "", function = ""))
+        update.variables_tab(self, new_variables = False)
+
+
+    def find_edge_index_by_id(self, id):
+        '''
+        Function is used to find the index of the edge by its id value. It iterates over all edges and returns the 
+        index when the id matches the edge.id
+        '''
+        for index, edge in enumerate(self.experiment.sequence):
+            if edge.id == id:
+                return index
+
+
+    def delete_derived_variable_button_clicked(self):
+        '''
+        Function is used when the user wants to delete the derived variable from the table.
         '''
         try:
-            row = self.variables_table.selectedIndexes()[0].row()
-            name = self.variables_table.item(row,0).text()
-            if name not in self.experiment.sampler_variables: # Check if the variable is being sampled 
-                #Checking if the variable is being scanned
-                variable_scanned = False
-                for variable in self.experiment.scanned_variables:
-                    if name == variable.name:
-                        variable_scanned = True
-                        break
-                if variable_scanned == False:
-                    backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
-                    del self.experiment.variables[name]
-                    self.variables_table.setCurrentCell(row-1,0)
-                    return_value = update.digital_analog_dds_tabs(self) #we need to update only values not expressions
-                    if return_value == None: #Variable can be deleted
-                        del self.experiment.new_variables[row]
-                        update.variables_tab(self)
-                    else: #Variable can not be deleted. Reverting all changes back to previous state
-                        self.experiment.variables[name] = backup
-                        update.digital_analog_dds_tabs(self) 
-                        update.variables_tab(self)
-                        self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
-                else:
-                    self.error_message("The variable is scanned. Remove it from the scan table before deleting.", "Scanned variable")
+            row = self.derived_variables_table.selectedIndexes()[0].row()
+            if row == 0:
+                self.error_message("You can not delete a dummy example", "Protected variable")
             else:
-                self.error_message("The variable is sampled. Remove it from the sampler tab before deleting.", "Sampled variable")
+                name = self.derived_variables_table.item(row,0).text()
+                edge_index = self.find_edge_index_by_id(self.derived_variables)
+                self.experiment.sequence[edge_index].derived_variable_requested = 0
+                self.experiment.names_of_derived_variables.remove(name)
+                del self.experiment.derived_variables[row-1] # -1 is due to the dummy variable taking the first row
+                update.variables_tab(self, new_variables = False)
         except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
+
+    def derived_variables_table_changed(self, item):
+        '''
+        Function is used when the user changes the values in the derived variables table. 
+        '''
+        if self.to_update:
+            row = item.row()
+            col = item.column()
+            variable = self.experiment.derived_variables[row-1] # due to the dummy variable being 1st
+            table_item_text = self.derived_variables_table.item(row,col).text()
+            self.derived_variables_table.item(row,col).setText(table_item_text.replace(" ",""))
+            if col == 0: #Variable name was changed
+                variable.name = table_item_text
+            if col == 1: #Variable arguments were changed
+                variable.arguments = table_item_text.replace(" ","")
+            if col == 2: #Variable execution edge was changed
+                new_edge_id = table_item_text.replace(" ", "")
+                if self.find_edge_index_by_id(new_edge_id) == None:
+                    self.error_message("The edge id was not found. Please enter correct id value", "Wrong id entered")
+                    self.derived_variables_table.item(row,col).setText(variable.edge_id)
+                else:
+                    if variable.edge_id != "":  #In case it was another id before we need to make that edge.derived_variable_requested to 0 which means that it is not requested
+                        edge_index = self.find_edge_index_by_id(variable.edge_id)
+                        self.experiment.sequence[edge_index].derived_variable_requested = -1
+                    #Assigning the edge.derived_variable_requested value 
+                    variable.edge_id = table_item_text.replace(" ","")
+                    edge_index = self.find_edge_index_by_id(variable.edge_id)
+                    self.experiment.sequence[edge_index].derived_variable_requested = row-1 # -1 because the dummy variable is the first one
+            if col == 3: #Variable function was changed
+                variable.function = table_item_text
 
 
     #SAMPLER TAB RELATED FUNCTIONS
@@ -1750,7 +1857,7 @@ class MainWindow(QMainWindow):
             if table_entry == "" or table_entry == "0" or table_entry == "0.0": #User deleted the value or set it to 0. The function will assign 0 value
                 if channel in self.experiment.sampler_variables: #if the previous value of the sampler was a variable we need to revert back the variables tab value and activate editing
                     self.experiment.sampler_variables.remove(channel)
-                    update.variables_tab(self)
+                    update.variables_tab(self, derived_variables = False)
                 self.update_off()
                 table_item.setText("0")
                 self.update_on()
@@ -1763,7 +1870,7 @@ class MainWindow(QMainWindow):
                                 self.experiment.sampler_variables.remove(channel)
                             self.experiment.sequence[row].sampler[col-4] = table_entry #Updating the sampler value
                             self.experiment.sampler_variables.add(table_entry) #Adding a new variable to the sampler variables set
-                            update.variables_tab(self)
+                            update.variables_tab(self, derived_variables = False)
                         else:
                             self.update_off()
                             table_item.setText(str(channel))
