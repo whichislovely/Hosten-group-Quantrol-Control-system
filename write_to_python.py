@@ -41,6 +41,7 @@ def create_experiment(self, run_continuous = False):
     
     #Creating functions to calculate derived variables
     for variable in self.experiment.derived_variables:
+        file.write(indentation + '@rpc(flags={"async"})\n')
         file.write(indentation + "def calculate_%s(%s) -> TFloat:\n"%(variable.name, variable.arguments))
         indentation += "    "
         file.write(indentation + "return %s \n\n" %variable.function)
@@ -116,6 +117,7 @@ def create_experiment(self, run_continuous = False):
             if index_of_derived_variable != -1:
                 variable = self.experiment.derived_variables[index_of_derived_variable]
                 file.write(indentation + "%s = calculate_%s(%s)\n"%(variable.name, variable.name, variable.arguments))
+       
         #DIGITAL CHANNEL CHANGES
         for index, channel in enumerate(self.experiment.sequence[edge_index].digital):
             if edge_index == 0 and index % 8 == 0: #adding a 5 ms delay to make changes into TTL channels
@@ -129,6 +131,7 @@ def create_experiment(self, run_continuous = False):
         
         if edge_index == 0: #adding a 10 ns delay after 8 ttl channels because otherwise it ignores the first analog channel
             file.write(indentation + "delay(10*ns)\n")
+       
         #ANALOG CHANNEL CHANGES
         #Assigning zotino card values
         if config.analog_card == "zotino":
@@ -147,11 +150,12 @@ def create_experiment(self, run_continuous = False):
             for index, channel in enumerate(self.experiment.sequence[edge_index].analog):
                 if channel.changed == True:
                     number_of_channels_changed += 1
-                    file.write(indentation + "delay(10*ns)\n")    
+                    if edge_index == 0 or index > 0: #adds a delay only for the default edge and in sace of 
+                        file.write(indentation + "delay(10*ns)\n")    
                     file.write(indentation + "self.fastino0.set_dac(%d, %s)\n" %(index,channel.for_python))
             #Moving the time cursor back
             if number_of_channels_changed > 1:
-                file.write(indentation + "delay(-%d0*ns)\n" %(number_of_channels_changed))
+                file.write(indentation + "delay(-%d0*ns)\n" %(number_of_channels_changed-1))
             
         #DDS CHANNEL CHANGES
         for index, channel in enumerate(self.experiment.sequence[edge_index].dds):

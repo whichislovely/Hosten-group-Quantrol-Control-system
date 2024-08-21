@@ -755,7 +755,7 @@ def variables_tab_build(self):
     self.derived_variables_table.setGeometry(QRect(440, 30, 1465, 1010))  #size of the table
     variables_num_columns = 4 
     self.derived_variables_table.setColumnCount(variables_num_columns)
-    self.derived_variables_table.setHorizontalHeaderLabels(["Derived variable", "Arguments", "Edge #","Function in python syntax"])
+    self.derived_variables_table.setHorizontalHeaderLabels(["Derived variable", "Arguments", "Edge id","Function in python syntax"])
     self.derived_variables_table.verticalHeader().setVisible(False)
     self.derived_variables_table.horizontalHeader().setFixedHeight(50)
     self.derived_variables_table.horizontalHeader().setFont(QFont('Arial', 12))
@@ -771,7 +771,7 @@ def variables_tab_build(self):
     #Disabling the first example row
     delegate = ReadOnlyDelegate(self)
     self.derived_variables_table.setItemDelegateForRow(0,delegate)
-    self.derived_variables_table.setItem(0, 0, QTableWidgetItem("dummy_derived_variable"))
+    self.derived_variables_table.setItem(0, 0, QTableWidgetItem("example_derived_variable"))
     self.derived_variables_table.setItem(0, 1, QTableWidgetItem("x,y"))
     self.derived_variables_table.setItem(0, 2, QTableWidgetItem("id5"))
     self.derived_variables_table.setItem(0, 3, QTableWidgetItem("np.sin(x) + 5*np.sqrt(y)"))
