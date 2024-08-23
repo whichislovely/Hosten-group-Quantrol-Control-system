@@ -20,6 +20,13 @@ def create_experiment(self, run_continuous = False):
     indentation = ""
     file.write(indentation + "from artiq.experiment import *\n\n")
     file.write(indentation + "import numpy as np\n\n")
+    #Creating functions to calculate derived variables
+    for variable in self.experiment.derived_variables:
+        file.write(indentation + "def calculate_%s(%s) -> TFloat:\n"%(variable.name, variable.arguments))
+        indentation += "    "
+        file.write(indentation + "return %s \n\n" %variable.function)
+        indentation = indentation[:-4]
+    #Experimental description
     file.write(indentation + "class " + file_name[:-3] + "(EnvExperiment):\n")
     indentation += "    "
     file.write(indentation + "def build(self):\n")
@@ -38,14 +45,6 @@ def create_experiment(self, run_continuous = False):
                 var_names += variable.name + ", "
     file.write("\n")
     indentation = indentation[:-4]
-    
-    #Creating functions to calculate derived variables
-    for variable in self.experiment.derived_variables:
-        file.write(indentation + '@rpc(flags={"async"})\n')
-        file.write(indentation + "def calculate_%s(%s) -> TFloat:\n"%(variable.name, variable.arguments))
-        indentation += "    "
-        file.write(indentation + "return %s \n\n" %variable.function)
-        indentation = indentation[:-4]
     
     # Overwriting the run method
     file.write(indentation + "@kernel\n")
