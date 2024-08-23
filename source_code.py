@@ -1715,13 +1715,18 @@ class MainWindow(QMainWindow):
                     if return_value == None: #The value can be updated
                         variable.value = self.experiment.variables[variable.name].value
                         table_item.setText(str(variable.value))
+                        update.sequence_tab(self)
+                        update.digital_analog_dds_tabs(self)
+                        update.from_object(self)
                     else: #The value can not be updated, reverting every evaluation done before.
                         self.error_message("Evaluation is out of allowed range occured in %s. Variable value can not be assigned" %return_value, "Wrong entry")
                         self.experiment.variables[variable.name].value = variable.value 
                         self.update_off()
                         table_item.setText(str(variable.value))
                         self.update_on()
+                        update.sequence_tab(self)
                         update.digital_analog_dds_tabs(self)
+                        update.from_object(self)
                 except: #Restricting the user from using anything but the integer values and floating numbers
                     self.update_off()
                     table_item.setText(str(variable.value))
