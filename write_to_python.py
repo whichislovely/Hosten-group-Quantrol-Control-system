@@ -223,6 +223,11 @@ def create_go_to_edge(self, edge_num, to_default = False):
     file.write(indentation + "self.core.reset()\n")
     file.write(indentation + "self.core.break_realtime()\n")
    
+    # Initializing the devices 
+    if to_default:
+        for device in config.list_of_devices_for_initialization:
+            file.write(indentation + "self.%s.init()\n"%device)
+   
     # DIGITAL CHANNEL CHANGES
     for index, channel in enumerate(self.experiment.sequence[edge].digital):
         if index % 8 == 0: #adding a 5 ms delay to make changes for more than 8 TTL channels. There is a limit of the buffer size
