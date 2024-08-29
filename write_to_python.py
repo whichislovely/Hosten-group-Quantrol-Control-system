@@ -167,6 +167,19 @@ def create_experiment(self, run_continuous = False):
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
                 else:
                     file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")
+
+        #MIRNY CHANNEL CHANGES
+        for index, channel in enumerate(self.experiment.sequence[edge_index].mirny):
+            if channel.changed == True:
+                mirny_num = int(index // 4)
+                channel_num = int(index % 4)
+                file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".set_att((" + str(channel.attenuation.for_python) + ")*dB) \n")    
+                file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".set(frequency = (" + str(channel.frequency.for_python) + ")*MHz, amplitude = " + str(channel.amplitude.for_python) + ", phase = (" + str(channel.phase.for_python) + ")/360)\n")    
+                if channel.state.value == 1:
+                    file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".sw.on() \n")
+                else:
+                    file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".sw.off() \n")
+
                     
         #SAMPLER CHANNELS
         input_readout_is_requested = False
@@ -260,4 +273,16 @@ def create_go_to_edge(self, edge_num, to_default = False):
             file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.on() \n")
         elif channel.state.value == 0:
             file.write(indentation + "self.urukul" + str(urukul_num) + "_ch" + str(channel_num) + ".sw.off() \n")                
+
+    # MIRNY CHANNEL CHANGES
+    for index, channel in enumerate(self.experiment.sequence[edge].mirny):
+        mirny_num = int(index // 4)
+        channel_num = int(index % 4)
+        file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".set_att(" + str(channel.attenuation.value) + "*dB) \n")    
+        file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".set(frequency = " + str(channel.frequency.value) + "*MHz, amplitude = " + str(channel.amplitude.value) + ", phase = (" + str(channel.phase.value) + ")/360)\n")    
+        if channel.state.value == 1:
+            file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".sw.on() \n")
+        elif channel.state.value == 0:
+            file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".sw.off() \n")                
+            
     file.close()

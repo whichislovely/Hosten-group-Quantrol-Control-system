@@ -61,6 +61,7 @@ class MainWindow(QMainWindow):
             analog      :   List of Analog objects used to describe the state of the analog channel
             digital     :   List of Digital objects used to describe the state of the digital channel
             dds         :   List of DDS objects used to describe the state of the dds channel
+            mirny       :   List of DDS objects used to describe the state of the mirny channel
             sampler     :   List of sampler channel parameters. 0 indicates that there is no requested input read. Other than 0 it can be a
                             variable name that will be used for storing the value of the input
             derived_variable_requested      :   Index of the derived variable for non zero values. -1 corresponds to no derived variables requested
@@ -77,6 +78,7 @@ class MainWindow(QMainWindow):
             self.digital = [self.Digital() for i in range(config.digital_channels_number)]
             self.analog = [self.Analog() for i in range(config.analog_channels_number)]
             self.dds = [self.DDS() for i in range(config.dds_channels_number)]
+            self.mirny = [self.DDS() for i in range(config.mirny_channels_number)]
             self.sampler = ['0']*8
             self.derived_variable_requested = derived_variable_requested
 
@@ -299,8 +301,10 @@ class MainWindow(QMainWindow):
         self.experiment = self.Experiment()
         self.sequence_num_rows = 1
         self.setting_dict = {0:"frequency", 1:"amplitude", 2:"attenuation", 3:"phase", 4:"state"}
-        self.max_dict = {0: 800, 1: 1, 2: 31.5, 3: 360, 4: 1} #max and min needs to be checked 
-        self.min_dict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}  #max and min needs to be checked 
+        self.max_dict_dds = {0: 500, 1: 1, 2: 31.5, 3: 360, 4: 1} 
+        self.min_dict_dds = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0} 
+        self.max_dict_mirny = {0: 6800, 1: 1, 2: 31.5, 3: 360, 4: 1} #max and min needs to be checked 
+        self.min_dict_mirny = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}  #max and min needs to be checked 
         self.to_update = False
         self.green = QColor(37,211,102)
         self.red = QColor(247,120,120)
@@ -322,6 +326,8 @@ class MainWindow(QMainWindow):
             tabs.dds_tab_build(self)
         if config.sampler_channels_number > 0:
             tabs.sampler_tab_build(self)
+        if config.mirny_channels_number > 0:
+            tabs.mirny_tab_build(self)
         tabs.variables_tab_build(self)
         self.making_separator()
        
@@ -330,6 +336,7 @@ class MainWindow(QMainWindow):
         self.main_window.addTab(self.digital_tab_widget, "Digital")
         self.main_window.addTab(self.analog_tab_widget, "Analog")
         self.main_window.addTab(self.dds_tab_widget, "DDS")
+        self.main_window.addTab(self.mirny_tab_widget, "Mirny")
         self.main_window.addTab(self.sampler_tab_widget, "Sampler")
         self.main_window.addTab(self.variables_tab_widget, "Variables")
         self.to_update = True
@@ -352,7 +359,7 @@ class MainWindow(QMainWindow):
         try:
             with open("./default/default", 'rb') as file:
                 default_experiment = pickle.load(file)
-            if (len(default_experiment.sequence[0].digital) == config.digital_channels_number) and (len(default_experiment.sequence[0].analog) == config.analog_channels_number) and (len(default_experiment.sequence[0].dds) == config.dds_channels_number) and (len(default_experiment.sequence[0].sampler) == config.sampler_channels_number):
+            if (len(default_experiment.sequence[0].digital) == config.digital_channels_number) and (len(default_experiment.sequence[0].analog) == config.analog_channels_number) and (len(default_experiment.sequence[0].dds) == config.dds_channels_number) and (len(default_experiment.sequence[0].sampler) == config.sampler_channels_number) and (len(default_experiment.sequence[0].mirny) == config.mirny_channels_number):
                 pass
             else:
                 incompatible = True
@@ -362,6 +369,7 @@ class MainWindow(QMainWindow):
             self.experiment.title_digital_tab = deepcopy(default_experiment.title_digital_tab)
             self.experiment.title_analog_tab = deepcopy(default_experiment.title_analog_tab)
             self.experiment.title_dds_tab = deepcopy(default_experiment.title_dds_tab)
+            self.experiment.title_mirny_tab = deepcopy(default_experiment.title_mirny_tab)
             self.experiment.title_sampler_tab = deepcopy(default_experiment.title_sampler_tab)
         except:
             self.experiment.sequence[0] = self.Edge(name="Default")
@@ -371,6 +379,8 @@ class MainWindow(QMainWindow):
                 self.experiment.title_analog_tab = ["#", "Name", "Time (ms)", ""] + [f"A{i}" for i in range(config.analog_channels_number)]
             if config.dds_channels_number > 0:
                 self.experiment.title_dds_tab = ["#", "Name", "Time (ms)", ""] + [f"DDS{i}" for i in range(config.dds_channels_number)]            
+            if config.mirny_channels_number > 0:
+                self.experiment.title_mirny_tab = ["#", "Name", "Time (ms)", ""] + [f"M{i}" for i in range(config.mirny_channels_number)]            
             if config.sampler_channels_number > 0:
                 self.experiment.title_sampler_tab = ["#", "Name", "Time (ms)", ""] + [f"S{i}" for i in range(config.sampler_channels_number)]            
             if incompatible:
@@ -418,6 +428,15 @@ class MainWindow(QMainWindow):
             self.dds_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
             self.dds_table.setItem(0,6*i + 3, QTableWidgetItem())
             self.dds_table.item(0, 6*i + 3).setBackground(self.grey)
+        # grey coloured separating line mirny tab
+        self.mirny_dummy.setSpan(0,3, self.sequence_num_rows + 2, 1)  
+        self.mirny_dummy.setItem(0,3, QTableWidgetItem())
+        self.mirny_dummy.item(0,3).setBackground(self.grey)
+        # grey coloured separating line in mirny tab between channels
+        for i in range(config.mirny_channels_number):
+            self.mirny_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
+            self.mirny_table.setItem(0,6*i + 3, QTableWidgetItem())
+            self.mirny_table.item(0, 6*i + 3).setBackground(self.grey)
         # grey coloured separating line sampler tab
         self.sampler_table.setItem(0,3, QTableWidgetItem())
         self.sampler_table.item(0,3).setBackground(self.grey)
@@ -669,6 +688,8 @@ class MainWindow(QMainWindow):
         self.analog_dummy.setRowCount(self.sequence_num_rows)
         self.dds_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
         self.dds_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name    
+        self.mirny_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
+        self.mirny_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name    
         self.sampler_table.setRowCount(self.sequence_num_rows)     
         self.making_separator()
         row = self.sequence_num_rows - 1
@@ -715,6 +736,19 @@ class MainWindow(QMainWindow):
                 exec("self.dds_table.setItem(dds_row, col, QTableWidgetItem(str(channel.%s.expression) + ' '))" %self.setting_dict[setting])
                 exec("self.dds_table.item(dds_row, col).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
             channel.changed = False
+        #Setting the left part of the MIRNY table (edge number, name, time)
+        self.mirny_dummy.setItem(row+2, 0, QTableWidgetItem(str(row)))
+        self.mirny_dummy.setItem(row+2, 1, QTableWidgetItem(edge.name))
+        self.mirny_dummy.setItem(row+2, 2, QTableWidgetItem(str(edge.value)))
+        #Setting MIRNY table values
+        for index, channel in enumerate(self.experiment.sequence[-1].mirny):
+            #plus 4 is because first 4 columns are used by number, name, time and separator(dark grey line)
+            for setting in range(5):
+                col = 4 + index * 6 + setting
+                dds_row = row + 2
+                exec("self.mirny_table.setItem(dds_row, col, QTableWidgetItem(str(channel.%s.expression) + ' '))" %self.setting_dict[setting])
+                exec("self.mirny_table.item(dds_row, col).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
+            channel.changed = False
         #Setting the left part of the SAMPLER table (edge number, name, time)
         self.sampler_table.setItem(row, 0, QTableWidgetItem(str(row)))
         self.sampler_table.setItem(row, 1, QTableWidgetItem(edge.name))
@@ -744,7 +778,7 @@ class MainWindow(QMainWindow):
                 backup = deepcopy(self.experiment.variables[name]) #backup is a variable copy in case we would need to restore changes and not allow deleting edge
                 #the following is a check whether the edge has been used somewhere. First we delete a corresponding variable and then try to evaluate all the entries
                 del self.experiment.variables[name]
-                return_value = update.digital_analog_dds_tabs(self)
+                return_value = update.digital_analog_dds_mirny_tabs(self)
                 if return_value == None: #no errors, means that the edge can be deleted
                     del self.experiment.sequence[row]
                     self.sequence_table.setCurrentCell(row-1, 0)
@@ -794,6 +828,8 @@ class MainWindow(QMainWindow):
                 edge_num = self.analog_dummy.selectedIndexes()[0].row()    
             elif self.main_window.currentIndex() == 3:
                 edge_num = self.dds_dummy.selectedIndexes()[0].row() - 2 # because top 2 rows are used for title   
+            elif self.main_window.currentIndex() == 4:
+                edge_num = self.mirny_dummy.selectedIndexes()[0].row() - 2 # because top 2 rows are used for title   
             write_to_python.create_go_to_edge(self, edge_num=edge_num)
             self.message_to_logger("Go to edge file generated")
             try:
@@ -829,12 +865,12 @@ class MainWindow(QMainWindow):
 
     def run_experiment_button_clicked(self): 
         '''
-        Function is used when the user wants to run the experiment. By calling update.digital_analog_dds_tabs(self) it updates every expression
+        Function is used when the user wants to run the experiment. By calling update.digital_analog_dds_mirny_tabs(self) it updates every expression
         to make sure that all scanning variables are taken into account. After that it generates the run_experiment.py file and 
         submits the experimental description to the scheduler through artiq_run function.
         '''
         self.count_scanned_variables()
-        update.digital_analog_dds_tabs(self) #updating all expressions in particular for_pythons of each parameter
+        update.digital_analog_dds_mirny_tabs(self) #updating all expressions in particular for_pythons of each parameter
         try:
             write_to_python.create_experiment(self)
             self.message_to_logger("Python file generated")
@@ -890,7 +926,7 @@ class MainWindow(QMainWindow):
         Function is used to generate the run_experiment.py according to the experimental descirption without
         running it. It is usefull for debugging purposes.
         '''
-        update.digital_analog_dds_tabs(self) #specifically used to update for_python version of each parameter in the sequence
+        update.digital_analog_dds_mirny_tabs(self) #specifically used to update for_python version of each parameter in the sequence
         try:
             write_to_python.create_experiment(self)
             self.message_to_logger("Python file generated")
@@ -1006,7 +1042,7 @@ class MainWindow(QMainWindow):
         It passes the run_continuous flag into the write_to_python.create_experiment and the rest is handled there
         '''
         self.count_scanned_variables()
-        update.digital_analog_dds_tabs(self) #updating all expressions in particular for_pythons of each parameter
+        update.digital_analog_dds_mirny_tabs(self) #updating all expressions in particular for_pythons of each parameter
         try:
             write_to_python.create_experiment(self, run_continuous=True)
             self.message_to_logger("Python file generated")
@@ -1164,7 +1200,7 @@ class MainWindow(QMainWindow):
                 for variable in self.experiment.scanned_variables:
                     if variable.name != "None":
                         self.experiment.variables[variable.name].value = variable.min_val
-            update.digital_analog_dds_tabs(self)
+            update.digital_analog_dds_mirny_tabs(self)
             update.variables_tab(self, derived_variables = False)
         
 
@@ -1195,7 +1231,7 @@ class MainWindow(QMainWindow):
             #First update the variables tab in order to update the values for evaluation in following update steps
             update.variables_tab(self, derived_variables = False)
             update.scan_table(self)
-            update.digital_analog_dds_tabs(self)
+            update.digital_analog_dds_mirny_tabs(self)
             if row != 0:
                 self.scan_table_parameters.setCurrentCell(row-1, 0)
         except:
@@ -1308,7 +1344,7 @@ class MainWindow(QMainWindow):
                     table_item.setText(str(variable.max_val))
                 except:
                     self.error_message("Expression can not be evaluated", "Wrong entry")
-            update.digital_analog_dds_tabs(self)
+            update.digital_analog_dds_mirny_tabs(self)
             update.variables_tab(self, derived_variables = False)
             update.scan_table(self)       
         else:
@@ -1536,7 +1572,7 @@ class MainWindow(QMainWindow):
                     expression = self.dds_table.item(row,col).text()
                     (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
                     exec("self.dummy_val =" + evaluation)
-                    maximum, minimum = self.max_dict[setting], self.min_dict[setting]
+                    maximum, minimum = self.max_dict_dds[setting], self.min_dict_dds[setting]
                     if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.expression = expression" %self.setting_dict[setting])
                         exec("self.experiment.sequence[edge_num].dds[channel].%s.evaluation = evaluation" %self.setting_dict[setting])
@@ -1567,6 +1603,72 @@ class MainWindow(QMainWindow):
         if self.to_update:
             col = item.column()
             self.experiment.title_dds_tab[(col-4)//6 + 4] = self.dds_dummy_header.item(0,col).text() # title has 3 leading names and a separator
+
+
+    #MIRNY TAB RELATED FUNCTIONS
+    def mirny_table_changed(self, item):
+        '''
+        Function is used when the user changes the values in the mirny table. It ensures that the expressions can be evaluated in the
+        allowed input values range. The user can delete the input and the function will assign the value of the previous edge and 
+        unhighlight the channel indicating that it should not be changed and will only display previously set value.
+        '''        
+        if self.to_update:
+            row = item.row()
+            col = item.column()
+            edge_num = row - 2
+            channel = (col - 4)//6 #4 columns for edge and separation. division by 5 channel settings and 1 separation
+            setting = col - 4 - 6 * channel # the number is a sequential value of setting. Frequency is 0, Amplitude 1, attenuation 2, phase 3, state 4
+            if self.mirny_table.item(row,col).text() == "": #User deleted the value. The function will display the previously set state
+                if edge_num == 0: #Default edge
+                    self.error_message("You can not delete initial value!", "Initial value is needed!")
+                    self.update_off()
+                    exec("self.mirny_table.item(row,col).setText(str(self.experiment.sequence[edge_num].mirny[channel].%s.expression))" %self.setting_dict[setting])
+                    self.update_on()
+                else: #Other than a default edge
+                    #Removing background color
+                    self.update_off()
+                    for index_setting in range(5):
+                        self.mirny_table.item(row, channel*6 + 4 + index_setting).setBackground(self.white)
+                    self.experiment.sequence[edge_num].mirny[channel].changed = False
+                    self.update_on()
+                    update.mirny_tab(self)
+            else:   #User entered a new input value
+                try:
+                    #Checking whether the expression can be evaluated and the value is within allowed range                     
+                    expression = self.mirny_table.item(row,col).text()
+                    (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                    exec("self.dummy_val =" + evaluation)
+                    maximum, minimum = self.max_dict_mirny[setting], self.min_dict_mirny[setting]
+                    if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
+                        exec("self.experiment.sequence[edge_num].mirny[channel].%s.expression = expression" %self.setting_dict[setting])
+                        exec("self.experiment.sequence[edge_num].mirny[channel].%s.evaluation = evaluation" %self.setting_dict[setting])
+                        exec("self.experiment.sequence[edge_num].mirny[channel].%s.for_python = for_python" %self.setting_dict[setting])
+                        exec("self.experiment.sequence[edge_num].mirny[channel].%s.value = self.dummy_val" %self.setting_dict[setting])
+                        exec("self.experiment.sequence[edge_num].mirny[channel].%s.for_python = for_python" %self.setting_dict[setting])
+                        self.experiment.sequence[edge_num].mirny[channel].changed = True
+                        update.mirny_tab(self)
+                    else:
+                        #Reverting back the previously accepted expression                            
+                        self.error_message("Only values between %.1f and %.1f are expected" %(minimum, maximum), "Wrong entry")
+                        self.update_off()
+                        exec("self.mirny_table.item(row,col).setText(str(self.experiment.sequence[edge_num].mirny[channel].%s.expression))" %self.setting_dict[setting])
+                        self.update_on()
+                except:
+                    #Return the previously assigned value if the expression can not be evaluated                       
+                    self.update_off()
+                    exec("self.mirny_table.item(row,col).setText(str(self.experiment.sequence[edge_num].mirny[channel].%s.expression))" %self.setting_dict[setting])
+                    self.update_on()
+                    self.error_message('Expression can not be evaluated', 'Wrong entry')            
+
+
+    def mirny_dummy_header_changed(self, item):
+        '''
+        Function is used when the user wants to change the name of the mirny title. 
+        It overwrites the value of the corresponding title name in the experiment object so when it is saved the changes are persitent.
+        '''
+        if self.to_update:
+            col = item.column()
+            self.experiment.title_mirny_tab[(col-4)//6 + 4] = self.mirny_dummy_header.item(0,col).text() # title has 3 leading names and a separator
 
 
     #VARIABLES TAB RELATED FUNCTIONS
@@ -1600,13 +1702,13 @@ class MainWindow(QMainWindow):
                     backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
                     del self.experiment.variables[name]
                     self.variables_table.setCurrentCell(row-1,0)
-                    return_value = update.digital_analog_dds_tabs(self) #we need to update only values not expressions
+                    return_value = update.digital_analog_dds_mirny_tabs(self) #we need to update only values not expressions
                     if return_value == None: #Variable can be deleted
                         del self.experiment.new_variables[row]
                         update.variables_tab(self)
                     else: #Variable can not be deleted. Reverting all changes back to previous state
                         self.experiment.variables[name] = backup
-                        update.digital_analog_dds_tabs(self) 
+                        update.digital_analog_dds_mirny_tabs(self) 
                         update.variables_tab(self)
                         self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
                 else:
@@ -1681,7 +1783,7 @@ class MainWindow(QMainWindow):
                                 #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
                                 backup = deepcopy(self.experiment.variables[variable.name])
                                 del self.experiment.variables[variable.name]
-                                return_value = update.digital_analog_dds_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
+                                return_value = update.digital_analog_dds_mirny_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
                                 if return_value == None: #The previous variable was not used anywhere and can be changed
                                     self.experiment.variables[new_name] = backup
                                     self.experiment.variables[new_name].name = new_name
@@ -1711,12 +1813,12 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking if the new value resulting in the values allowed for each parameter it is used in
                     self.experiment.variables[variable.name].value = float(table_item.text())
-                    return_value = update.digital_analog_dds_tabs(self) # we do not need to update expressions only update values.
+                    return_value = update.digital_analog_dds_mirny_tabs(self) # we do not need to update expressions only update values.
                     if return_value == None: #The value can be updated
                         variable.value = self.experiment.variables[variable.name].value
                         table_item.setText(str(variable.value))
                         update.sequence_tab(self)
-                        update.digital_analog_dds_tabs(self)
+                        update.digital_analog_dds_mirny_tabs(self)
                         update.from_object(self)
                     else: #The value can not be updated, reverting every evaluation done before.
                         self.error_message("Evaluation is out of allowed range occured in %s. Variable value can not be assigned" %return_value, "Wrong entry")
@@ -1725,13 +1827,13 @@ class MainWindow(QMainWindow):
                         table_item.setText(str(variable.value))
                         self.update_on()
                         update.sequence_tab(self)
-                        update.digital_analog_dds_tabs(self)
+                        update.digital_analog_dds_mirny_tabs(self)
                         update.from_object(self)
                 except: #Restricting the user from using anything but the integer values and floating numbers
                     self.update_off()
                     table_item.setText(str(variable.value))
                     self.update_on()
-                    update.digital_analog_dds_tabs(self, update_expressions_and_evaluations=False)                    
+                    update.digital_analog_dds_mirny_tabs(self, update_expressions_and_evaluations=False)                    
                     self.error_message("Only integers and floating numbers are allowed.", "Wrong entry")
 
 

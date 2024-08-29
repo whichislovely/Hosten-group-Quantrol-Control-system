@@ -241,7 +241,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                         except:
                             return "dds channel %d, edge %d" %(channel_index, row)
                         #check if the value within allowed range
-                        if channel_entry.value >= self.min_dict[setting] and channel_entry.value <= self.max_dict[setting]:
+                        if channel_entry.value >= self.min_dict_dds[setting] and channel_entry.value <= self.max_dict_dds[setting]:
                             #Color coding the values
                             if channel.state.value == 1:
                                 table_item.setBackground(self.green)
@@ -269,8 +269,83 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                         table_item.setText(current_expression + " ")  
                         table_item.setToolTip(str(channel_entry.value))
                         
+    self.update_on()
+
+def mirny_tab(self, update_expressions_and_evaluations = True, update_values_and_table = True):
+    '''
+    This function updates expressions, evaluations, values and entries of mirny table
+    Used in mirny_table_changed()
+    '''
+    self.update_off()
+    #note that in order to display numbers you first need to convert them to string
+    for channel_index in range(config.mirny_channels_number):
+        for setting in range(4,-1,-1): #start an update from the state of the channel to properly update the color coding
+            for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
+                channel = self.experiment.sequence[row-2].mirny[channel_index]
+                # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
+                col = channel_index * 6 + 4 + setting
+                table_item = self.mirny_table.item(row, col)
+                exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
+                channel_entry = self.channel_entry
+                if channel.changed: #Channel state needs to be updated
+                    #Updating expressions and evaluations
+                    if update_expressions_and_evaluations:
+                        channel_entry.expression = table_item.text()
+                        #If a value is convertible to float perform the conversion as Artiq parameters for dds channel are required to be floats not integers
+                        try:
+                            if setting == 0: #frequency
+                                channel_entry.expression = str(float(channel_entry.expression)) #Was checked to have at least a 1 Hz level resolution
+                            elif setting == 1: #amplitude
+                                channel_entry.expression = str(int(float(channel_entry.expression)*1000)/1000) # Keep only up to 3rd digit (0.1234 --> 0.123)
+                            elif setting == 2: #attenuation
+                                channel_entry.expression = str(round(float(channel_entry.expression)/0.5)*0.5) #Round up to 0.5
+                            elif setting == 3: #phase
+                                channel_entry.expression = str(round(float(channel_entry.expression)/0.36)*0.36) # Keep only up to 3rd digit (0.1234 --> 0.123) of phase that is represented as 1 -- > 360. 0.001 --> 0.36 in degrees 
+                            elif setting == 4: #state
+                                channel_entry.expression = str(int(channel_entry.expression))
+                        except:
+                            pass
+                        try:
+                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled, is_derived) = self.decode_input(channel_entry.expression)
+                        except:
+                            return "mirny channel %d, edge %d" %(channel_index, row)
+                    #Updating values and table entries
+                    if update_values_and_table:
+                        try:
+                            exec("channel_entry.value =" + channel_entry.evaluation)
+                        except:
+                            return "mirny channel %d, edge %d" %(channel_index, row)
+                        #check if the value within allowed range
+                        if channel_entry.value >= self.min_dict_mirny[setting] and channel_entry.value <= self.max_dict_mirny[setting]:
+                            #Color coding the values
+                            if channel.state.value == 1:
+                                table_item.setBackground(self.green)
+                            else:
+                                table_item.setBackground(self.red)
+                            #Updating the entry of table to convert to float or integer. (Only state is being converted to integer)
+                            table_item.setText(channel_entry.expression)
+                            table_item.setToolTip(str(channel_entry.value))
+                        else:
+                            return "mirny channel %d, edge %d" %(channel_index, row)
+                    #Saving the current state of the channel
+                    current_expression = channel_entry.expression
+                    current_evaluation = channel_entry.evaluation
+                    current_value = channel_entry.value
+                    current_for_python = channel_entry.for_python
+                else: #Update the value according to the previously set state
+                    #Updating expressions and evaluations
+                    if update_expressions_and_evaluations:
+                        channel_entry.expression = current_expression
+                        channel_entry.evaluation = current_evaluation
+                        channel_entry.for_python = current_for_python
+                    #Updating mirny table values and table entries
+                    if update_values_and_table:
+                        channel_entry.value = current_value
+                        table_item.setText(current_expression + " ")  
+                        table_item.setToolTip(str(channel_entry.value))     
 
     self.update_on()
+
 
 def variables_tab(self, new_variables = True, derived_variables = True):
     #creating the variables tab from self.experiment.new_variables object
@@ -313,7 +388,7 @@ def scan_table(self):
     self.update_on()
 
 
-def digital_analog_dds_tabs(self, update_expressions_and_evaluations = True, update_values_and_tables = True):
+def digital_analog_dds_mirny_tabs(self, update_expressions_and_evaluations = True, update_values_and_tables = True):
     '''
     This function updates all tabs. It just calls an update of each tab one by one
     '''
@@ -324,8 +399,12 @@ def digital_analog_dds_tabs(self, update_expressions_and_evaluations = True, upd
             analog_tab_return = analog_tab(self, update_expressions_and_evaluations, update_values_and_tables)
             if (analog_tab_return==None):
                 dds_tab_return = dds_tab(self, update_expressions_and_evaluations, update_values_and_tables)        
-                self.update_on()
-                return dds_tab_return
+                if (dds_tab_return == None):
+                    mirny_tab_return = mirny_tab(self, update_expressions_and_evaluations, update_values_and_tables)      
+                    return mirny_tab_return
+                else:
+                    self.update_on()
+                    return dds_tab_return
             else:
                 self.update_on()
                 return analog_tab_return
@@ -357,6 +436,8 @@ def from_object(self):
     self.analog_dummy.setRowCount(self.sequence_num_rows)
     self.dds_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
     self.dds_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
+    self.mirny_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
+    self.mirny_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
     self.sampler_table.setRowCount(self.sequence_num_rows)
     #Separator
     self.making_separator()
@@ -375,6 +456,15 @@ def from_object(self):
         self.dds_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
         self.dds_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
         self.dds_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
+    for i in range(config.mirny_channels_number):
+        self.mirny_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_mirny_tab[i+4])))
+        self.mirny_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
+        #headers Channel attributes (f, Amp, att, phase, state)
+        self.mirny_dummy_header.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
+        self.mirny_dummy_header.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
+        self.mirny_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
+        self.mirny_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
+        self.mirny_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
 
     if config.allow_skipping_images:
         #Updating the "Skip images" button color
@@ -404,6 +494,10 @@ def from_object(self):
         self.dds_dummy.setItem(row+2,1, QTableWidgetItem(edge.name))
         self.dds_dummy.setItem(row+2,2, QTableWidgetItem(str(edge.value)))   
         
+        self.mirny_dummy.setItem(row+2,0, QTableWidgetItem(str(row)))
+        self.mirny_dummy.setItem(row+2,1, QTableWidgetItem(edge.name))
+        self.mirny_dummy.setItem(row+2,2, QTableWidgetItem(str(edge.value)))   
+
         self.sampler_table.setItem(row,0, QTableWidgetItem(str(row)))
         self.sampler_table.setItem(row,1, QTableWidgetItem(edge.name))
         self.sampler_table.setItem(row,2, QTableWidgetItem(str(edge.value)))
@@ -477,6 +571,32 @@ def from_object(self):
                     current_for_python = channel_entry.for_python
                 else:
                     self.dds_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                    channel_entry.expression = current_expression
+                    channel_entry.evaluation = current_evaluation
+                    channel_entry.for_python = current_for_python
+                    channel_entry.value = current_value
+
+    #Displaying MIRNY table
+    for channel_index in range(config.mirny_channels_number):
+        for setting in range(5):
+            for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
+                channel = self.experiment.sequence[row-2].mirny[channel_index]
+                # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
+                col = channel_index * 6 + 4 + setting
+                exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
+                channel_entry = self.channel_entry
+                if channel.changed: 
+                    self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression))
+                    if channel.state.value == 1:
+                        self.mirny_table.item(row, col).setBackground(self.green)
+                    else:
+                        self.mirny_table.item(row, col).setBackground(self.red)
+                    current_expression = channel_entry.expression
+                    current_evaluation = channel_entry.evaluation
+                    current_value = channel_entry.value
+                    current_for_python = channel_entry.for_python
+                else:
+                    self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
                     channel_entry.expression = current_expression
                     channel_entry.evaluation = current_evaluation
                     channel_entry.for_python = current_for_python

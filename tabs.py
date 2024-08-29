@@ -875,3 +875,225 @@ def sampler_tab_build(self):
     self.go_to_edge_button_sampler.setText("Go to Edge")
     self.go_to_edge_button_sampler.clicked.connect(self.go_to_edge_button_clicked)
     self.go_to_edge_button_sampler.setToolTip("Go to Edge button is used to set the state of the hardware to a specific state at a particular edge. The user first needs to choose the edge to go by right clicking the sequence table on the left")
+
+
+def mirny_tab_build(self):
+    self.mirny_tab_num_cols = 6*config.mirny_channels_number + 3
+    #MIRNY TABLE WIDGET
+    self.mirny_tab_widget = QWidget()
+    #MIRNY LABLE
+    mirny_lable = QLabel(self.mirny_tab_widget)
+    mirny_lable.setText("Mirny channels")
+    mirny_lable.setFont(QFont('Arial', 14))
+    mirny_lable.setGeometry(85, 0, 400, 30)
+    self.sequence_num_rows = len(self.experiment.sequence)
+    
+    #MIRNY TAB LAYOUT
+    self.mirny_table = QTableWidget(self.mirny_tab_widget)
+    self.mirny_table.setGeometry(QRect(10, 30, 1905, 1020))
+    self.mirny_table.setColumnCount(self.mirny_tab_num_cols)
+    self.mirny_table.horizontalHeader().setMinimumHeight(50)
+    self.mirny_table.verticalHeader().setVisible(False)
+    self.mirny_table.horizontalHeader().setVisible(False)
+    self.mirny_table.setRowCount(3) # 5 is an arbitrary number we just need to have rows in order to span them
+    self.mirny_table.horizontalHeader().setMinimumSectionSize(0)
+    self.mirny_table.setFont(QFont('Arial', 12))
+    self.mirny_table.setFrameStyle(QFrame.NoFrame)
+    #SHAPING THE FIRST 3 COLUMNS 
+    self.mirny_table.setColumnWidth(0,50)
+    self.mirny_table.setColumnWidth(1,180)
+    self.mirny_table.setColumnWidth(2,100)
+    self.mirny_table.setColumnWidth(3,5)
+
+    delegate = ReadOnlyDelegate(self)
+    #SHAPING THE TABLE
+    for i in range(config.mirny_channels_number):
+        self.mirny_table.setSpan(0,4 + 6*i, 1, 5) # stretching the title of the channel
+        self.mirny_table.setColumnWidth(3 + 6*i, 5) # making separation line thin
+        self.mirny_table.setColumnWidth(8 + 6*i, 45) # making state column smaller
+        self.mirny_table.setItemDelegateForColumn(3 + 6*i,delegate) #making separation line uneditable
+    
+    #making first three columns verticaly wider to fit with header 
+    for i in range(3):
+        self.mirny_table.setSpan(0, i, 2, 1)
+        self.mirny_table.setItemDelegateForColumn(i,delegate)
+    #Filling the default values of MIRNY table
+    for index, channel in enumerate(self.experiment.sequence[0].mirny):
+        #plus 4 is because first 4 columns are used by number, name, time and separator(dark grey line)
+        col = 4 + index * 6  
+        for setting in range(5):
+            exec("self.mirny_table.setItem(2, col + setting, QTableWidgetItem(str(channel.%s.expression)))" %self.setting_dict[setting])
+            exec("self.mirny_table.item(2, col + setting).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
+            if channel.state.value == 1:
+                self.mirny_table.item(2, col + setting).setBackground(self.green)
+            else:  
+                self.mirny_table.item(2, col + setting).setBackground(self.red)
+
+
+    self.mirny_table.itemChanged.connect(self.mirny_table_changed)
+
+    #Dummy table that will display edge number, name and time and will be fixed (LEFT SIDE OF THE TABLE)
+    self.mirny_dummy = QTableWidget(self.mirny_tab_widget)
+    self.mirny_dummy.setGeometry(QRect(10,30,335,1003))
+    self.mirny_dummy.setColumnCount(4)
+    self.mirny_dummy.setRowCount(3)
+    self.mirny_dummy.horizontalHeader().setMinimumHeight(50)
+    self.mirny_dummy.verticalHeader().setVisible(False)
+    self.mirny_dummy.horizontalHeader().setVisible(False)
+    self.mirny_dummy.horizontalHeader().setMinimumSectionSize(0)
+    self.mirny_dummy.horizontalHeader().setFont(QFont('Arial', 12))
+    self.mirny_dummy.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+    self.mirny_dummy.setFont(QFont('Arial', 12))
+    self.mirny_dummy.setColumnWidth(0,50)
+    self.mirny_dummy.setColumnWidth(1,180)
+    self.mirny_dummy.setColumnWidth(2,100)
+    self.mirny_dummy.setColumnWidth(3,5)
+    self.mirny_dummy.setFrameStyle(QFrame.NoFrame)
+
+    #making first three columns vertically wider to fit with header 
+    for i in range(3):
+        self.mirny_dummy.setSpan(0, i, 2, 1)
+        self.mirny_dummy.setItemDelegateForColumn(i,delegate)
+    #Filling the left part of the MIRNY table
+    self.mirny_dummy.setItem(2, 0, QTableWidgetItem("0"))
+    self.mirny_dummy.setItem(2, 1, QTableWidgetItem(self.experiment.sequence[0].name))
+    self.mirny_dummy.setItem(2, 2, QTableWidgetItem(str(self.experiment.sequence[0].value)))
+
+
+    #Dummy horizontal header (TOP SIDE OF THE TABLE)
+    self.mirny_dummy_header = QTableWidget(self.mirny_tab_widget)
+    self.mirny_dummy_header.setGeometry(QRect(10,30,1905,60))
+    self.mirny_dummy_header.setColumnCount(self.mirny_tab_num_cols)
+    self.mirny_dummy_header.horizontalHeader().setMinimumHeight(50)
+    self.mirny_dummy_header.verticalHeader().setVisible(False)
+    self.mirny_dummy_header.horizontalHeader().setVisible(False)
+    self.mirny_dummy_header.setRowCount(2) 
+    self.mirny_dummy_header.horizontalHeader().setMinimumSectionSize(0)
+    self.mirny_dummy_header.horizontalHeader().setFont(QFont('Arial', 12))
+    self.mirny_dummy_header.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+    self.mirny_dummy_header.setFont(QFont('Arial', 12))
+    self.mirny_dummy_header.setFrameStyle(QFrame.NoFrame)
+    #SHAPING THE FIRST 3 COLUMNS 
+    self.mirny_dummy_header.setColumnWidth(0,50) 
+    self.mirny_dummy_header.setColumnWidth(1,180)
+    self.mirny_dummy_header.setColumnWidth(2,100)
+
+    #SHAPING THE TABLE
+    for i in range(config.mirny_channels_number):
+        self.mirny_dummy_header.setSpan(0,4 + 6*i, 1, 5) # stretching the title of the channel
+        self.mirny_dummy_header.setColumnWidth(3 + 6*i, 5) # making separation line thin
+        self.mirny_dummy_header.setColumnWidth(8 + 6*i, 45) # making state column smaller
+        self.mirny_dummy_header.setItemDelegateForColumn(3 + 6*i,delegate) #making separation line uneditable
+
+    self.mirny_dummy_header.setItemDelegateForRow(1, delegate) #making row number 2 uneditable
+
+    #populating headers and separators
+    for i in range(config.mirny_channels_number):
+        #separator
+        self.mirny_dummy_header.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
+        self.mirny_dummy_header.setItem(0,6*i + 3, QTableWidgetItem())
+        self.mirny_dummy_header.item(0, 6*i + 3).setBackground(QColor(100,100,100))
+        #headers Channel
+        self.mirny_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_mirny_tab[i+4])))
+        self.mirny_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
+        #headers Channel attributes (f, Amp, att, phase, state)
+        self.mirny_dummy_header.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
+        self.mirny_dummy_header.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
+        self.mirny_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
+        self.mirny_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
+        self.mirny_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
+
+    self.mirny_dummy_header.itemChanged.connect(self.mirny_dummy_header_changed)
+
+    #Making fixed corner (TOP LEFT SIDE OF THE TABLE)
+    self.mirny_fixed = QTableWidget(self.mirny_tab_widget)
+    self.mirny_fixed.setGeometry(QRect(10,30, 335,60))
+    self.mirny_fixed.setColumnCount(4)
+    self.mirny_fixed.horizontalHeader().setMinimumHeight(50)
+    self.mirny_fixed.verticalHeader().setVisible(False)
+    self.mirny_fixed.horizontalHeader().setVisible(False)
+    self.mirny_fixed.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+    self.mirny_fixed.horizontalHeader().setMinimumSectionSize(0)
+    self.mirny_fixed.setRowCount(2) 
+    self.mirny_fixed.setFont(QFont('Arial', 12))
+    self.mirny_fixed.setFrameStyle(QFrame.NoFrame)
+    #SHAPING THE FIRST 3 COLUMNS
+    self.mirny_fixed.setColumnWidth(0,50)
+    self.mirny_fixed.setColumnWidth(1,180)
+    self.mirny_fixed.setColumnWidth(2,100)
+    self.mirny_fixed.setColumnWidth(3,5)
+    #making first three columns vertically wider to fit with header 
+    for i in range(4):
+        self.mirny_fixed.setSpan(0, i, 2, 1)
+        self.mirny_fixed.setItemDelegateForColumn(i,delegate)
+    #Separator
+    self.mirny_fixed.setItem(0,3, QTableWidgetItem())
+    self.mirny_fixed.item(0,3).setBackground(QColor(100,100,100))
+    #populating edge number, name and time
+    for i in range(3):
+        self.mirny_fixed.setItem(0,i, QTableWidgetItem(str(self.experiment.title_mirny_tab[i])))
+        self.mirny_fixed.item(0,i).setTextAlignment(Qt.AlignCenter)
+
+    #MAKING VERTICAL SCROLL BARS COMMON FOR MIRNY TABLE
+    self.mirny_tables = [self.mirny_table,self.mirny_dummy, self.analog_table,self.analog_dummy, self.digital_table, self.digital_dummy, self.sequence_table]
+
+    def move_other_scrollbars_vertical(idx,bar):
+        scrollbars = {tbl.verticalScrollBar() for tbl in self.mirny_tables}
+        scrollbars.remove(bar)
+        for bar in scrollbars:
+            bar.setValue(idx)
+        
+    self.mirny_dummy.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    self.mirny_dummy.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    for tbl in self.mirny_tables:
+        scrollbar = tbl.verticalScrollBar()
+        scrollbar.valueChanged.connect(lambda idx,bar=scrollbar: move_other_scrollbars_vertical(idx, bar))
+
+    #MAKING HORIZONTAL SCROLL BARS COMMON FOR MIRNY TABLE
+    self.mirny_dummy_tables = [self.mirny_table,self.mirny_dummy_header]
+
+    def move_other_scrollbars_horizontal(idx,bar):
+        scrollbars = {tbl.horizontalScrollBar() for tbl in self.mirny_dummy_tables}
+        scrollbars.remove(bar)
+        for bar in scrollbars:
+            bar.setValue(idx)
+        
+    self.mirny_dummy_header.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    self.mirny_dummy_header.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    for tbl in self.mirny_dummy_tables:
+        scrollbar = tbl.horizontalScrollBar()
+        scrollbar.valueChanged.connect(lambda idx,bar=scrollbar: move_other_scrollbars_horizontal(idx, bar))
+
+    
+    #BUTTONS AT THE BOTTOM
+    #button to stop continuous run
+    self.stop_continuous_run_button_mirny = QPushButton(self.mirny_tab_widget)
+    self.stop_continuous_run_button_mirny.setFont(QFont('Arial', 14))
+    self.stop_continuous_run_button_mirny.setGeometry(10, 1060, 200, 30)
+    self.stop_continuous_run_button_mirny.setText("Stop continuous run")
+    self.stop_continuous_run_button_mirny.clicked.connect(self.stop_continuous_run_button_clicked)
+    self.stop_continuous_run_button_mirny.setToolTip("Stop continuous run button stops whatever experiment was running before. It generates the init_hardware.py according to the latest default edge values and sets the hardware to that state. Again, it does not only stop continuous run, it stops any experiment and can be used to interrupt whatever was running.")
+   
+    #button to start continuous run
+    self.continuous_run_button_mirny = QPushButton(self.mirny_tab_widget)
+    self.continuous_run_button_mirny.setFont(QFont('Arial', 14))
+    self.continuous_run_button_mirny.setGeometry(220, 1060, 200, 30)
+    self.continuous_run_button_mirny.setText("Continuous run")
+    self.continuous_run_button_mirny.clicked.connect(self.continuous_run_button_clicked)
+    self.continuous_run_button_mirny.setToolTip("Continuous run button generates the experimental sequence description according to the current state of the Quatnrol as a run_experiment.py file and then runs that experimental sequence indefinitely.")
+ 
+    #run experiment
+    self.run_experiment_button_mirny = QPushButton(self.mirny_tab_widget)
+    self.run_experiment_button_mirny.setFont(QFont('Arial', 14))
+    self.run_experiment_button_mirny.setGeometry(430, 1060, 200, 30)
+    self.run_experiment_button_mirny.setText("Run experiment")
+    self.run_experiment_button_mirny.clicked.connect(self.run_experiment_button_clicked) 
+    self.run_experiment_button_mirny.setToolTip("Run experiment button generates the experimental sequence description accodring to the current state of the Quantrol as a run_experiment.py file and then runs that experimental sequence once.")
+    
+    #go to edge
+    self.go_to_edge_button_mirny = QPushButton(self.mirny_tab_widget)
+    self.go_to_edge_button_mirny.setFont(QFont('Arial', 14))
+    self.go_to_edge_button_mirny.setGeometry(640, 1060, 200, 30)
+    self.go_to_edge_button_mirny.setText("Go to Edge")
+    self.go_to_edge_button_mirny.clicked.connect(self.go_to_edge_button_clicked)
+    self.go_to_edge_button_mirny.setToolTip("Go to Edge button is used to set the state of the hardware to a specific state at a particular edge. The user first needs to choose the edge to go by right clicking the sequence table on the left")
