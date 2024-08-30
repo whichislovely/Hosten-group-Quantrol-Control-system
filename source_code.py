@@ -202,12 +202,15 @@ class MainWindow(QMainWindow):
             scanned_varbiales_count     :   Number of scanned variables. Used to ignore the scan tick in case of 0 specified scanned variables.
                                             User can create several scanning variables with None as names
             continuously_running        :   Flag indicating if the continuous run is required
+            slow_dds                    :   List of SLOW_DDS objects that describe the state of the slow dds output
         '''  
         def __init__(self):
             self.title_digital_tab = []
             self.title_analog_tab = []
             self.title_dds_tab = []
+            self.title_mirny_tab = []
             self.title_sampler_tab = []
+            self.title_slow_dds_tab = []
             self.sequence = [] 
             self.go_to_edge_num = -1
             self.new_variables = [] 
@@ -221,6 +224,25 @@ class MainWindow(QMainWindow):
             self.scanned_variables = [] 
             self.scanned_variables_count = 0
             self.continously_running = False 
+            self.slow_dds = [self.SLOW_DDS() for i in range(config.slow_dds_channels_number)]
+
+
+        class SLOW_DDS:
+            '''
+            An object that is used to describe the state of the slow dds channel
+            Attributes description:
+                frequency    :   An object that is used to describe the frequency state of the dds channel
+                amplitude    :   An object that is used to describe the amplitude state of the dds channel
+                attenuation  :   An object that is used to describe the attenuation state of the dds channel
+                phase        :   An object that is used to describe the phase state of the dds channel
+                state        :   An object that is used to describe the ON/OFF state of the dds channel
+            '''
+            def __init__(self, frequency = 0.0, amplitude = 0.0, attenuation = 0.0, phase = 0.0, state = 0):
+                self.frequency = frequency
+                self.amplitude = amplitude
+                self.attenuation = attenuation
+                self.phase = phase
+                self.state = state
 
 
     class Derived_variable:
@@ -328,6 +350,8 @@ class MainWindow(QMainWindow):
             tabs.sampler_tab_build(self)
         if config.mirny_channels_number > 0:
             tabs.mirny_tab_build(self)
+        if config.slow_dds_channels_number > 0:
+            tabs.slow_dds_tab_build(self)
         tabs.variables_tab_build(self)
         self.making_separator()
        
@@ -339,6 +363,7 @@ class MainWindow(QMainWindow):
         self.main_window.addTab(self.mirny_tab_widget, "Mirny")
         self.main_window.addTab(self.sampler_tab_widget, "Sampler")
         self.main_window.addTab(self.variables_tab_widget, "Variables")
+        self.main_window.addTab(self.slow_dds_tab_widget, "Slow DDS")
         self.to_update = True
         
     '''
@@ -359,7 +384,7 @@ class MainWindow(QMainWindow):
         try:
             with open("./default/default", 'rb') as file:
                 default_experiment = pickle.load(file)
-            if (len(default_experiment.sequence[0].digital) == config.digital_channels_number) and (len(default_experiment.sequence[0].analog) == config.analog_channels_number) and (len(default_experiment.sequence[0].dds) == config.dds_channels_number) and (len(default_experiment.sequence[0].sampler) == config.sampler_channels_number) and (len(default_experiment.sequence[0].mirny) == config.mirny_channels_number):
+            if (len(default_experiment.sequence[0].digital) == config.digital_channels_number) and (len(default_experiment.sequence[0].analog) == config.analog_channels_number) and (len(default_experiment.sequence[0].dds) == config.dds_channels_number) and (len(default_experiment.sequence[0].sampler) == config.sampler_channels_number) and (len(default_experiment.sequence[0].mirny) == config.mirny_channels_number) and (len(default_experiment.slow_dds) == config.slow_dds_channels_number):
                 pass
             else:
                 incompatible = True
@@ -371,6 +396,7 @@ class MainWindow(QMainWindow):
             self.experiment.title_dds_tab = deepcopy(default_experiment.title_dds_tab)
             self.experiment.title_mirny_tab = deepcopy(default_experiment.title_mirny_tab)
             self.experiment.title_sampler_tab = deepcopy(default_experiment.title_sampler_tab)
+            self.experiment.title_slow_dds_tab = deepcopy(default_experiment.title_slow_dds_tab)
         except:
             self.experiment.sequence[0] = self.Edge(name="Default")
             if config.digital_channels_number > 0:
@@ -383,6 +409,8 @@ class MainWindow(QMainWindow):
                 self.experiment.title_mirny_tab = ["#", "Name", "Time (ms)", ""] + [f"M{i}" for i in range(config.mirny_channels_number)]            
             if config.sampler_channels_number > 0:
                 self.experiment.title_sampler_tab = ["#", "Name", "Time (ms)", ""] + [f"S{i}" for i in range(config.sampler_channels_number)]            
+            if config.dds_channels_number > 0:
+                self.experiment.title_slow_dds_tab = ["#", "Name", "Time (ms)", ""] + [f"slow DDS{i}" for i in range(config.dds_channels_number)]            
             if incompatible:
                 self.error_message('Default file is incompatible. Initializing the DEFAULT default values and updating the default file.', 'Error')
             else:
@@ -1583,7 +1611,7 @@ class MainWindow(QMainWindow):
                         update.dds_tab(self)
                     else:
                         #Reverting back the previously accepted expression                            
-                        self.error_message("Only values between %.1f and %.1f are expected" %(minimum, maximum), "Wrong entry")
+                        self.error_message("Only values between %f and %f are expected" %(minimum, maximum), "Wrong entry")
                         self.update_off()
                         exec("self.dds_table.item(row,col).setText(str(self.experiment.sequence[edge_num].dds[channel].%s.expression))" %self.setting_dict[setting])
                         self.update_on()
@@ -1649,7 +1677,7 @@ class MainWindow(QMainWindow):
                         update.mirny_tab(self)
                     else:
                         #Reverting back the previously accepted expression                            
-                        self.error_message("Only values between %.1f and %.1f are expected" %(minimum, maximum), "Wrong entry")
+                        self.error_message("Only values between %f and %f are expected" %(minimum, maximum), "Wrong entry")
                         self.update_off()
                         exec("self.mirny_table.item(row,col).setText(str(self.experiment.sequence[edge_num].mirny[channel].%s.expression))" %self.setting_dict[setting])
                         self.update_on()
@@ -1670,6 +1698,76 @@ class MainWindow(QMainWindow):
             col = item.column()
             self.experiment.title_mirny_tab[(col-4)//6 + 4] = self.mirny_dummy_header.item(0,col).text() # title has 3 leading names and a separator
 
+
+    #SLOW_DDS TAB RELATED FUNCTIONS
+    def slow_dds_table_changed(self, item):
+        '''
+        Function is used when the user changes the values in the slow_dds table. It ensures that the expressions can be evaluated in the
+        allowed input values range. The user can delete the input and the function will assign the value of the previous edge and 
+        unhighlight the channel indicating that it should not be changed and will only display previously set value.
+        '''        
+        if self.to_update:
+            row = item.row()
+            col = item.column()
+            channel = (col - 1)//6 #4 columns for edge and separation. division by 5 channel settings and 1 separation
+            setting = col - 1 - 6 * channel # the number is a sequential value of setting. Frequency is 0, Amplitude 1, attenuation 2, phase 3, state 4
+            if row == 2: #Table entry was changed
+                if self.slow_dds_table.item(row,col).text() == "": #User deleted the value. The function will display the previously set state
+                    self.error_message("You can not delete the value!", "Some value is required!")
+                    self.update_off()
+                    exec("self.slow_dds_table.item(row,col).setText(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
+                    self.update_on()
+                else:   #User entered a new input value
+                    try:
+                        #Checking whether the expression can be evaluated and the value is within allowed range                     
+                        expression = self.slow_dds_table.item(row,col).text()
+                        (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                        exec("self.dummy_val =" + evaluation)
+                        maximum, minimum = self.max_dict_dds[setting], self.min_dict_dds[setting]
+                        if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
+                            exec("self.experiment.slow_dds[channel].%s = self.dummy_val" %self.setting_dict[setting])
+                            for parameter in range(5): # THIS SHOULD BE DONE
+                                if self.experiment.slow_dds[channel].state == 1:
+                                    self.slow_dds_table.item(row,(col - 1)//6 * 6 + parameter).setBackground(self.green)
+                                else:
+                                    self.slow_dds_table.item(row,(col - 1)//6 * 6 + parameter).setBackground(self.red)
+                        else:
+                            #Reverting back the previously accepted expression                            
+                            self.error_message("Only values between %f and %f are expected" %(minimum, maximum), "Wrong entry")
+                            self.update_off()
+                            exec("self.slow_dds_table.item(row,col).setText(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
+                            self.update_on()
+                    except:
+                        #Return the previously assigned value if the expression can not be evaluated                       
+                        self.update_off()
+                        exec("self.slow_dds_table.item(row,col).setText(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
+                        self.update_on()
+                        self.error_message('Expression can not be evaluated', 'Wrong entry')            
+            elif row == 0: #Channel title was changed
+                self.experiment.title_slow_dds_tab[(col)//6 + 4] = self.slow_dds_table.item(0,col).text() 
+
+
+    def set_slow_dds_states_button_clicked(self):
+        '''
+        Function is used when the user requests to set the displayed values. It will generate the experimental description
+        and artiq_run it to set only the states of the slow dds channels
+        '''
+        try:
+            write_to_python.set_slow_dds_states(self)
+            self.message_to_logger("Python file generated")
+            try:
+                #initialize environment and submit the experiment to the scheduler
+                if config.package_manager == "conda":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && set_slow_dds_states.py"%config.artiq_environment_name])
+                elif config.package_manager == "clang64":
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["set_slow_dds_states.bat"])
+                submit_experiment_thread.start()
+                self.message_to_logger("Slow DDS states are set")
+            except:
+                self.message_to_logger("Was not able to set slow DDS states")
+        except:
+            self.message_to_logger("Was not able to generate python file")
+    
 
     #VARIABLES TAB RELATED FUNCTIONS
     def find_new_variable_name_unused(self):

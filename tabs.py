@@ -1097,3 +1097,72 @@ def mirny_tab_build(self):
     self.go_to_edge_button_mirny.setText("Go to Edge")
     self.go_to_edge_button_mirny.clicked.connect(self.go_to_edge_button_clicked)
     self.go_to_edge_button_mirny.setToolTip("Go to Edge button is used to set the state of the hardware to a specific state at a particular edge. The user first needs to choose the edge to go by right clicking the sequence table on the left")
+
+
+def slow_dds_tab_build(self):
+    self.slow_dds_tab_num_cols = 6*config.slow_dds_channels_number
+    #SLOW_DDS TABLE WIDGET
+    self.slow_dds_tab_widget = QWidget()
+    #SLOW_DDS LABLE
+    slow_dds_lable = QLabel(self.slow_dds_tab_widget)
+    slow_dds_lable.setText("Slow_dds channels")
+    slow_dds_lable.setFont(QFont('Arial', 14))
+    slow_dds_lable.setGeometry(85, 0, 400, 30)
+    self.sequence_num_rows = len(self.experiment.sequence)
+    
+    #SLOW_DDS TAB LAYOUT
+    self.slow_dds_table = QTableWidget(self.slow_dds_tab_widget)
+    self.slow_dds_table.setGeometry(QRect(10, 30, 1905, 1020))
+    self.slow_dds_table.setColumnCount(self.slow_dds_tab_num_cols)
+    self.slow_dds_table.horizontalHeader().setMinimumHeight(50)
+    self.slow_dds_table.verticalHeader().setVisible(False)
+    self.slow_dds_table.horizontalHeader().setVisible(False)
+    self.slow_dds_table.setRowCount(3) 
+    self.slow_dds_table.horizontalHeader().setMinimumSectionSize(0)
+    self.slow_dds_table.setFont(QFont('Arial', 12))
+    self.slow_dds_table.setFrameStyle(QFrame.NoFrame)
+
+    delegate = ReadOnlyDelegate(self)
+    #SHAPING THE TABLE
+    for i in range(config.slow_dds_channels_number):
+        self.slow_dds_table.setSpan(0,1 + 6*i, 1, 5) # stretching the title of the channel
+        self.slow_dds_table.setColumnWidth(6*i, 5) # making separation line thin
+        self.slow_dds_table.setColumnWidth(5 + 6*i, 45) # making state column smaller
+        self.slow_dds_table.setItemDelegateForColumn(6*i,delegate) #making separation line uneditable
+    
+    for index, channel in enumerate(self.experiment.slow_dds):
+        col = index * 6 + 1 # there is a separator in the very beginning
+        for setting in range(5):
+            exec("self.slow_dds_table.setItem(2, col + setting, QTableWidgetItem(str(channel.%s)))" %self.setting_dict[setting])
+            exec("self.slow_dds_table.item(2, col + setting).setToolTip(str(channel.%s))" %self.setting_dict[setting])
+            if channel.state == 1:
+                self.slow_dds_table.item(2, col + setting).setBackground(self.green)
+            else:  
+                self.slow_dds_table.item(2, col + setting).setBackground(self.red)
+                
+    self.slow_dds_table.setItemDelegateForRow(1, delegate) #making row number 2 uneditable
+    self.slow_dds_table.itemChanged.connect(self.slow_dds_table_changed)
+
+    #populating headers and separators
+    for i in range(config.slow_dds_channels_number):
+        #separator
+        self.slow_dds_table.setSpan(0, 6*i, self.sequence_num_rows+2, 1)
+        self.slow_dds_table.setItem(0, 6*i, QTableWidgetItem())
+        self.slow_dds_table.item(0, 6*i).setBackground(QColor(100,100,100))
+        #headers Channel
+        self.slow_dds_table.setItem(0,6*i + 1, QTableWidgetItem(str(self.experiment.title_slow_dds_tab[i+4])))
+        self.slow_dds_table.item(0,6*i + 1).setTextAlignment(Qt.AlignCenter)
+        #headers Channel attributes (f, Amp, att, phase, state)
+        self.slow_dds_table.setItem(1,6*i + 1, QTableWidgetItem('f (MHz)'))
+        self.slow_dds_table.setItem(1,6*i + 2, QTableWidgetItem('Amp (dBm)'))
+        self.slow_dds_table.setItem(1,6*i + 3, QTableWidgetItem('Att (dBm)'))
+        self.slow_dds_table.setItem(1,6*i + 4, QTableWidgetItem('phase (deg)'))
+        self.slow_dds_table.setItem(1,6*i + 5, QTableWidgetItem('state'))
+
+    #button to set slow dds states
+    self.set_slow_dds_states = QPushButton(self.slow_dds_tab_widget)
+    self.set_slow_dds_states.setFont(QFont('Arial', 14))
+    self.set_slow_dds_states.setGeometry(10, 1060, 200, 30)
+    self.set_slow_dds_states.setText("Set slow DDS states")
+    self.set_slow_dds_states.clicked.connect(self.set_slow_dds_states_button_clicked)
+    self.set_slow_dds_states.setToolTip("Set slow dds states button is used to prepare the experimental description and run it to set the states of only the slow dds channels. Any experiment that has been running at the time of pressing this button will be interrupted and might leave the experiment in a random state that might be not safe. It is a user responsibility to make sure that this button is clicked only when there is no experiment running. This should be fine since this DDSs should be used permanently and only changed quite rarely.")

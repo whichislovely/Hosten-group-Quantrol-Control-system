@@ -6,6 +6,7 @@ sequences/
 go_to_edge.py
 init_hardware.py
 run_experiment.py
+set_slow_dds_states.py
 last_rid.pyon
 dataset_db.pyon
 /device_db.py

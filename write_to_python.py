@@ -286,3 +286,45 @@ def create_go_to_edge(self, edge_num, to_default = False):
             file.write(indentation + "self.mirny" + str(mirny_num) + "_ch" + str(channel_num) + ".sw.off() \n")                
             
     file.close()
+    
+    
+def set_slow_dds_states(self):
+    '''
+    Function is used to write a description of experiment that will set the displayed states for slow dds channels
+    The description is saved as set_slow_dds.py   
+    '''
+    file_name = "set_slow_dds_states.py"
+    # Create a file if it is missing
+    if not os.path.exists(file_name):
+        with open(file_name, 'w'): pass
+    file = open(file_name,'w')
+    
+    # Importing libraries and overwriting the build method
+    indentation = ""
+    file.write(indentation + "from artiq.experiment import *\n\n")
+    file.write(indentation + "class " + file_name[:-3] + "(EnvExperiment):\n")
+    indentation += "    "
+    file.write(indentation + "def build(self):\n")
+    indentation += "    "
+    # Setting the devices to be used 
+    for device in config.list_of_devices_for_initialization:
+        file.write(indentation + "self.setattr_device('%s')\n" %device)
+    
+    file.write("\n")
+    indentation = indentation[:-4]
+    # Overwriting the run method
+    file.write(indentation + "@kernel\n")
+    file.write(indentation + "def run(self):\n")
+    indentation += "    "
+    file.write(indentation + "self.core.reset()\n")
+    file.write(indentation + "self.core.break_realtime()\n")
+   
+    # SLOW DDS CHANNEL STATES
+    for index, channel in enumerate(self.experiment.slow_dds):
+        file.write(indentation + "self.%s"%config.slow_dds_channels + ".set_att(" + str(channel.attenuation) + "*dB) \n")    
+        file.write(indentation + "self.%s"%config.slow_dds_channels + ".set(frequency = " + str(channel.frequency.value) + "*MHz, amplitude = " + str(channel.amplitude.value) + ", phase = (" + str(channel.phase.value) + ")/360)\n")    
+        if channel.state.value == 1:
+            file.write(indentation + "self.%s"%config.slow_dds_channels + ".cfg_sw(True) \n")
+        elif channel.state.value == 0:
+            file.write(indentation + "self.%s"%config.slow_dds_channels + ".cfg_sw(False) \n")
+    file.close()

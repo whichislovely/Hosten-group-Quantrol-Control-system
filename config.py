@@ -14,6 +14,13 @@ analog_channels_number = 16
 dds_channels_number = 12
 mirny_channels_number = 4
 slow_dds_channels_number = 4
+slow_dds_channels_number = 4
+slow_dds_channels = [
+    "urukul3_ch0",
+    "urukul3_ch1",
+    "urukul3_ch2",
+    "urukul3_ch3"
+] # The sequence of the channels should be corresponding to the sequence in the slow DDS tab. The first one in the slow_dds_channels list will be the slow_DDS0 and so on
 sampler_channels_number = 8
 package_manager = "conda" #it can be either conda or clang64
 artiq_environment_name = "artiq_5" # it can be either artiq or artiq_5 for Hosten lab systems
@@ -37,6 +44,11 @@ list_of_devices_for_initialization = [
     "urukul2_ch1",
     "urukul2_ch2",
     "urukul2_ch3",
+    "urukul3_cpld",
+    "urukul3_ch0",
+    "urukul3_ch1",
+    "urukul3_ch2",
+    "urukul3_ch3",
     "ttl0",
     "ttl1",
     "ttl2",
