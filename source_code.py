@@ -1716,6 +1716,7 @@ class MainWindow(QMainWindow):
                     self.error_message("You can not delete the value!", "Some value is required!")
                     self.update_off()
                     exec("self.slow_dds_table.item(row,col).setText(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
+                    exec("self.slow_dds_table.item(row,col).setToolTip(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
                     self.update_on()
                 else:   #User entered a new input value
                     try:
@@ -1724,23 +1725,43 @@ class MainWindow(QMainWindow):
                         (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
                         exec("self.dummy_val =" + evaluation)
                         maximum, minimum = self.max_dict_dds[setting], self.min_dict_dds[setting]
-                        if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
+                        if (self.dummy_val <= maximum and self.dummy_val >= minimum): #Change accepted
+                            if setting == 0: #frequency
+                                self.dummy_val = float(self.dummy_val) #Was checked to have at least a 1 Hz level resolution
+                            elif setting == 1: #amplitude
+                                self.dummy_val = int(float(self.dummy_val)*1000)/1000 # Keep only up to 3rd digit (0.1234 --> 0.123)
+                            elif setting == 2: #attenuation
+                                self.dummy_val = round(float(self.dummy_val)/0.5)*0.5 #Round up to 0.5
+                            elif setting == 3: #phase
+                                self.dummy_val = round(float(self.dummy_val)/0.36)*0.36 # Keep only up to 3rd digit (0.1234 --> 0.123) of phase that is represented as 1 -- > 360. 0.001 --> 0.36 in degrees 
+                            elif setting == 4: #state
+                                self.dummy_val = int(self.dummy_val)
                             exec("self.experiment.slow_dds[channel].%s = self.dummy_val" %self.setting_dict[setting])
-                            for parameter in range(5): # THIS SHOULD BE DONE
+                            self.update_off()
+                            exec("self.slow_dds_table.item(row,col).setText(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
+                            exec("self.slow_dds_table.item(row,col).setToolTip(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
+                            self.update_on()
+                            for parameter in range(5): #Changing the color of the entire channel
                                 if self.experiment.slow_dds[channel].state == 1:
-                                    self.slow_dds_table.item(row,(col - 1)//6 * 6 + parameter).setBackground(self.green)
+                                    self.update_off()
+                                    self.slow_dds_table.item(row,(col - 1)//6 * 6 + parameter + 1).setBackground(self.green)
+                                    self.update_on()
                                 else:
-                                    self.slow_dds_table.item(row,(col - 1)//6 * 6 + parameter).setBackground(self.red)
+                                    self.update_off()
+                                    self.slow_dds_table.item(row,(col - 1)//6 * 6 + parameter + 1).setBackground(self.red)
+                                    self.update_on()
                         else:
                             #Reverting back the previously accepted expression                            
                             self.error_message("Only values between %f and %f are expected" %(minimum, maximum), "Wrong entry")
                             self.update_off()
                             exec("self.slow_dds_table.item(row,col).setText(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
+                            exec("self.slow_dds_table.item(row,col).setToolTip(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
                             self.update_on()
                     except:
                         #Return the previously assigned value if the expression can not be evaluated                       
                         self.update_off()
                         exec("self.slow_dds_table.item(row,col).setText(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
+                        exec("self.slow_dds_table.item(row,col).setToolTip(str(self.experiment.slow_dds[channel].%s))" %self.setting_dict[setting])
                         self.update_on()
                         self.error_message('Expression can not be evaluated', 'Wrong entry')            
             elif row == 0: #Channel title was changed
@@ -1754,7 +1775,7 @@ class MainWindow(QMainWindow):
         '''
         try:
             write_to_python.set_slow_dds_states(self)
-            self.message_to_logger("Python file generated")
+            self.message_to_logger("set_slow_dds_states.py file generated")
             try:
                 #initialize environment and submit the experiment to the scheduler
                 if config.package_manager == "conda":

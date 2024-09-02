@@ -12,19 +12,23 @@ For the list_of_devices_for_initialization you can have a look at your device_db
 digital_channels_number = 16
 analog_channels_number = 16
 dds_channels_number = 12
+mirny_channels_number = 4
+slow_dds_channels_number = 4
+slow_dds_channels_number = 4
+slow_dds_channels = [
+    "urukul3_ch0",
+    "urukul3_ch1",
+    "urukul3_ch2",
+    "urukul3_ch3"
+] # The sequence of the channels should be corresponding to the sequence in the slow DDS tab. The first one in the slow_dds_channels list will be the slow_DDS0 and so on
 sampler_channels_number = 8
 package_manager = "conda" #it can be either conda or clang64
-artiq_environment_name = "artiq" # it can be either artiq or artiq_5 for Hosten lab systems
-analog_card = "fastino" # it can be either fastino or zotino for Hosten lab systems
+artiq_environment_name = "artiq_5" # it can be either artiq or artiq_5 for Hosten lab systems
+analog_card = "zotino" # it can be either fastino or zotino for Hosten lab systems
 research_group_name = "Hosten"
 allow_skipping_images = True
 list_of_devices_for_initialization = [
     "core",
-    "mirny0_cpld",
-    "mirny0_ch0",
-    "mirny0_ch1",
-    "mirny0_ch2",
-    "mirny0_ch3",
     "urukul0_cpld",
     "urukul0_ch0",
     "urukul0_ch1",
@@ -62,7 +66,5 @@ list_of_devices_for_initialization = [
     "ttl14",
     "ttl15",
     "zotino0",
-    "sampler0",
-    "mirny"
-
+    "sampler0"
 ]

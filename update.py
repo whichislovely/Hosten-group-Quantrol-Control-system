@@ -447,6 +447,7 @@ def from_object(self):
     self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
     self.analog_dummy.setHorizontalHeaderLabels(self.experiment.title_analog_tab[0:3])
     self.sampler_table.setHorizontalHeaderLabels(self.experiment.title_sampler_tab)
+    #Update DDS titles
     for i in range(config.dds_channels_number):
         self.dds_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_dds_tab[i+4])))
         self.dds_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
@@ -456,6 +457,7 @@ def from_object(self):
         self.dds_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
         self.dds_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
         self.dds_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
+    #Update MIRNY titles
     for i in range(config.mirny_channels_number):
         self.mirny_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_mirny_tab[i+4])))
         self.mirny_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
@@ -465,7 +467,17 @@ def from_object(self):
         self.mirny_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
         self.mirny_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
         self.mirny_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
-
+    #Update Slow DDS titles
+    for i in range(config.slow_dds_channels_number):
+        self.slow_dds_table.setItem(0,6*i+4 + 1, QTableWidgetItem(str(self.experiment.title_slow_dds_tab[i+4])))
+        self.slow_dds_table.item(0,6*i+4 + 1).setTextAlignment(Qt.AlignCenter)
+        #headers Channel attributes (f, Amp, att, phase, state)
+        self.slow_dds_table.setItem(1,6*i+1, QTableWidgetItem('f (MHz)'))
+        self.slow_dds_table.setItem(1,6*i+2, QTableWidgetItem('Amp (dBm)'))
+        self.slow_dds_table.setItem(1,6*i+3, QTableWidgetItem('Att (dBm)'))
+        self.slow_dds_table.setItem(1,6*i+4, QTableWidgetItem('phase (deg)'))
+        self.slow_dds_table.setItem(1,6*i+5, QTableWidgetItem('state'))
+        
     if config.allow_skipping_images:
         #Updating the "Skip images" button color
         if self.experiment.skip_images == False:
@@ -601,6 +613,21 @@ def from_object(self):
                     channel_entry.evaluation = current_evaluation
                     channel_entry.for_python = current_for_python
                     channel_entry.value = current_value
+ 
+     #Displaying Slow DDS table
+    for channel_index in range(config.slow_dds_channels_number):
+        for setting in range(5):
+            for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
+                channel = self.experiment.slow_dds[channel_index]
+                # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
+                col = channel_index * 6 + 1 + setting
+                exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
+                channel_entry = self.channel_entry
+                self.slow_dds_table.setItem(row, col, QTableWidgetItem(str(channel_entry)))
+                if channel.state == 1:
+                    self.slow_dds_table.item(row, col).setBackground(self.green)
+                else:
+                    self.slow_dds_table.item(row, col).setBackground(self.red)
                     
     #Displaying SAMPLER table
     for channel_index in range(config.sampler_channels_number):

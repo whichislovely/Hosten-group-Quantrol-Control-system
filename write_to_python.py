@@ -321,10 +321,10 @@ def set_slow_dds_states(self):
    
     # SLOW DDS CHANNEL STATES
     for index, channel in enumerate(self.experiment.slow_dds):
-        file.write(indentation + "self.%s"%config.slow_dds_channels + ".set_att(" + str(channel.attenuation) + "*dB) \n")    
-        file.write(indentation + "self.%s"%config.slow_dds_channels + ".set(frequency = " + str(channel.frequency.value) + "*MHz, amplitude = " + str(channel.amplitude.value) + ", phase = (" + str(channel.phase.value) + ")/360)\n")    
-        if channel.state.value == 1:
-            file.write(indentation + "self.%s"%config.slow_dds_channels + ".cfg_sw(True) \n")
-        elif channel.state.value == 0:
-            file.write(indentation + "self.%s"%config.slow_dds_channels + ".cfg_sw(False) \n")
+        file.write(indentation + "self.%s"%config.slow_dds_channels[index] + ".set_att(" + str(channel.attenuation) + "*dB) \n")    
+        file.write(indentation + "self.%s"%config.slow_dds_channels[index] + ".set(frequency = " + str(channel.frequency) + "*MHz, amplitude = " + str(channel.amplitude) + ", phase = (" + str(channel.phase) + ")/360)\n")    
+        if channel.state == 1:
+            file.write(indentation + "self.%s"%config.slow_dds_channels[index] + ".cfg_sw(True) \n")
+        elif channel.state == 0:
+            file.write(indentation + "self.%s"%config.slow_dds_channels[index] + ".cfg_sw(False) \n")
     file.close()
