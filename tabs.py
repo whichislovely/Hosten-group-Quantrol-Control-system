@@ -599,7 +599,7 @@ def dds_tab_build(self):
         #separator
         self.dds_dummy_header.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
         self.dds_dummy_header.setItem(0,6*i + 3, QTableWidgetItem())
-        self.dds_dummy_header.item(0, 6*i + 3).setBackground(QColor(100,100,100))
+        self.dds_dummy_header.item(0, 6*i + 3).setBackground(self.grey)
         #headers Channel
         self.dds_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_dds_tab[i+4])))
         self.dds_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
@@ -635,7 +635,7 @@ def dds_tab_build(self):
         self.dds_fixed.setItemDelegateForColumn(i,delegate)
     #Separator
     self.dds_fixed.setItem(0,3, QTableWidgetItem())
-    self.dds_fixed.item(0,3).setBackground(QColor(100,100,100))
+    self.dds_fixed.item(0,3).setBackground(self.grey)
     #populating edge number, name and time
     for i in range(3):
         self.dds_fixed.setItem(0,i, QTableWidgetItem(str(self.experiment.title_dds_tab[i])))
@@ -713,7 +713,7 @@ def variables_tab_build(self):
     variables_lable = QLabel(self.variables_tab_widget)
     variables_lable.setText("Variables")
     variables_lable.setFont(QFont('Arial', 14))
-    variables_lable.setGeometry(85, 0, 1000, 30)
+    variables_lable.setGeometry(85, 0, 400, 30)
 
     #VARIABLES TABLE LAYOUT
     self.variables_table = QTableWidget(self.variables_tab_widget)
@@ -744,26 +744,26 @@ def variables_tab_build(self):
     self.delete_variable.clicked.connect(self.delete_variable_button_clicked)
     
     #DERIVED VARIABLES LABLE
-    variables_lable = QLabel(self.variables_tab_widget)
-    variables_lable.setText("Derived variables")
-    variables_lable.setFont(QFont('Arial', 14))
-    variables_lable.setGeometry(515, 0, 1000, 30)
+    derived_variables_lable = QLabel(self.variables_tab_widget)
+    derived_variables_lable.setText("Derived variables")
+    derived_variables_lable.setFont(QFont('Arial', 14))
+    derived_variables_lable.setGeometry(515, 0, 400, 30)
 
     #DERIVED VARIABLES TABLE LAYOUT
     self.derived_variables_table = QTableWidget(self.variables_tab_widget)
     width_of_table_variables = 420
-    self.derived_variables_table.setGeometry(QRect(440, 30, 1465, 1010))  #size of the table
-    variables_num_columns = 4 
-    self.derived_variables_table.setColumnCount(variables_num_columns)
-    self.derived_variables_table.setHorizontalHeaderLabels(["Derived variable", "Arguments", "Edge id","Function in python syntax"])
+    self.derived_variables_table.setGeometry(QRect(440, 30, 700, 1010))  #size of the table
+    derived_variables_num_columns = 4 
+    self.derived_variables_table.setColumnCount(derived_variables_num_columns)
+    self.derived_variables_table.setHorizontalHeaderLabels(["Name", "Arguments", "Edge id","Function in python syntax"])
     self.derived_variables_table.verticalHeader().setVisible(False)
     self.derived_variables_table.horizontalHeader().setFixedHeight(50)
     self.derived_variables_table.horizontalHeader().setFont(QFont('Arial', 12))
     self.derived_variables_table.setFont(QFont('Arial', 12))
-    self.derived_variables_table.setColumnWidth(0,205)
-    self.derived_variables_table.setColumnWidth(1,123)
-    self.derived_variables_table.setColumnWidth(2,80)
-    self.derived_variables_table.setColumnWidth(3,1055)
+    self.derived_variables_table.setColumnWidth(0,130)
+    self.derived_variables_table.setColumnWidth(1,100)
+    self.derived_variables_table.setColumnWidth(2,70)
+    self.derived_variables_table.setColumnWidth(3,398)
     self.derived_variables_table.setRowCount(1)
     prototypeItem = QTableWidgetItem()
     prototypeItem.setTextAlignment(Qt.AlignCenter)
@@ -771,7 +771,7 @@ def variables_tab_build(self):
     #Disabling the first example row
     delegate = ReadOnlyDelegate(self)
     self.derived_variables_table.setItemDelegateForRow(0,delegate)
-    self.derived_variables_table.setItem(0, 0, QTableWidgetItem("example_derived_variable"))
+    self.derived_variables_table.setItem(0, 0, QTableWidgetItem("example_name"))
     self.derived_variables_table.setItem(0, 1, QTableWidgetItem("x,y"))
     self.derived_variables_table.setItem(0, 2, QTableWidgetItem("id5"))
     self.derived_variables_table.setItem(0, 3, QTableWidgetItem("np.sin(x) + 5*np.sqrt(y)"))
@@ -790,7 +790,60 @@ def variables_tab_build(self):
     self.delete_derived_variable.setGeometry(650, 1050, 200, 30)
     self.delete_derived_variable.setText("Delete derived variable")
     self.delete_derived_variable.clicked.connect(self.delete_derived_variable_button_clicked)
-    
+
+    #LOOKUP VARIABLES LABLE
+    lookup_variables_lable = QLabel(self.variables_tab_widget)
+    lookup_variables_lable.setText("Lookup variables")
+    lookup_variables_lable.setFont(QFont('Arial', 14))
+    lookup_variables_lable.setGeometry(1235, 0, 500, 30)
+
+    #LOOKUP VARIABLES TABLE LAYOUT
+    self.lookup_variables_table = QTableWidget(self.variables_tab_widget)
+    width_of_table_variables = 420
+    self.lookup_variables_table.setGeometry(QRect(1160, 30, 745, 1010))  #size of the table
+    lookup_variables_num_columns = 3
+    self.lookup_variables_table.setColumnCount(lookup_variables_num_columns)
+    self.lookup_variables_table.setHorizontalHeaderLabels(["Name", "Agrument", "Lookup list name"])
+    self.lookup_variables_table.verticalHeader().setVisible(False)
+    self.lookup_variables_table.horizontalHeader().setFixedHeight(50)
+    self.lookup_variables_table.horizontalHeader().setFont(QFont('Arial', 12))
+    self.lookup_variables_table.setFont(QFont('Arial', 12))
+    self.lookup_variables_table.setColumnWidth(0,180)
+    self.lookup_variables_table.setColumnWidth(1,150)
+    self.lookup_variables_table.setColumnWidth(2,413)
+    self.lookup_variables_table.setRowCount(1)
+    prototypeItem = QTableWidgetItem()
+    prototypeItem.setTextAlignment(Qt.AlignCenter)
+    self.lookup_variables_table.setItemPrototype(prototypeItem)
+    #Disabling the first example row
+    delegate = ReadOnlyDelegate(self)
+    self.lookup_variables_table.setItemDelegateForRow(0,delegate)
+    self.lookup_variables_table.setItemDelegateForColumn(2,delegate)
+    self.lookup_variables_table.setItem(0, 0, QTableWidgetItem("example_name"))
+    self.lookup_variables_table.setItem(0, 1, QTableWidgetItem("sampled_var"))
+    self.lookup_variables_table.setItem(0, 2, QTableWidgetItem("gaussian_fit"))
+    #when table contents are changed
+    self.lookup_variables_table.itemChanged.connect(self.lookup_variables_table_changed)
+
+    #button to create new lookup variable
+    self.create_lookup_variable = QPushButton(self.variables_tab_widget)
+    self.create_lookup_variable.setFont(QFont('Arial', 14))
+    self.create_lookup_variable.setGeometry(1160, 1050, 200, 30)
+    self.create_lookup_variable.setText("Create lookup variable")
+    self.create_lookup_variable.clicked.connect(self.create_lookup_variable_button_clicked)
+    #button to delete a variable
+    self.delete_lookup_variable = QPushButton(self.variables_tab_widget)
+    self.delete_lookup_variable.setFont(QFont('Arial', 14))
+    self.delete_lookup_variable.setGeometry(1370, 1050, 200, 30)
+    self.delete_lookup_variable.setText("Delete lookup variable")
+    self.delete_lookup_variable.clicked.connect(self.delete_lookup_variable_button_clicked)
+    #button to load the lookup table
+    self.load_lookup_list = QPushButton(self.variables_tab_widget)
+    self.load_lookup_list.setFont(QFont('Arial', 14))
+    self.load_lookup_list.setGeometry(1580, 1050, 200, 30)
+    self.load_lookup_list.setText("Load lookup list")
+    self.load_lookup_list.clicked.connect(self.load_lookup_list_button_clicked)
+        
 # SAMPLER TAB
 def sampler_tab_build(self):
     self.sampler_tab_num_cols = config.sampler_channels_number + 4    
@@ -992,7 +1045,7 @@ def mirny_tab_build(self):
         #separator
         self.mirny_dummy_header.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
         self.mirny_dummy_header.setItem(0,6*i + 3, QTableWidgetItem())
-        self.mirny_dummy_header.item(0, 6*i + 3).setBackground(QColor(100,100,100))
+        self.mirny_dummy_header.item(0, 6*i + 3).setBackground(self.grey)
         #headers Channel
         self.mirny_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_mirny_tab[i+4])))
         self.mirny_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
@@ -1028,7 +1081,7 @@ def mirny_tab_build(self):
         self.mirny_fixed.setItemDelegateForColumn(i,delegate)
     #Separator
     self.mirny_fixed.setItem(0,3, QTableWidgetItem())
-    self.mirny_fixed.item(0,3).setBackground(QColor(100,100,100))
+    self.mirny_fixed.item(0,3).setBackground(self.grey)
     #populating edge number, name and time
     for i in range(3):
         self.mirny_fixed.setItem(0,i, QTableWidgetItem(str(self.experiment.title_mirny_tab[i])))
@@ -1148,7 +1201,7 @@ def slow_dds_tab_build(self):
         #separator
         self.slow_dds_table.setSpan(0, 6*i, self.sequence_num_rows+2, 1)
         self.slow_dds_table.setItem(0, 6*i, QTableWidgetItem())
-        self.slow_dds_table.item(0, 6*i).setBackground(QColor(100,100,100))
+        self.slow_dds_table.item(0, 6*i).setBackground(self.grey)
         #headers Channel
         self.slow_dds_table.setItem(0,6*i + 1, QTableWidgetItem(str(self.experiment.title_slow_dds_tab[i+4])))
         self.slow_dds_table.item(0,6*i + 1).setTextAlignment(Qt.AlignCenter)

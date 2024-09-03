@@ -32,6 +32,8 @@ from copy import deepcopy
 import update
 import threading
 import config
+from scipy.io import savemat, loadmat
+
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -97,7 +99,7 @@ class MainWindow(QMainWindow):
                                 in the expression, the channel becomes scanned as it is supposed to be changing at different
                                 scan steps
             '''
-            def __init__(self, expression = "0", evaluation = 0, value = 0, for_python = 0, changed = True, is_scanned = False):
+            def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, for_python = 0.0, changed = True, is_scanned = False):
                 self.expression = expression
                 self.evaluation = evaluation
                 self.value = value
@@ -120,7 +122,7 @@ class MainWindow(QMainWindow):
                                 in the expression, the channel becomes scanned as it is supposed to be changing at different
                                 scan steps
             '''            
-            def __init__(self, expression = "0", evaluation = 0, value = 0, for_python = "0", changed = True, is_scanned = False):
+            def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, for_python = "0.0", changed = True, is_scanned = False):
                 self.expression = expression
                 self.evaluation = evaluation
                 self.value = value
@@ -203,6 +205,8 @@ class MainWindow(QMainWindow):
                                             User can create several scanning variables with None as names
             continuously_running        :   Flag indicating if the continuous run is required
             slow_dds                    :   List of SLOW_DDS objects that describe the state of the slow dds output
+            lookup_variables            :   List of Lookup_variables. Used to be able to use sampled variables to output a complex function using lookup list
+            names_of_lookup_variables   :   Set of the lookup variables names. Useful to check if a variable is a lookup variable
         '''  
         def __init__(self):
             self.title_digital_tab = []
@@ -225,6 +229,8 @@ class MainWindow(QMainWindow):
             self.scanned_variables_count = 0
             self.continously_running = False 
             self.slow_dds = [self.SLOW_DDS() for i in range(config.slow_dds_channels_number)]
+            self.lookup_variables = []
+            self.names_of_lookup_variables = set()
 
 
         class SLOW_DDS:
@@ -259,6 +265,22 @@ class MainWindow(QMainWindow):
             self.edge_id = edge_id
             self.function = function
             
+
+    class Lookup_variable:
+        '''
+        An object that is used to describe the lookup variable parameters
+        Attributes description:
+            name                :   Name of the scanned variable
+            argument            :   Argument that is a sampled variable to be used to lookup the value
+            lookup_list         :   List of lookup table
+            lookup_list_name    :   Name of the lookup table
+        ''' 
+        def __init__(self, name, argument = "", lookup_list = [], lookup_list_name = ""):
+            self.name = name
+            self.argument = argument
+            self.lookup_list = lookup_list
+            self.lookup_list_name = lookup_list_name
+
               
     class Scanned_variable:
         '''
@@ -283,13 +305,17 @@ class MainWindow(QMainWindow):
             is_scanned  :   Flag indicating if the variable is scanned
             for_python  :   The version of the variable description that is used in the python like experimental sequence
                             generation. It is only used in write_to_python.py and only updated when the run_experiment_button_clicked
+            is_derived  :   Flag indicating if the variable is a derived variable
+            is_lookup   :   Flag indicating if the variable is a lookup variable
         '''         
-        def __init__(self, name, value, for_python, is_scanned = False, is_derived = False):
+        def __init__(self, name, value, for_python, is_scanned = False, is_derived = False, is_lookup = False):
             self.name = name
             self.value = value
             self.for_python = for_python
             self.is_scanned = is_scanned
             self.is_derived = is_derived
+            self.is_lookup = is_lookup
+            self.lookup_argument = ""
             
             
     class CustomThread(threading.Thread):
@@ -331,6 +357,7 @@ class MainWindow(QMainWindow):
         self.green = QColor(37,211,102)
         self.red = QColor(247,120,120)
         self.grey = QColor(100,100,100)
+        self.light_grey = QColor(211,211,211)
         self.white = QColor(255,255,255)
         self.yellow = QColor(255, 255, 0)
         self.cyan = QColor(0, 255, 255)
@@ -510,6 +537,7 @@ class MainWindow(QMainWindow):
         is_scanned = False
         is_sampled = False
         is_derived = False
+        is_lookup = False
         text = text.replace(" ", "") # removing spaces
         text += "+" #Adding a plus in the end of the text in order to avoid typing additional operation for the last element
         while index < len(text):
@@ -534,6 +562,9 @@ class MainWindow(QMainWindow):
                     elif variable.is_derived: #if derived assign the name itself
                         output_for_python += "%s" %current + text[index]
                         is_derived = True
+                    elif variable.is_lookup: #if lookup assign the self.name[argument] 
+                        output_for_python += "self.%s[%s]"%(current, self.experiment.variables[current].argument) + text[index]
+                        is_lookup = True
                     else:
                         output_for_python += str(variable.value) + text[index]
                 current = ""
@@ -552,7 +583,7 @@ class MainWindow(QMainWindow):
             output_eval = str(float(output_eval))
         except:
             pass
-        return (output_eval, output_for_python, is_scanned, is_sampled, is_derived) #Since we added an additional sign we need to remove it
+        return (output_eval, output_for_python, is_scanned, is_sampled, is_derived, is_lookup) #Since we added an additional sign we need to remove it
 
 
     def remove_restricted_characters(self, text):
@@ -600,7 +631,7 @@ class MainWindow(QMainWindow):
                 else:                        
                     try:
                         expression = table_item.text()
-                        (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                        (evaluation, for_python, is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(expression)
                         exec("self.value = " + str(evaluation)) # this is done here to be able to assign value of the id# type variable
                         if self.value < 0: #restricting negative values for time
                             self.error_message("Negative values are not allowed", "Negative time value")
@@ -997,16 +1028,16 @@ class MainWindow(QMainWindow):
             self.message_to_logger("The file run_experiment.py is not found")
         
     def dummy_button_clicked(self):
-        
-        print("DERIVED VARIABLES")
-        for variable in self.experiment.derived_variables:
-            print(variable.name, variable.arguments, variable.function)
-            
         ''' 
         Function is used to debug the program. Can be used to check the variables at different time stamps.
         Commented out examlpes might be usefull starting point. Usually debugging is done by printing values
         in the console of the VS Code and observing how parameters are being changed.
         '''
+        # print("DERIVED VARIABLES")
+        # for variable in self.experiment.derived_variables:
+        #     print(variable.name, variable.arguments, variable.function)
+            
+        
         # print("SAMPLER")
         # for edge in self.experiment.sequence:
         #     print(edge.name, edge.sampler)    
@@ -1024,7 +1055,10 @@ class MainWindow(QMainWindow):
         
         print("VARIABLES")
         for key, item in self.experiment.variables.items():
-            print("name: ", item.name, "value: ", item.value, "for python: ", item.for_python)
+            print("name: ", item.name, "value: ", item.value, "is_lookup:", item.is_lookup, "for python: ", item.for_python)
+        print("LOOKUP VARIABLES")
+        for variable in self.experiment.lookup_variables:
+            print("name: ", variable.name, "argument:", variable.argument)
 
         # print("EDGES")
         # for ind, edge in enumerate(self.experiment.sequence):
@@ -1289,7 +1323,7 @@ class MainWindow(QMainWindow):
         if self.to_update: 
             try:
                 expression = self.number_of_steps_input.text()
-                (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                (evaluation, for_python, is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(expression)
                 exec("self.value = " + str(evaluation))
                 if self.value > 0: #check whether it is a positive integer
                     self.experiment.number_of_steps = int(self.value)
@@ -1458,7 +1492,7 @@ class MainWindow(QMainWindow):
                 try: 
                     #Checking whether the expression can be evaluated and the value is within allowed range
                     expression = table_item.text()
-                    (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(expression)
                     exec("self.value = " + evaluation)
                     if (self.value == 0 or self.value == 1):
                         channel.changed = True
@@ -1543,7 +1577,7 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking whether the expression can be evaluated and the value is within allowed range                    
                     expression = table_item.text()
-                    (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(expression)
                     exec("self.value =" + evaluation)
                     if (self.value <= 9.9 and self.value >= -9.9):
                         channel.expression = expression
@@ -1598,7 +1632,7 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking whether the expression can be evaluated and the value is within allowed range                     
                     expression = self.dds_table.item(row,col).text()
-                    (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(expression)
                     exec("self.dummy_val =" + evaluation)
                     maximum, minimum = self.max_dict_dds[setting], self.min_dict_dds[setting]
                     if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
@@ -1664,7 +1698,7 @@ class MainWindow(QMainWindow):
                 try:
                     #Checking whether the expression can be evaluated and the value is within allowed range                     
                     expression = self.mirny_table.item(row,col).text()
-                    (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                    (evaluation, for_python, is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(expression)
                     exec("self.dummy_val =" + evaluation)
                     maximum, minimum = self.max_dict_mirny[setting], self.min_dict_mirny[setting]
                     if (self.dummy_val <= maximum and self.dummy_val >= minimum): 
@@ -1722,7 +1756,7 @@ class MainWindow(QMainWindow):
                     try:
                         #Checking whether the expression can be evaluated and the value is within allowed range                     
                         expression = self.slow_dds_table.item(row,col).text()
-                        (evaluation, for_python, is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                        (evaluation, for_python, is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(expression)
                         exec("self.dummy_val =" + evaluation)
                         maximum, minimum = self.max_dict_dds[setting], self.min_dict_dds[setting]
                         if (self.dummy_val <= maximum and self.dummy_val >= minimum): #Change accepted
@@ -1969,13 +2003,35 @@ class MainWindow(QMainWindow):
     def create_derived_variable_button_clicked(self):
         '''
         Function is used when the user wants to create a new derived variable. It finds the lowest unused available variable name and 
-        creates it with initial value of 0.0. It also create the corresponding Variable objects  in new_variables and variables.
+        creates it. It also create the corresponding Variable objects  in variables.
         '''
         variable_name = self.find_derived_variable_name_unused()
         self.experiment.names_of_derived_variables.add(variable_name)
         self.experiment.derived_variables.append(self.Derived_variable(name = variable_name, edge_id = "", arguments = "", function = ""))
         self.experiment.variables[variable_name] = self.Variable(name = variable_name, value = 0.0, for_python = 0.0, is_derived = True)
-        update.variables_tab(self, new_variables = False)
+        update.variables_tab(self, new_variables = False, lookup_variables = False)
+
+
+    def find_lookup_variable_name_unused(self):
+        '''
+        Function itereates over the variable names of form derived_1, derived_2, etc. and returns the lowest available variable name
+        '''
+        for i in range(1, 1000):
+            name = "lookup_" + str(i)
+            if name not in self.experiment.names_of_lookup_variables:
+                return name
+
+
+    def create_lookup_variable_button_clicked(self):
+        '''
+        Function is used when the user wants to create a new lookup variable. It finds the lowest unused available variable name and 
+        creates it. It also create the corresponding Variable objects  in new_variables and variables.
+        '''
+        variable_name = self.find_lookup_variable_name_unused()
+        self.experiment.names_of_lookup_variables.add(variable_name)
+        self.experiment.lookup_variables.append(self.Lookup_variable(name = variable_name))
+        self.experiment.variables[variable_name] = self.Variable(name = variable_name, value = 0.0, for_python = 0.0, is_lookup = True)
+        update.variables_tab(self, new_variables = False, derived_variables = False)
 
 
     def find_edge_index_by_id(self, id):
@@ -1997,19 +2053,59 @@ class MainWindow(QMainWindow):
             if row == 0:
                 self.error_message("You can not delete a dummy example", "Protected variable")
             else:
-                print(1)
                 name = self.derived_variables_table.item(row,0).text()
-                edge_index = self.find_edge_index_by_id(self.derived_variables)
-                self.experiment.sequence[edge_index].derived_variable_requested = 0
+                edge_index = self.find_edge_index_by_id(self.experiment.derived_variables[row-1].edge_id)
+                if edge_index != None:
+                    self.experiment.sequence[edge_index].derived_variable_requested = 0
                 self.experiment.names_of_derived_variables.remove(name)
-                print(2)
                 del self.experiment.derived_variables[row-1] # -1 is due to the dummy variable taking the first row
-                print(3)
                 del self.experiment.variables[name]
-                print(4)
                 update.variables_tab(self, new_variables = False)
         except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
+
+
+    def load_lookup_list_button_clicked(self):
+        try:
+            row = self.lookup_variables_table.selectedIndexes()[0].row()
+            lookup_variable = self.experiment.lookup_variables[row-1]
+            if row == 0: # Default edge
+                self.error_message("You can not modify dummy variable", "Wrong variable")    
+            else: # Allowed look up variable was selected
+                loaded_file_path = QFileDialog.getOpenFileName(self, "Open File")[0]
+                loaded_file_name = loaded_file_path.split("/")[-1]
+                if loaded_file_path != "": #happens when no file name was given (canceled)
+                    try:
+                        lookup_variable.lookup_list = list(loadmat(loaded_file_path)['array'][0])
+                        lookup_variable.lookup_list_name = loaded_file_name
+                        self.update_off()
+                        self.lookup_variables_table.item(row, 2).setText(loaded_file_name)
+                        self.update_on()
+                    except:
+                        self.error_message('Could not load the file.', 'Error')
+        except:
+            self.error_message("Select the lookup variable you want to load the lookup list for", "No variable selected selected")
+        
+
+
+    def delete_lookup_variable_button_clicked(self):
+        '''
+        Function is used when the user wants to delete the lookup variable from the table.
+        '''
+        try:
+            row = self.lookup_variables_table.selectedIndexes()[0].row()
+            if row == 0:
+                self.error_message("You can not delete a dummy example", "Protected variable")
+            else:
+                name = self.lookup_variables_table.item(row,0).text()
+                self.experiment.names_of_lookup_variables.remove(name)
+                del self.experiment.lookup_variables[row-1] # -1 is due to the dummy variable taking the first row
+                del self.experiment.variables[name]
+                self.lookup_variables_table.setCurrentCell(row-1, 0)
+                update.variables_tab(self, new_variables = False, derived_variables = False)
+        except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
+            self.error_message("Select the variable that needs to be deleted", "No variable selected")
+
 
     def derived_variables_table_changed(self, item):
         '''
@@ -2042,6 +2138,25 @@ class MainWindow(QMainWindow):
                     self.experiment.sequence[edge_index].derived_variable_requested = row-1 # -1 because the dummy variable is the first one
             if col == 3: #Variable function was changed
                 variable.function = table_item_text
+
+
+    def lookup_variables_table_changed(self, item):
+        '''
+        Function is used when the user changes the values in the lookup variables table. 
+        '''
+        if self.to_update:
+            row = item.row()
+            col = item.column()
+            variable = self.experiment.lookup_variables[row-1] # due to the dummy variable being 1st
+            table_item_text = self.lookup_variables_table.item(row,col).text().replace(" ","")
+            self.lookup_variables_table.item(row,col).setText(table_item_text)
+            if col == 0: #Variable name was changed
+                del self.experiment.variables[variable.name]
+                variable.name = table_item_text
+                self.experiment.variables[variable.name] = self.Variable(name = variable.name, value = 0.0, for_python = 0.0, is_lookup = True)
+            if col == 1: #Variable argument was changed
+                variable.arguments = table_item_text
+                self.experiment.variables[variable.name].argument = table_item_text
 
 
     #SAMPLER TAB RELATED FUNCTIONS

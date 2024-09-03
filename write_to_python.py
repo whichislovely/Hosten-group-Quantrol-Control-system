@@ -1,7 +1,7 @@
 import os
 from sympy import simplify
 import config
-   
+from scipy.io import savemat
 
 def create_experiment(self, run_continuous = False):
     '''
@@ -18,8 +18,10 @@ def create_experiment(self, run_continuous = False):
     #IMPORT AND BUILD FUNCTIONS
     file = open(file_name,'w')
     indentation = ""
-    file.write(indentation + "from artiq.experiment import *\n\n")
-    file.write(indentation + "import numpy as np\n\n")
+    file.write(indentation + "from artiq.experiment import *\n")
+    file.write(indentation + "import numpy as np\n")
+    file.write(indentation + "from scipy.io import loadmat\n\n")
+    
     #Creating functions to calculate derived variables
     for variable in self.experiment.derived_variables:
         file.write(indentation + "def calculate_%s(%s) -> TFloat:\n"%(variable.name, variable.arguments))
@@ -35,6 +37,14 @@ def create_experiment(self, run_continuous = False):
     for device in config.list_of_devices_for_initialization:
         file.write(indentation + "self.setattr_device('%s')\n" %device)
 
+    # If lookup variables are requested create and load them
+    for index, lookup_variable in enumerate(self.experiment.lookup_variables):
+        # We first save the lookup list and then load it from the python description of the experiment
+        if lookup_variable.lookup_list_name != "":
+            temp_lookup_list_path = "./temp lookup variables/temp_%d_"%index +lookup_variable.lookup_list_name
+            savemat(temp_lookup_list_path, {'array':lookup_variable.lookup_list})
+            file.write(indentation + "self.%s"%lookup_variable.name + " = list(loadmat('%s')['array'][0])\n"%temp_lookup_list_path)
+    
     # If scan is needed prepare the variables
     if self.experiment.do_scan == True and self.experiment.scanned_variables_count > 0:
         #iterating over valid (not "None") scanned variables and creating an array to be used as a collection of names

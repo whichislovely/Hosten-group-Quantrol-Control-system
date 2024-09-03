@@ -16,7 +16,7 @@ def sequence_tab(self):
         for row, edge in enumerate(self.experiment.sequence):
             expression = self.sequence_table.item(row,3).text()
             try:
-                (edge.evaluation, edge.for_python, edge.is_scanned, is_sampled, is_derived) = self.decode_input(expression)
+                (edge.evaluation, edge.for_python, edge.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(expression)
                 if edge.id in self.experiment.variables: # in case of deleting an edge there is no self.experiment.variables[edge.id] since we delete it in oder to check whether it has been used anywhere or not
                     if self.experiment.variables[edge.id].is_scanned != edge.is_scanned or self.experiment.variables[edge.id].for_python != edge.for_python:
                         something_changed = True
@@ -68,7 +68,7 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                 if update_expressions_and_evaluations:
                     channel.expression = table_item.text()
                     try:
-                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled, is_derived) = self.decode_input(channel.expression)
+                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(channel.expression)
                     except:
                         return "digital channel %d, edge %d" %(channel_index, row)
                 #Updating values and table
@@ -146,7 +146,7 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                     except:
                         pass
                     try:
-                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled, is_derived) = self.decode_input(channel.expression)
+                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(channel.expression)
                     except:
                         return "analog channel %d, edge %d" %(channel_index, row)
                 if is_sampled:
@@ -156,7 +156,11 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                 elif is_derived:
                     table_item.setBackground(self.cyan)
                     table_item.setText(channel.expression)
-                    table_item.setToolTip("derived")                    
+                    table_item.setToolTip("derived")    
+                elif is_lookup:
+                    table_item.setBackground(self.light_grey)
+                    table_item.setText(channel.expression)
+                    table_item.setToolTip("derived")    
                 else:
                     #Updating values and table
                     if update_values_and_table:
@@ -231,7 +235,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                         except:
                             pass
                         try:
-                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled, is_derived) = self.decode_input(channel_entry.expression)
+                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(channel_entry.expression)
                         except:
                             return "dds channel %d, edge %d" %(channel_index, row)
                     #Updating values and table entries
@@ -306,7 +310,7 @@ def mirny_tab(self, update_expressions_and_evaluations = True, update_values_and
                         except:
                             pass
                         try:
-                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled, is_derived) = self.decode_input(channel_entry.expression)
+                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(channel_entry.expression)
                         except:
                             return "mirny channel %d, edge %d" %(channel_index, row)
                     #Updating values and table entries
@@ -347,7 +351,7 @@ def mirny_tab(self, update_expressions_and_evaluations = True, update_values_and
     self.update_on()
 
 
-def variables_tab(self, new_variables = True, derived_variables = True):
+def variables_tab(self, new_variables = True, derived_variables = True, lookup_variables = True):
     #creating the variables tab from self.experiment.new_variables object
     self.update_off()
     if new_variables:
@@ -375,6 +379,15 @@ def variables_tab(self, new_variables = True, derived_variables = True):
             self.derived_variables_table.setItem(row, 1, QTableWidgetItem(variable.arguments))
             self.derived_variables_table.setItem(row, 2, QTableWidgetItem(variable.edge_id))
             self.derived_variables_table.setItem(row, 3, QTableWidgetItem(variable.function))
+    if lookup_variables:
+        self.lookup_variables_row_count = len(self.experiment.lookup_variables) + 1 #Since the first row is used for the dummy variable
+        self.lookup_variables_table.setRowCount(self.lookup_variables_row_count)
+        for index, variable in enumerate(self.experiment.lookup_variables):
+            row = index + 1 #Since the first row is reserved for the dummy variable
+            self.lookup_variables_table.setItem(row, 0, QTableWidgetItem(variable.name))
+            self.lookup_variables_table.setItem(row, 1, QTableWidgetItem(variable.argument))
+            self.lookup_variables_table.setItem(row, 2, QTableWidgetItem(variable.lookup_list_name))
+
     self.update_on()
 
 def scan_table(self):
@@ -513,7 +526,7 @@ def from_object(self):
         self.sampler_table.setItem(row,0, QTableWidgetItem(str(row)))
         self.sampler_table.setItem(row,1, QTableWidgetItem(edge.name))
         self.sampler_table.setItem(row,2, QTableWidgetItem(str(edge.value)))
-           
+
     #Displaying DIGITAL table
     for channel_index in range(config.digital_channels_number):
         for row in range(self.sequence_num_rows):
@@ -537,7 +550,7 @@ def from_object(self):
                 channel.evaluation = current_evaluation
                 channel.for_python = current_for_python
                 channel.value = current_value
-                  
+
     #Displaying ANALOG table
     for channel_index in range(config.analog_channels_number):
         for row in range(self.sequence_num_rows):
@@ -561,7 +574,7 @@ def from_object(self):
                 channel.evaluation = current_evaluation
                 channel.for_python = current_for_python
                 channel.value = current_value 
-                
+
     #Displaying DDS table
     for channel_index in range(config.dds_channels_number):
         for setting in range(5):
@@ -613,22 +626,22 @@ def from_object(self):
                     channel_entry.evaluation = current_evaluation
                     channel_entry.for_python = current_for_python
                     channel_entry.value = current_value
- 
-     #Displaying Slow DDS table
+
+    #Displaying Slow DDS table
     for channel_index in range(config.slow_dds_channels_number):
         for setting in range(5):
-            for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
-                channel = self.experiment.slow_dds[channel_index]
-                # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
-                col = channel_index * 6 + 1 + setting
-                exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
-                channel_entry = self.channel_entry
-                self.slow_dds_table.setItem(row, col, QTableWidgetItem(str(channel_entry)))
-                if channel.state == 1:
-                    self.slow_dds_table.item(row, col).setBackground(self.green)
-                else:
-                    self.slow_dds_table.item(row, col).setBackground(self.red)
-                    
+            row = 2
+            channel = self.experiment.slow_dds[channel_index]
+            # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
+            col = channel_index * 6 + 1 + setting
+            exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
+            channel_entry = self.channel_entry
+            self.slow_dds_table.setItem(row, col, QTableWidgetItem(str(channel_entry)))
+            if channel.state == 1:
+                self.slow_dds_table.item(row, col).setBackground(self.green)
+            else:
+                self.slow_dds_table.item(row, col).setBackground(self.red)
+
     #Displaying SAMPLER table
     for channel_index in range(config.sampler_channels_number):
         for row in range(self.sequence_num_rows):
@@ -641,7 +654,7 @@ def from_object(self):
             elif channel == "0":
                 self.sampler_table.setItem(row, col, QTableWidgetItem("0"))
                 self.sampler_table.item(row, col).setBackground(self.white)
-    
+
     #building variables table from the self.experiment.new_variables array
     variables_tab(self)
     # building scanned variables table from the self.experiment.scanned_variables array
