@@ -26,6 +26,9 @@ See the github page of pyenv-win for more details.
 
 https://github.com/pyenv-win/pyenv-win/blob/master/README.md#installation
 
+## Repository version
+There are three branches in this repository. Quantrol 1.0 is a more stable version that has only the basic functionality of running experiments according to the edge-like structure of the description. Quantrol 2.0 is a newer version that was quickly done and hence might have more bugs. It has less protection from user and might crash. However, it includes features as derived variables, lookup variables, mirny card, and slow DDS.
+
 ## Installation
 This program was built and has been used on Windows based OS. 
 In order to get started simply copy the entire repository on your local machine. The program was tested with VS Code but other code editors might also work as well. Open the entire repository folder in VS Code to be able to use it properly.
