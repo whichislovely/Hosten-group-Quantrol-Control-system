@@ -68,7 +68,7 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                 if update_expressions_and_evaluations:
                     channel.expression = table_item.text()
                     try:
-                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(channel.expression)
+                        (channel.evaluation, channel.for_python, channel.is_scanned, channel.is_sampled, channel.is_derived, channel.is_lookup) = self.decode_input(channel.expression)
                     except:
                         return "digital channel %d, edge %d" %(channel_index, row)
                 #Updating values and table
@@ -78,29 +78,57 @@ def digital_tab(self, update_expressions_and_evaluations = True, update_values_a
                     except:
                         return "digital channel %d, edge %d" %(channel_index, row)
                     #Color coding the values
-                    if channel.value == 1:
-                        table_item.setBackground(self.green)
-                    elif channel.value == 0:
-                        table_item.setBackground(self.red)
+                    if channel.value == 1 or channel.value == 0:
+                        table_item.setText(channel.expression + " ")
+                        if channel.is_sampled:
+                            table_item.setBackground(self.yellow)
+                            table_item.setText(channel.expression)
+                            table_item.setToolTip("sampled")                    
+                        elif channel.is_derived:
+                            table_item.setBackground(self.cyan)
+                            table_item.setText(channel.expression)
+                            table_item.setToolTip("derived")    
+                        elif channel.is_lookup:
+                            table_item.setBackground(self.light_grey)
+                            table_item.setText(channel.expression)
+                            table_item.setToolTip("lookup")    
+                        else:                        
+                            table_item.setToolTip(str(channel.value))
+                            if channel.value == 1:
+                                table_item.setBackground(self.green)
+                            elif channel.value == 0:
+                                table_item.setBackground(self.red)
                     else: # the value is out of the allowed range
                         return "digital channel %d, edge %d" %(channel_index, row)
-                    table_item.setToolTip(str(channel.value))
                 #Saving the current state of the channel
                 current_expression = channel.expression
                 current_evaluation = channel.evaluation
                 current_value = channel.value
                 current_for_python = channel.for_python
+                current_is_sampled = channel.is_sampled
+                current_is_derived = channel.is_derived
+                current_is_lookup = channel.is_lookup
             else: #Update the value according to the previously set state
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = current_expression
                     channel.evaluation = current_evaluation
                     channel.for_python = current_for_python
+                    channel.is_sampled = current_is_sampled
+                    channel.is_derived = current_is_derived
+                    channel.is_lookup = current_is_lookup
                 #Updating values and table entries
                 if update_values_and_table:
                     channel.value = int(current_value)
                     table_item.setText(channel.expression + " ") # Updating digital table entries 
-                    table_item.setToolTip(str(channel.value))
+                    if channel.is_sampled:
+                        table_item.setToolTip("sampled")
+                    elif channel.is_derived:
+                        table_item.setToolTip("derived")
+                    elif channel.is_lookup:
+                        table_item.setToolTip("lookup")
+                    else:
+                        table_item.setToolTip(str(channel.value))
                 #Color coding the values
                 table_item.setBackground(self.white)   
                                  
@@ -146,22 +174,9 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                     except:
                         pass
                     try:
-                        (channel.evaluation, channel.for_python, channel.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(channel.expression)
+                        (channel.evaluation, channel.for_python, channel.is_scanned, channel.is_sampled, channel.is_derived, channel.is_lookup) = self.decode_input(channel.expression)
                     except:
                         return "analog channel %d, edge %d" %(channel_index, row)
-                if is_sampled:
-                    table_item.setBackground(self.yellow)
-                    table_item.setText(channel.expression)
-                    table_item.setToolTip("sampled")                    
-                elif is_derived:
-                    table_item.setBackground(self.cyan)
-                    table_item.setText(channel.expression)
-                    table_item.setToolTip("derived")    
-                elif is_lookup:
-                    table_item.setBackground(self.light_grey)
-                    table_item.setText(channel.expression)
-                    table_item.setToolTip("derived")    
-                else:
                     #Updating values and table
                     if update_values_and_table:
                         #Check if the expression can be evaluated
@@ -171,32 +186,58 @@ def analog_tab(self, update_expressions_and_evaluations = True, update_values_an
                             return "analog channel %d, edge %d" %(channel_index, row)
                         #Color coding the values
                         if channel.value >= -9.9 and channel.value <= 9.9:
-                            if channel.value != 0:
-                                table_item.setBackground(self.green)
-                            else:
-                                table_item.setBackground(self.red)
+                            table_item.setText(channel.expression + " ")
+                            if channel.is_sampled:
+                                table_item.setBackground(self.yellow)
+                                table_item.setText(channel.expression)
+                                table_item.setToolTip("sampled")                    
+                            elif channel.is_derived:
+                                table_item.setBackground(self.cyan)
+                                table_item.setText(channel.expression)
+                                table_item.setToolTip("derived")    
+                            elif channel.is_lookup:
+                                table_item.setBackground(self.light_grey)
+                                table_item.setText(channel.expression)
+                                table_item.setToolTip("lookup")    
+                            else:                        
+                                table_item.setToolTip(str(channel.value))
+                                if channel.value != 0:
+                                    table_item.setBackground(self.green)
+                                else:
+                                    table_item.setBackground(self.red)                        
                         else:
                             return "analog channel %d, edge %d" %(channel_index, row)
-                        table_item.setText(channel.expression)
-                        table_item.setToolTip(str(channel.value))
-                    #Saving the current state of the channel
-                    current_expression = channel.expression
-                    current_evaluation = channel.evaluation
-                    current_value = channel.value
-                    current_for_python = channel.for_python
+                #Saving the current state of the channel
+                current_expression = channel.expression
+                current_evaluation = channel.evaluation
+                current_value = channel.value
+                current_for_python = channel.for_python
+                current_is_sampled = channel.is_sampled
+                current_is_derived = channel.is_derived
+                current_is_lookup = channel.is_lookup
             else: #Update the value according to the previously set state
                 #Updating expressions and evaluations
                 if update_expressions_and_evaluations:
                     channel.expression = current_expression
                     channel.evaluation = current_evaluation
                     channel.for_python = current_for_python
+                    channel.is_sampled = current_is_sampled
+                    channel.is_derived = current_is_derived
+                    channel.is_lookup = current_is_lookup
                 #Updating values
                 if update_values_and_table:
                     channel.value = current_value     
                     table_item.setText(current_expression + " ")  # Updating analog table entries                       
-                    table_item.setToolTip(str(channel.value))
+                    if channel.is_sampled:
+                        table_item.setToolTip("sampled")
+                    elif channel.is_derived:
+                        table_item.setToolTip("derived")
+                    elif channel.is_lookup:
+                        table_item.setToolTip("lookup")
+                    else:                
+                        table_item.setToolTip(str(channel.value))
                 #Color coding the values
-                table_item.setBackground(self.white)                       
+                table_item.setBackground(self.white)
 
     self.update_on()
 
@@ -235,7 +276,7 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                         except:
                             pass
                         try:
-                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(channel_entry.expression)
+                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, channel_entry.is_sampled, channel_entry.is_derived, channel_entry.is_lookup) = self.decode_input(channel_entry.expression)
                         except:
                             return "dds channel %d, edge %d" %(channel_index, row)
                     #Updating values and table entries
@@ -246,14 +287,23 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                             return "dds channel %d, edge %d" %(channel_index, row)
                         #check if the value within allowed range
                         if channel_entry.value >= self.min_dict_dds[setting] and channel_entry.value <= self.max_dict_dds[setting]:
-                            #Color coding the values
-                            if channel.state.value == 1:
-                                table_item.setBackground(self.green)
+                            #Color coding the values and updating tooltips
+                            table_item.setText(channel_entry.expression + " ")
+                            if channel_entry.is_sampled:
+                                table_item.setBackground(self.yellow)
+                                table_item.setToolTip("sampled")
+                            elif channel_entry.is_derived:
+                                table_item.setBackground(self.cyan)
+                                table_item.setToolTip("derived")
+                            elif channel_entry.is_lookup:
+                                table_item.setBackground(self.light_grey)
+                                table_item.setToolTip("lookup")
                             else:
-                                table_item.setBackground(self.red)
-                            #Updating the entry of table to convert to float or integer. (Only state is being converted to integer)
-                            table_item.setText(channel_entry.expression)
-                            table_item.setToolTip(str(channel_entry.value))
+                                table_item.setToolTip(str(channel_entry.value))
+                                if channel.state.value == 1:
+                                    table_item.setBackground(self.green)
+                                else:
+                                    table_item.setBackground(self.red)                            
                         else:
                             return "dds channel %d, edge %d" %(channel_index, row)
                     #Saving the current state of the channel
@@ -261,17 +311,32 @@ def dds_tab(self, update_expressions_and_evaluations = True, update_values_and_t
                     current_evaluation = channel_entry.evaluation
                     current_value = channel_entry.value
                     current_for_python = channel_entry.for_python
+                    current_is_sampled = channel_entry.is_sampled
+                    current_is_derived = channel_entry.is_derived
+                    current_is_lookup = channel_entry.is_lookup
                 else: #Update the value according to the previously set state
                     #Updating expressions and evaluations
                     if update_expressions_and_evaluations:
                         channel_entry.expression = current_expression
                         channel_entry.evaluation = current_evaluation
                         channel_entry.for_python = current_for_python
+                        channel_entry.is_sampled = current_is_sampled
+                        channel_entry.is_derived = current_is_derived
+                        channel_entry.is_lookup = current_is_lookup
                     #Updating dds table values and table entries
                     if update_values_and_table:
                         channel_entry.value = current_value
-                        table_item.setText(current_expression + " ")  
-                        table_item.setToolTip(str(channel_entry.value))
+                        table_item.setText(str(current_expression + " "))
+                        if channel_entry.is_sampled:
+                            table_item.setToolTip("sampled")
+                        elif channel_entry.is_derived:
+                            table_item.setToolTip("derived")
+                        elif channel_entry.is_lookup:
+                            table_item.setToolTip("lookup")
+                        else:                        
+                            table_item.setToolTip(str(channel_entry.value))
+                    #Color coding the values
+                    table_item.setBackground(self.white)
                         
     self.update_on()
 
@@ -310,7 +375,7 @@ def mirny_tab(self, update_expressions_and_evaluations = True, update_values_and
                         except:
                             pass
                         try:
-                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, is_sampled, is_derived, is_lookup) = self.decode_input(channel_entry.expression)
+                            (channel_entry.evaluation, channel_entry.for_python, channel_entry.is_scanned, channel_entry.is_sampled, channel_entry.is_derived, channel_entry.is_lookup) = self.decode_input(channel_entry.expression)
                         except:
                             return "mirny channel %d, edge %d" %(channel_index, row)
                     #Updating values and table entries
@@ -321,14 +386,23 @@ def mirny_tab(self, update_expressions_and_evaluations = True, update_values_and
                             return "mirny channel %d, edge %d" %(channel_index, row)
                         #check if the value within allowed range
                         if channel_entry.value >= self.min_dict_mirny[setting] and channel_entry.value <= self.max_dict_mirny[setting]:
-                            #Color coding the values
-                            if channel.state.value == 1:
-                                table_item.setBackground(self.green)
+                            #Color coding the values and updating tooltips
+                            table_item.setText(channel_entry.expression + " ")
+                            if channel_entry.is_sampled:
+                                table_item.setBackground(self.yellow)
+                                table_item.setToolTip("sampled")
+                            elif channel_entry.is_derived:
+                                table_item.setBackground(self.cyan)
+                                table_item.setToolTip("derived")
+                            elif channel_entry.is_lookup:
+                                table_item.setBackground(self.light_grey)
+                                table_item.setToolTip("lookup")
                             else:
-                                table_item.setBackground(self.red)
-                            #Updating the entry of table to convert to float or integer. (Only state is being converted to integer)
-                            table_item.setText(channel_entry.expression)
-                            table_item.setToolTip(str(channel_entry.value))
+                                table_item.setToolTip(str(channel_entry.value))
+                                if channel.state.value == 1:
+                                    table_item.setBackground(self.green)
+                                else:
+                                    table_item.setBackground(self.red) 
                         else:
                             return "mirny channel %d, edge %d" %(channel_index, row)
                     #Saving the current state of the channel
@@ -336,17 +410,32 @@ def mirny_tab(self, update_expressions_and_evaluations = True, update_values_and
                     current_evaluation = channel_entry.evaluation
                     current_value = channel_entry.value
                     current_for_python = channel_entry.for_python
+                    current_is_sampled = channel_entry.is_sampled
+                    current_is_derived = channel_entry.is_derived
+                    current_is_lookup = channel_entry.is_lookup                    
                 else: #Update the value according to the previously set state
                     #Updating expressions and evaluations
                     if update_expressions_and_evaluations:
                         channel_entry.expression = current_expression
                         channel_entry.evaluation = current_evaluation
                         channel_entry.for_python = current_for_python
+                        channel_entry.is_sampled = current_is_sampled
+                        channel_entry.is_derived = current_is_derived
+                        channel_entry.is_lookup = current_is_lookup                    
                     #Updating mirny table values and table entries
                     if update_values_and_table:
                         channel_entry.value = current_value
-                        table_item.setText(current_expression + " ")  
-                        table_item.setToolTip(str(channel_entry.value))     
+                        table_item.setText(str(current_expression) + " ")
+                        if channel_entry.is_sampled:
+                            table_item.setToolTip("sampled")
+                        elif channel_entry.is_derived:
+                            table_item.setToolTip("derived")
+                        elif channel_entry.is_lookup:
+                            table_item.setToolTip("lookup")
+                        else:                        
+                            table_item.setToolTip(str(channel_entry.value))
+                    #Color coding the values
+                    table_item.setBackground(self.white)
 
     self.update_on()
 
@@ -534,22 +623,51 @@ def from_object(self):
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
             col = channel_index + 4
             if channel.changed:
-                self.digital_table.setItem(row, col, QTableWidgetItem(channel.expression))
-                if channel.value == 1:
-                    self.digital_table.item(row,col).setBackground(self.green)
+                self.digital_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
+                table_item = self.digital_table.item(row, col)
+                if channel.is_sampled:
+                    table_item.setBackground(self.yellow)
+                    table_item.setToolTip("sampled")
+                elif channel.is_derived:
+                    table_item.setBackground(self.cyan)
+                    table_item.setToolTip("derived")
+                elif channel.is_lookup:
+                    table_item.setBackground(self.light_grey)
+                    table_item.setToolTip("lookup")
                 else:
-                    self.digital_table.item(row,col).setBackground(self.red)
+                    table_item.setToolTip(str(channel.value))                
+                    if channel.value == 1:
+                        self.digital_table.item(row,col).setBackground(self.green)
+                    else:
+                        self.digital_table.item(row,col).setBackground(self.red)
                 #Saving the current state of the channel
                 current_expression = channel.expression
                 current_evaluation = channel.evaluation
                 current_value = channel.value
                 current_for_python = channel.for_python
+                current_is_sampled = channel.is_sampled
+                current_is_derived = channel.is_derived
+                current_is_lookup = channel.is_lookup                
             else:
-                self.digital_table.setItem(row, col, QTableWidgetItem(current_expression + " "))
                 channel.expression = current_expression
                 channel.evaluation = current_evaluation
                 channel.for_python = current_for_python
                 channel.value = current_value
+                channel.is_sampled = current_is_sampled
+                channel.is_derived = current_is_derived
+                channel.is_lookup = current_is_lookup                
+                self.digital_table.setItem(row, col, QTableWidgetItem(current_expression + " "))
+                table_item = self.digital_table.item(row, col)
+                if channel.is_sampled:
+                    table_item.setToolTip("sampled")
+                elif channel.is_derived:
+                    table_item.setToolTip("derived")
+                elif channel.is_lookup:
+                    table_item.setToolTip("lookup")
+                else:
+                    table_item.setToolTip(str(channel.value))
+                #Color coding the values
+                table_item.setBackground(self.white)
 
     #Displaying ANALOG table
     for channel_index in range(config.analog_channels_number):
@@ -558,22 +676,51 @@ def from_object(self):
             # plus 4 is because first 4 columns are used by number, name, time of edge and separator
             col = channel_index + 4
             if channel.changed:
-                self.analog_table.setItem(row, col, QTableWidgetItem(channel.expression))
-                if channel.value == 0:
-                    self.analog_table.item(row,col).setBackground(self.red)
+                self.analog_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
+                table_item = self.analog_table.item(row, col)
+                if channel.is_sampled:
+                    table_item.setBackground(self.yellow)
+                    table_item.setToolTip("sampled")
+                elif channel.is_derived:
+                    table_item.setBackground(self.cyan)
+                    table_item.setToolTip("derived")
+                elif channel.is_lookup:
+                    table_item.setBackground(self.light_grey)
+                    table_item.setToolTip("lookup")
                 else:
-                    self.analog_table.item(row,col).setBackground(self.green)
+                    table_item.setToolTip(str(channel.value))
+                    if channel.value == 0:
+                        self.analog_table.item(row,col).setBackground(self.red)
+                    else:
+                        self.analog_table.item(row,col).setBackground(self.green)
                 #Saving the current state of the channel
                 current_expression = channel.expression
                 current_evaluation = channel.evaluation
                 current_value = channel.value
                 current_for_python = channel.for_python
+                current_is_sampled = channel.is_sampled
+                current_is_derived = channel.is_derived
+                current_is_lookup = channel.is_lookup                
             else:
-                self.analog_table.setItem(row, col, QTableWidgetItem(current_expression + " "))
                 channel.expression = current_expression
                 channel.evaluation = current_evaluation
                 channel.for_python = current_for_python
                 channel.value = current_value 
+                channel.is_sampled = current_is_sampled
+                channel.is_derived = current_is_derived
+                channel.is_lookup = current_is_lookup                
+                self.analog_table.setItem(row, col, QTableWidgetItem(current_expression + " "))
+                table_item = self.analog_table.item(row, col)
+                if channel.is_sampled:
+                    table_item.setToolTip("sampled")
+                elif channel.is_derived:
+                    table_item.setToolTip("derived")
+                elif channel.is_lookup:
+                    table_item.setToolTip("lookup")
+                else:                
+                    table_item.setToolTip(str(channel.value))
+                #Color coding the values
+                table_item.setBackground(self.white)                
 
     #Displaying DDS table
     for channel_index in range(config.dds_channels_number):
@@ -585,22 +732,51 @@ def from_object(self):
                 exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
                 channel_entry = self.channel_entry
                 if channel.changed: 
-                    self.dds_table.setItem(row, col, QTableWidgetItem(channel_entry.expression))
-                    if channel.state.value == 1:
-                        self.dds_table.item(row, col).setBackground(self.green)
+                    self.dds_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                    table_item = self.dds_table.item(row, col)
+                    if channel_entry.is_sampled:
+                        table_item.setBackground(self.yellow)
+                        table_item.setToolTip("sampled")
+                    elif channel_entry.is_derived:
+                        table_item.setBackground(self.cyan)
+                        table_item.setToolTip("derived")
+                    elif channel_entry.is_lookup:
+                        table_item.setBackground(self.light_grey)
+                        table_item.setToolTip("lookup")
                     else:
-                        self.dds_table.item(row, col).setBackground(self.red)
+                        table_item.setToolTip(str(channel_entry.value))
+                        if channel.state.value == 1:
+                            self.dds_table.item(row, col).setBackground(self.green)
+                        else:
+                            self.dds_table.item(row, col).setBackground(self.red)
                     current_expression = channel_entry.expression
                     current_evaluation = channel_entry.evaluation
                     current_value = channel_entry.value
                     current_for_python = channel_entry.for_python
+                    current_is_sampled = channel_entry.is_sampled
+                    current_is_derived = channel_entry.is_derived
+                    current_is_lookup = channel_entry.is_lookup                    
                 else:
                     self.dds_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                    table_item = self.dds_table.item(row, col)
                     channel_entry.expression = current_expression
                     channel_entry.evaluation = current_evaluation
                     channel_entry.for_python = current_for_python
                     channel_entry.value = current_value
-
+                    channel_entry.is_sampled = current_is_sampled
+                    channel_entry.is_derived = current_is_derived
+                    channel_entry.is_lookup = current_is_lookup 
+                    if channel_entry.is_sampled:
+                        table_item.setToolTip("sampled")
+                    elif channel_entry.is_derived:
+                        table_item.setToolTip("derived")
+                    elif channel_entry.is_lookup:
+                        table_item.setToolTip("lookup")
+                    else:                        
+                        table_item.setToolTip(str(channel_entry.value))                                       
+                    #Color coding the values
+                    table_item.setBackground(self.white)
+                    
     #Displaying MIRNY table
     for channel_index in range(config.mirny_channels_number):
         for setting in range(5):
@@ -611,21 +787,50 @@ def from_object(self):
                 exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
                 channel_entry = self.channel_entry
                 if channel.changed: 
-                    self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression))
-                    if channel.state.value == 1:
-                        self.mirny_table.item(row, col).setBackground(self.green)
+                    self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                    table_item = self.mirny_table.item(row, col)
+                    if channel_entry.is_sampled:
+                        table_item.setBackground(self.yellow)
+                        table_item.setToolTip("sampled")
+                    elif channel_entry.is_derived:
+                        table_item.setBackground(self.cyan)
+                        table_item.setToolTip("derived")
+                    elif channel_entry.is_lookup:
+                        table_item.setBackground(self.light_grey)
+                        table_item.setToolTip("lookup")
                     else:
-                        self.mirny_table.item(row, col).setBackground(self.red)
+                        table_item.setToolTip(str(channel_entry.value))
+                        if channel.state.value == 1:
+                            self.mirny_table.item(row, col).setBackground(self.green)
+                        else:
+                            self.mirny_table.item(row, col).setBackground(self.red)
                     current_expression = channel_entry.expression
                     current_evaluation = channel_entry.evaluation
                     current_value = channel_entry.value
                     current_for_python = channel_entry.for_python
+                    current_is_sampled = channel_entry.is_sampled
+                    current_is_derived = channel_entry.is_derived
+                    current_is_lookup = channel_entry.is_lookup                   
                 else:
                     self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                    table_item = self.mirny_table.item(row, col)
                     channel_entry.expression = current_expression
                     channel_entry.evaluation = current_evaluation
                     channel_entry.for_python = current_for_python
                     channel_entry.value = current_value
+                    channel_entry.is_sampled = current_is_sampled
+                    channel_entry.is_derived = current_is_derived
+                    channel_entry.is_lookup = current_is_lookup                     
+                    if channel_entry.is_sampled:
+                        table_item.setToolTip("sampled")
+                    elif channel_entry.is_derived:
+                        table_item.setToolTip("derived")
+                    elif channel_entry.is_lookup:
+                        table_item.setToolTip("lookup")
+                    else:                        
+                        table_item.setToolTip(str(channel_entry.value))                                       
+                    #Color coding the values
+                    table_item.setBackground(self.white)
 
     #Displaying Slow DDS table
     for channel_index in range(config.slow_dds_channels_number):

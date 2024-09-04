@@ -711,7 +711,7 @@ def variables_tab_build(self):
     self.variables_tab_widget = QWidget()
     #VARIABLES LABLE
     variables_lable = QLabel(self.variables_tab_widget)
-    variables_lable.setText("Variables")
+    variables_lable.setText("Constant variables")
     variables_lable.setFont(QFont('Arial', 14))
     variables_lable.setGeometry(85, 0, 400, 30)
 

@@ -98,14 +98,20 @@ class MainWindow(QMainWindow):
                 is_scanned  :   Flag indicating if the digital channel state requires scanning. Even if there is a single scanned variable
                                 in the expression, the channel becomes scanned as it is supposed to be changing at different
                                 scan steps
+                is_sampled  :   Flag indicating if the digital channel is sampled
+                is_derived  :   Flag indicating if the digital channel is dervied
+                is_lookup   :   Flag indicating if the digital channel is lookup                                
             '''
-            def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, for_python = 0.0, changed = True, is_scanned = False):
+            def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, for_python = 0.0, changed = True, is_scanned = False, is_sampled = False, is_derived = False, is_lookup = False):
                 self.expression = expression
                 self.evaluation = evaluation
                 self.value = value
                 self.for_python = for_python
                 self.changed = changed
                 self.is_scanned = is_scanned
+                self.is_sampled = is_sampled
+                self.is_derived = is_derived
+                self.is_lookup = is_lookup
 
 
         class Analog:
@@ -121,15 +127,20 @@ class MainWindow(QMainWindow):
                 is_scanned  :   Flag indicating if the analog channel state requires scanning. Even if there is a single scanned variable
                                 in the expression, the channel becomes scanned as it is supposed to be changing at different
                                 scan steps
+                is_sampled  :   Flag indicating if the analgo channel is sampled
+                is_derived  :   Flag indicating if the analog channel is dervied
+                is_lookup   :   Flag indicating if the analog channel is lookup
             '''            
-            def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, for_python = "0.0", changed = True, is_scanned = False):
+            def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, for_python = "0.0", changed = True, is_scanned = False, is_sampled = False, is_derived = False, is_lookup = False):
                 self.expression = expression
                 self.evaluation = evaluation
                 self.value = value
                 self.for_python = for_python
                 self.changed = changed
                 self.is_scanned = is_scanned
-                self.is_sampled = False
+                self.is_sampled = is_sampled
+                self.is_derived = is_derived
+                self.is_lookup = is_lookup
 
 
         class DDS:
@@ -141,7 +152,7 @@ class MainWindow(QMainWindow):
                 attenuation  :   An object that is used to describe the attenuation state of the dds channel
                 phase        :   An object that is used to describe the phase state of the dds channel
                 state        :   An object that is used to describe the ON/OFF state of the dds channel
-                changed      :   Flag indicating if the dds channel is required to be changed at this time edge                
+                changed      :   Flag indicating if the dds channel is required to be changed at this time edge
             '''
             def __init__(self, state = 0, changed = True):
                 self.frequency = self.Object()
@@ -166,14 +177,20 @@ class MainWindow(QMainWindow):
                     is_scanned  :   Flag indicating if the dds channel parameter requires scanning. Even if there is a single scanned variable
                                     in the expression, the channel parameter becomes scanned as it is supposed to be changing at different
                                     scan steps
+                    is_sampled  :   Flag indicating if the parameter is sampled
+                    is_derived  :   Flag indicating if the parameter is dervied
+                    is_lookup   :   Flag indicating if the parameter is lookup                                    
                 '''
-                def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, changed = True, is_scanned = False):
+                def __init__(self, expression = "0.0", evaluation = 0.0, value = 0.0, changed = True, is_scanned = False, is_sampled = False, is_derived = False, is_lookup = False):
                     self.expression = expression
                     self.evaluation = evaluation
                     self.for_python = evaluation
                     self.value = value
                     self.changed = changed   
-                    self.is_scanned = is_scanned     
+                    self.is_scanned = is_scanned
+                    self.is_sampled = is_sampled     
+                    self.is_derived = is_derived
+                    self.is_lookup = is_lookup
 
         
     class Experiment:
@@ -307,6 +324,7 @@ class MainWindow(QMainWindow):
                             generation. It is only used in write_to_python.py and only updated when the run_experiment_button_clicked
             is_derived  :   Flag indicating if the variable is a derived variable
             is_lookup   :   Flag indicating if the variable is a lookup variable
+            argument    :   Argument used for the lookup variables
         '''         
         def __init__(self, name, value, for_python, is_scanned = False, is_derived = False, is_lookup = False):
             self.name = name
@@ -315,7 +333,7 @@ class MainWindow(QMainWindow):
             self.is_scanned = is_scanned
             self.is_derived = is_derived
             self.is_lookup = is_lookup
-            self.lookup_argument = ""
+            self.argument = ""
             
             
     class CustomThread(threading.Thread):
@@ -726,7 +744,7 @@ class MainWindow(QMainWindow):
     def insert_edge_button_clicked(self):   
         '''
         Function is used to insert a new edge. Its values are assigned to be the same as the values of the previous edge but empty name.
-        Updating of the table here is done inplace. One could create a function in update.py that would do it but for now it is here.
+        Updating of tables is done by setting all channels is_changed to False and updating form object
         '''
         #appending a new edge with a unique id
         new_unique_id = self.find_unique_id()
@@ -739,84 +757,20 @@ class MainWindow(QMainWindow):
         #creating a corresponding variable so one can use id# as a variable
         self.experiment.variables[new_edge.id] = self.Variable(name = new_edge.id, value = new_edge.value, for_python = new_edge.for_python)
         self.update_off()
-        #adding a new row in all tabs
-        self.sequence_table.setRowCount(self.sequence_num_rows)                     
-        self.digital_table.setRowCount(self.sequence_num_rows)
-        self.digital_dummy.setRowCount(self.sequence_num_rows)
-        self.analog_table.setRowCount(self.sequence_num_rows)
-        self.analog_dummy.setRowCount(self.sequence_num_rows)
-        self.dds_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
-        self.dds_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name    
-        self.mirny_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
-        self.mirny_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name    
-        self.sampler_table.setRowCount(self.sequence_num_rows)     
-        self.making_separator()
-        row = self.sequence_num_rows - 1
-        edge = self.experiment.sequence[row]
-        #Setting the left part of the SEQUENCE table (edge number, name, expression, time)
-        self.sequence_table.setItem(row, 0, QTableWidgetItem(str(row)))
-        self.sequence_table.setItem(row, 1, QTableWidgetItem(edge.name))
-        self.sequence_table.setItem(row, 2, QTableWidgetItem(edge.id))
-        self.sequence_table.setItem(row, 3, QTableWidgetItem(edge.expression))
-        self.sequence_table.setItem(row, 4, QTableWidgetItem(str(edge.value)))
-        
-        #Setting the left part of the DIGITAL table (edge number, name, time)
-        self.digital_dummy.setItem(row, 0, QTableWidgetItem(str(row)))
-        self.digital_dummy.setItem(row, 1, QTableWidgetItem(edge.name))
-        self.digital_dummy.setItem(row, 2, QTableWidgetItem(str(edge.value)))
-        #Setting DIGITAL table values
-        for index, channel in enumerate(self.experiment.sequence[-1].digital):
-            col = index + 4 #plus 4 is because first 4 columns are used by number, name, time of the edge and separator
-            self.digital_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
+        #Setting DIGITAL table values to not changed
+        for channel in self.experiment.sequence[-1].digital:
+            channel.changed = False
+        #Setting ANALOG table values to not changed
+        for channel in self.experiment.sequence[-1].analog:
+            channel.changed = False
+        #Setting DDS table values to not changed
+        for channel in self.experiment.sequence[-1].dds:
+            channel.changed = False
+        #Setting MIRNY table values to not changed
+        for channel in self.experiment.sequence[-1].mirny:
             channel.changed = False
 
-        #Setting the left part of the ANALOG table (edge number, name, time)
-        self.analog_dummy.setItem(row, 0, QTableWidgetItem(str(row)))
-        self.analog_dummy.setItem(row, 1, QTableWidgetItem(edge.name))
-        self.analog_dummy.setItem(row, 2, QTableWidgetItem(str(edge.value)))
-        #Setting ANALOG table values
-        for index, channel in enumerate(self.experiment.sequence[-1].analog):
-            # plus 3 is because first 3 columns are used by number, name and time of edge
-            col = index + 4
-            self.analog_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
-            self.analog_table.item(row, col).setToolTip(str(channel.value))
-            channel.changed = False
-
-        #Setting the left part of the DDS table (edge number, name, time)
-        self.dds_dummy.setItem(row+2, 0, QTableWidgetItem(str(row)))
-        self.dds_dummy.setItem(row+2, 1, QTableWidgetItem(edge.name))
-        self.dds_dummy.setItem(row+2, 2, QTableWidgetItem(str(edge.value)))
-        #Setting DDS table values
-        for index, channel in enumerate(self.experiment.sequence[-1].dds):
-            #plus 4 is because first 4 columns are used by number, name, time and separator(dark grey line)
-            for setting in range(5):
-                col = 4 + index * 6 + setting
-                dds_row = row + 2
-                exec("self.dds_table.setItem(dds_row, col, QTableWidgetItem(str(channel.%s.expression) + ' '))" %self.setting_dict[setting])
-                exec("self.dds_table.item(dds_row, col).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
-            channel.changed = False
-        #Setting the left part of the MIRNY table (edge number, name, time)
-        self.mirny_dummy.setItem(row+2, 0, QTableWidgetItem(str(row)))
-        self.mirny_dummy.setItem(row+2, 1, QTableWidgetItem(edge.name))
-        self.mirny_dummy.setItem(row+2, 2, QTableWidgetItem(str(edge.value)))
-        #Setting MIRNY table values
-        for index, channel in enumerate(self.experiment.sequence[-1].mirny):
-            #plus 4 is because first 4 columns are used by number, name, time and separator(dark grey line)
-            for setting in range(5):
-                col = 4 + index * 6 + setting
-                dds_row = row + 2
-                exec("self.mirny_table.setItem(dds_row, col, QTableWidgetItem(str(channel.%s.expression) + ' '))" %self.setting_dict[setting])
-                exec("self.mirny_table.item(dds_row, col).setToolTip(str(channel.%s.value))" %self.setting_dict[setting])
-            channel.changed = False
-        #Setting the left part of the SAMPLER table (edge number, name, time)
-        self.sampler_table.setItem(row, 0, QTableWidgetItem(str(row)))
-        self.sampler_table.setItem(row, 1, QTableWidgetItem(edge.name))
-        self.sampler_table.setItem(row, 2, QTableWidgetItem(str(edge.value)))
-        #Setting SAMPLER table values
-        for index, channel in enumerate(self.experiment.sequence[-1].sampler):
-            col = index + 4 #plus 4 is because first 4 columns are used by number, name, time of the edge and separator
-            self.sampler_table.setItem(row, col, QTableWidgetItem("0"))
-
+        update.from_object(self)
         self.update_on()
 
 
@@ -1053,18 +1007,22 @@ class MainWindow(QMainWindow):
         # for item in self.experiment.new_variables:
         #     print("name: ", item.name, "value: ", item.value, "for python: ", item.for_python)
         
-        print("VARIABLES")
-        for key, item in self.experiment.variables.items():
-            print("name: ", item.name, "value: ", item.value, "is_lookup:", item.is_lookup, "for python: ", item.for_python)
-        print("LOOKUP VARIABLES")
-        for variable in self.experiment.lookup_variables:
-            print("name: ", variable.name, "argument:", variable.argument)
+        # print("VARIABLES")
+        # for key, item in self.experiment.variables.items():
+        #     print("name: ", item.name, "value: ", item.value, "is_lookup:", item.is_lookup, "for python: ", item.for_python)
+        # print("LOOKUP VARIABLES")
+        # for variable in self.experiment.lookup_variables:
+        #     print("name: ", variable.name, "argument:", variable.argument)
 
         # print("EDGES")
         # for ind, edge in enumerate(self.experiment.sequence):
         #     print("edge", ind)
         #     print("    chanel", ind,"evaluation", edge.evaluation, "for_python", edge.for_python, "scanned", edge.is_scanned)
         # print("END")
+        print("Mirny")
+        for ind, edge in enumerate(self.experiment.sequence):
+            for mirny in edge.mirny:
+                print(ind, mirny.frequency.is_sampled)
 
         # print("analog channel values")
         # for edge in self.experiment.sequence:
@@ -1078,7 +1036,7 @@ class MainWindow(QMainWindow):
         # print("new variables")
         # for item in self.experiment.new_variables:
         #     print(item.name, item.value, item.is_scanned)
-
+        pass
 
     def save_sequence_as_button_clicked(self):
         '''
@@ -1852,18 +1810,27 @@ class MainWindow(QMainWindow):
                         variable_scanned = True
                         break
                 if variable_scanned == False:
-                    backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
-                    del self.experiment.variables[name]
-                    self.variables_table.setCurrentCell(row-1,0)
-                    return_value = update.digital_analog_dds_mirny_tabs(self) #we need to update only values not expressions
-                    if return_value == None: #Variable can be deleted
-                        del self.experiment.new_variables[row]
-                        update.variables_tab(self)
-                    else: #Variable can not be deleted. Reverting all changes back to previous state
-                        self.experiment.variables[name] = backup
-                        update.digital_analog_dds_mirny_tabs(self) 
-                        update.variables_tab(self)
-                        self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                    # Checking if the variable is being used in a lookup variables as an argument
+                    is_lookup_argument = False
+                    for lookup_variable in self.experiment.lookup_variables:
+                        if name == lookup_variable.argument:
+                            is_lookup_argument = True
+                            break
+                    if not is_lookup_argument:
+                        backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
+                        del self.experiment.variables[name]
+                        self.variables_table.setCurrentCell(row-1,0)
+                        return_value = update.digital_analog_dds_mirny_tabs(self) #we need to update only values not expressions
+                        if return_value == None: #Variable can be deleted
+                            del self.experiment.new_variables[row]
+                            update.variables_tab(self)
+                        else: #Variable can not be deleted. Reverting all changes back to previous state
+                            self.experiment.variables[name] = backup
+                            update.digital_analog_dds_mirny_tabs(self) 
+                            update.variables_tab(self)
+                            self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                    else:
+                        self.error_message("The variable is used as a argument in lookup variables. Remove it from the Lookup variables table before deleting it.", "Lookup variable's argument")
                 else:
                     self.error_message("The variable is scanned. Remove it from the scan table before deleting.", "Scanned variable")
             else:
@@ -1905,52 +1872,78 @@ class MainWindow(QMainWindow):
                             variable_scanned = True
                             break
                     if variable_scanned == False:
-                        new_name = self.remove_restricted_characters(table_item.text())
-                        #Restricting the user from using the reserved default variable names in the form of id1, id2, etc.
-                        if new_name[0:2] == "id" and new_name[2] in "0123456789":
-                            self.error_message("Variable names starting with id and following with integers are reserved for default edge time variables", "Invalid variable name")
-                        elif new_name == "None": #Restricting the user from defining the variable name "None" as it is reserved by the Scan table
-                            self.error_message("Variable name None is reserved by the scan table. Please choose another name", "Invalid variable name")
-                            self.update_off()
-                            table_item.setText(variable.name)       
-                            self.update_on()             
-                        elif new_name in self.experiment.variables:#Restricting the user from defining the variable name as already defined variable names to avoid having duplicates
-                            self.error_message('Variable name is already used', 'Invalid variable name')
-                            self.update_off()
-                            table_item.setText(variable.name)       
-                            self.update_on()                         
-                        else: # The varibable name is almost among allowed, only the integer or float without other caracters should be checked.
-                            only_numbers = False
-                            try:
-                                float(new_name) #does not allow defining variable names that contains only integers without characters
-                                only_numbers = True
-                            except:
-                                pass
-                            if only_numbers: #Restricting the user from defining a variable name using only numbers
-                                self.update_off()
-                                table_item.setText(variable.name)       
-                                self.update_on()                         
-                                self.error_message('Variable name can not be in a form of a number', 'Invalid variable name')
+                        #Checking if the variable is being used in arguments of derived variables
+                        is_derived_argument = False
+                        for derived_variable in self.experiment.derived_variables:
+                            arguments = derived_variable.arguments.replace(" ","").split(",")
+                            for argument in arguments:
+                                if variable.name == argument:
+                                    is_derived_argument = True
+                                    break
+                        if not is_derived_argument:
+                            # Checking if the variable is being used in a lookup variables as an argument
+                            is_lookup_argument = False
+                            for lookup_variable in self.experiment.lookup_variables:
+                                if variable.name == lookup_variable.argument:
+                                    is_lookup_argument = True
+                                    break
+                            if not is_lookup_argument:
+                                new_name = self.remove_restricted_characters(table_item.text())
+                                #Restricting the user from using the reserved default variable names in the form of id1, id2, etc.
+                                if new_name[0:2] == "id" and new_name[2] in "0123456789":
+                                    self.error_message("Variable names starting with id and following with integers are reserved for default edge time variables", "Invalid variable name")
+                                elif new_name == "None": #Restricting the user from defining the variable name "None" as it is reserved by the Scan table
+                                    self.error_message("Variable name None is reserved by the scan table. Please choose another name", "Invalid variable name")
+                                    self.update_off()
+                                    table_item.setText(variable.name)       
+                                    self.update_on()             
+                                elif new_name in self.experiment.variables:#Restricting the user from defining the variable name as already defined variable names to avoid having duplicates
+                                    self.error_message('Variable name is already used', 'Invalid variable name')
+                                    self.update_off()
+                                    table_item.setText(variable.name)       
+                                    self.update_on()                         
+                                else: # The varibable name is almost among allowed, only the integer or float without other caracters should be checked.
+                                    only_numbers = False
+                                    try:
+                                        float(new_name) #does not allow defining variable names that contains only integers without characters
+                                        only_numbers = True
+                                    except:
+                                        pass
+                                    if only_numbers: #Restricting the user from defining a variable name using only numbers
+                                        self.update_off()
+                                        table_item.setText(variable.name)       
+                                        self.update_on()                         
+                                        self.error_message('Variable name can not be in a form of a number', 'Invalid variable name')
+                                    else:
+                                        #Allowed variable name. Now checking if it is used in any expression or not. It is done by deleting the variable and trying to evaluate every expression
+                                        #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
+                                        backup = deepcopy(self.experiment.variables[variable.name])
+                                        del self.experiment.variables[variable.name]
+                                        return_value = update.digital_analog_dds_mirny_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
+                                        if return_value == None: #The previous variable was not used anywhere and can be changed
+                                            self.experiment.variables[new_name] = backup
+                                            self.experiment.variables[new_name].name = new_name
+                                            self.experiment.variables[new_name].is_scanned = False
+                                            variable.name = new_name
+                                            self.update_off()
+                                            table_item.setText(variable.name)
+                                            self.update_on()                            
+                                        else: #The previous variable was used somewhere. Reverting the name to the previous 
+                                            self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                                            self.experiment.variables[backup.name] = backup
+                                            self.update_off()
+                                            table_item.setText(backup.name)
+                                            self.update_on()
                             else:
-                                #Allowed variable name. Now checking if it is used in any expression or not. It is done by deleting the variable and trying to evaluate every expression
-                                #variable.value is used as a back up if evaluation is not possible since we do not change self.experiment.new_variables to check if the variable is used or not
-                                backup = deepcopy(self.experiment.variables[variable.name])
-                                del self.experiment.variables[variable.name]
-                                return_value = update.digital_analog_dds_mirny_tabs(self) # we need to update value. In other words evaluate evaluations. No need to udpage expressions
-                                if return_value == None: #The previous variable was not used anywhere and can be changed
-                                    self.experiment.variables[new_name] = backup
-                                    self.experiment.variables[new_name].name = new_name
-                                    self.experiment.variables[new_name].is_scanned = False
-                                    variable.name = new_name
-                                    self.update_off()
-                                    table_item.setText(variable.name)
-                                    self.update_on()                            
-                                else: #The previous variable was used somewhere. Reverting the name to the previous 
-                                    self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
-                                    self.experiment.variables[backup.name] = backup
-                                    self.update_off()
-                                    table_item.setText(backup.name)
-                                    self.update_on()
+                                self.update_off()
+                                table_item.setText(variable.name)
+                                self.update_on()                          
+                                self.error_message("The variable is used as an argument in lookup variables. Remove it from the Lookup variables table before changing its name.", "Lookup variable's argument")
+                        else:
+                            self.update_off()
+                            table_item.setText(variable.name)
+                            self.update_on()                          
+                            self.error_message("The variable is used as an argument in derived variables. Remove it from the Derived variables table before changing its name.", "Derived variable's argument")
                     else:
                         self.update_off()
                         table_item.setText(variable.name)
@@ -2053,6 +2046,7 @@ class MainWindow(QMainWindow):
             if row == 0:
                 self.error_message("You can not delete a dummy example", "Protected variable")
             else:
+                #ADD HERE A CHECK IF THE VARIABLE IS USED OR NOT
                 name = self.derived_variables_table.item(row,0).text()
                 edge_index = self.find_edge_index_by_id(self.experiment.derived_variables[row-1].edge_id)
                 if edge_index != None:
@@ -2060,7 +2054,8 @@ class MainWindow(QMainWindow):
                 self.experiment.names_of_derived_variables.remove(name)
                 del self.experiment.derived_variables[row-1] # -1 is due to the dummy variable taking the first row
                 del self.experiment.variables[name]
-                update.variables_tab(self, new_variables = False)
+                self.derived_variables_table.setCurrentCell(row-1, 0)
+                update.variables_tab(self, new_variables = False, lookup_variables = False)
         except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
 
@@ -2115,16 +2110,38 @@ class MainWindow(QMainWindow):
             row = item.row()
             col = item.column()
             variable = self.experiment.derived_variables[row-1] # due to the dummy variable being 1st
-            table_item_text = self.derived_variables_table.item(row,col).text()
-            self.derived_variables_table.item(row,col).setText(table_item_text.replace(" ",""))
+            table_item_text = self.derived_variables_table.item(row,col).text().replace(" ","")
+            self.update_off()
+            self.derived_variables_table.item(row,col).setText(table_item_text)
+            self.update_on()
             if col == 0: #Variable name was changed
-                del self.experiment.variables[variable.name]
-                variable.name = table_item_text.replace(" ","")
-                self.experiment.variables[variable.name] = self.Variable(name = variable.name, value = 0.0, for_python = 0.0, is_derived = True)
+                if table_item_text not in self.experiment.variables:
+                    del self.experiment.variables[variable.name]
+                    variable.name = table_item_text
+                    self.experiment.variables[variable.name] = self.Variable(name = variable.name, value = 0.0, for_python = 0.0, is_derived = True)
+                    self.experiment.names_of_derived_variables.add(variable.name)
+                else:
+                    self.error_message("Variable name is already used", "Wrong variable name")
+                    self.update_off()
+                    self.derived_variables_table.item(row,col).setText(self.experiment.derived_variables[row-1].name)
+                    self.update_on()
             if col == 1: #Variable arguments were changed
-                variable.arguments = table_item_text.replace(" ","")
+                #Checking if the variables in the arguments are declared in the variables table
+                arguments = table_item_text.split(",")
+                missing_variable = False
+                for argument in arguments:
+                    if argument not in self.experiment.variables:
+                        missing_variable = True
+                        break
+                if missing_variable: #Reverting back the Arguments table entry
+                    self.error_message("Arguments include missing variables. First create variables in variables tab","Wrong arguments")
+                    self.update_off()
+                    self.derived_variables_table.item(row,col).setText(self.experiment.derived_variables[row-1].arguments)
+                    self.update_on()
+                else:
+                    variable.arguments = table_item_text
             if col == 2: #Variable execution edge was changed
-                new_edge_id = table_item_text.replace(" ", "")
+                new_edge_id = table_item_text
                 if self.find_edge_index_by_id(new_edge_id) == None:
                     self.error_message("The edge id was not found. Please enter correct id value", "Wrong id entered")
                     self.derived_variables_table.item(row,col).setText(variable.edge_id)
@@ -2133,7 +2150,7 @@ class MainWindow(QMainWindow):
                         edge_index = self.find_edge_index_by_id(variable.edge_id)
                         self.experiment.sequence[edge_index].derived_variable_requested = -1
                     #Assigning the edge.derived_variable_requested value 
-                    variable.edge_id = table_item_text.replace(" ","")
+                    variable.edge_id = table_item_text
                     edge_index = self.find_edge_index_by_id(variable.edge_id)
                     self.experiment.sequence[edge_index].derived_variable_requested = row-1 # -1 because the dummy variable is the first one
             if col == 3: #Variable function was changed
@@ -2149,14 +2166,29 @@ class MainWindow(QMainWindow):
             col = item.column()
             variable = self.experiment.lookup_variables[row-1] # due to the dummy variable being 1st
             table_item_text = self.lookup_variables_table.item(row,col).text().replace(" ","")
+            self.update_off()
             self.lookup_variables_table.item(row,col).setText(table_item_text)
+            self.update_on()
             if col == 0: #Variable name was changed
-                del self.experiment.variables[variable.name]
-                variable.name = table_item_text
-                self.experiment.variables[variable.name] = self.Variable(name = variable.name, value = 0.0, for_python = 0.0, is_lookup = True)
+                if table_item_text not in self.experiment.variables:
+                    del self.experiment.variables[variable.name]
+                    variable.name = table_item_text
+                    self.experiment.variables[variable.name] = self.Variable(name = variable.name, value = 0.0, for_python = 0.0, is_lookup = True)
+                    self.experiment.names_of_lookup_variables.add(variable.name)
+                else:
+                    self.error_message("Variable name is already used", "Wrong variable name")
+                    self.update_off()
+                    self.lookup_variables_table.item(row, col).setText(self.experiment.lookup_variables[row-1].name)
+                    self.update_on()
             if col == 1: #Variable argument was changed
-                variable.arguments = table_item_text
-                self.experiment.variables[variable.name].argument = table_item_text
+                if table_item_text not in self.experiment.variables:
+                    self.error_message("Argument include missing variable. First create a variable in variables tab", "Wrong argument")
+                    self.update_off()
+                    self.lookup_variables_table.item(row, col).setText(self.experiment.lookup_variables[row-1].argument)
+                    self.update_on()
+                else:
+                    variable.argument = table_item_text
+                    self.experiment.variables[variable.name].argument = table_item_text
 
 
     #SAMPLER TAB RELATED FUNCTIONS
@@ -2244,7 +2276,8 @@ class MainWindow(QMainWindow):
                     table_item.setText(str(channel))
                     self.update_on()
                     self.error_message("Variable you entered is not found in the variables table. First create the variable there.", "No variable found")
-            update.sampler_tab(self)  
+            update.sampler_tab(self) 
+            update.digital_analog_dds_mirny_tabs(self) 
                 
 
 def run():
