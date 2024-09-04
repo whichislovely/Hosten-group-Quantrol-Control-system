@@ -735,12 +735,14 @@ def variables_tab_build(self):
     self.create_new_variable.setFont(QFont('Arial', 14))
     self.create_new_variable.setGeometry(10, 1050, 200, 30)
     self.create_new_variable.setText("Create new variable")
+    self.create_new_variable.setToolTip("Button that is used to create a new variable.")
     self.create_new_variable.clicked.connect(self.create_new_variable_button_clicked)
     #button to delete a variable
     self.delete_variable = QPushButton(self.variables_tab_widget)
     self.delete_variable.setFont(QFont('Arial', 14))
     self.delete_variable.setGeometry(220, 1050, 200, 30)
     self.delete_variable.setText("Delete variable")
+    self.delete_variable.setToolTip("Button that is used to delete a new variable. First choose the new varibles by right clicking it in the variables table.")
     self.delete_variable.clicked.connect(self.delete_variable_button_clicked)
     
     #DERIVED VARIABLES LABLE
@@ -772,9 +774,13 @@ def variables_tab_build(self):
     delegate = ReadOnlyDelegate(self)
     self.derived_variables_table.setItemDelegateForRow(0,delegate)
     self.derived_variables_table.setItem(0, 0, QTableWidgetItem("example_name"))
+    self.derived_variables_table.item(0,0).setToolTip("Name of the derived variable")
     self.derived_variables_table.setItem(0, 1, QTableWidgetItem("x,y"))
+    self.derived_variables_table.item(0,1).setToolTip("Comma separated arguments of the function to be used to derive the variable")
     self.derived_variables_table.setItem(0, 2, QTableWidgetItem("id5"))
+    self.derived_variables_table.item(0,2).setToolTip("ID of the edge when user wants to request the calculation of the derived variable")
     self.derived_variables_table.setItem(0, 3, QTableWidgetItem("np.sin(x) + 5*np.sqrt(y)"))
+    self.derived_variables_table.item(0,1).setToolTip("Function to be used to derive the variable. It should be python compatible with the numpy being imported as np")
     #when table contents are changed
     self.derived_variables_table.itemChanged.connect(self.derived_variables_table_changed)
 
@@ -783,12 +789,14 @@ def variables_tab_build(self):
     self.create_derived_variable.setFont(QFont('Arial', 14))
     self.create_derived_variable.setGeometry(440, 1050, 200, 30)
     self.create_derived_variable.setText("Create derived variable")
+    self.create_derived_variable.setToolTip("Button that is used to create a new derived variable. Please input arguments and edge id before using the variable")
     self.create_derived_variable.clicked.connect(self.create_derived_variable_button_clicked)
     #button to delete a variable
     self.delete_derived_variable = QPushButton(self.variables_tab_widget)
     self.delete_derived_variable.setFont(QFont('Arial', 14))
     self.delete_derived_variable.setGeometry(650, 1050, 200, 30)
     self.delete_derived_variable.setText("Delete derived variable")
+    self.delete_derived_variable.setToolTip("Button that is used to delete a derived variable. First choose the derived variable by right clicking it in the derived variables table.")
     self.delete_derived_variable.clicked.connect(self.delete_derived_variable_button_clicked)
 
     #LOOKUP VARIABLES LABLE
@@ -820,8 +828,11 @@ def variables_tab_build(self):
     self.lookup_variables_table.setItemDelegateForRow(0,delegate)
     self.lookup_variables_table.setItemDelegateForColumn(2,delegate)
     self.lookup_variables_table.setItem(0, 0, QTableWidgetItem("example_name"))
+    self.lookup_variables_table.item(0,0).setToolTip("Name of the lookup variable")
     self.lookup_variables_table.setItem(0, 1, QTableWidgetItem("sampled_var"))
+    self.lookup_variables_table.item(0,1).setToolTip("Name of the sampled variable that is going to be used as an argument for the lookup list")
     self.lookup_variables_table.setItem(0, 2, QTableWidgetItem("gaussian_fit"))
+    self.lookup_variables_table.item(0,0).setToolTip("Name of the lookup list to remind the user the purpose of the lookup variable")
     #when table contents are changed
     self.lookup_variables_table.itemChanged.connect(self.lookup_variables_table_changed)
 
@@ -830,18 +841,21 @@ def variables_tab_build(self):
     self.create_lookup_variable.setFont(QFont('Arial', 14))
     self.create_lookup_variable.setGeometry(1160, 1050, 200, 30)
     self.create_lookup_variable.setText("Create lookup variable")
+    self.create_lookup_variable.setToolTip("Button that is used to create a new lookup variable. Please input the arguments before using the variable")
     self.create_lookup_variable.clicked.connect(self.create_lookup_variable_button_clicked)
     #button to delete a variable
     self.delete_lookup_variable = QPushButton(self.variables_tab_widget)
     self.delete_lookup_variable.setFont(QFont('Arial', 14))
     self.delete_lookup_variable.setGeometry(1370, 1050, 200, 30)
     self.delete_lookup_variable.setText("Delete lookup variable")
+    self.delete_lookup_variable.setToolTip("Button that is used to delete a lookup variable. First choose the lookup variable by right clikcing it in the lookup variables table.")
     self.delete_lookup_variable.clicked.connect(self.delete_lookup_variable_button_clicked)
     #button to load the lookup table
     self.load_lookup_list = QPushButton(self.variables_tab_widget)
     self.load_lookup_list.setFont(QFont('Arial', 14))
     self.load_lookup_list.setGeometry(1580, 1050, 200, 30)
     self.load_lookup_list.setText("Load lookup list")
+    self.load_lookup_list.setToolTip("Button is used to load the lookup list for the variable. First choose the lookup variable by right clicking it in the lookup variables table. After that navigate and open the lookup variable list. It should be of the .mat format.")
     self.load_lookup_list.clicked.connect(self.load_lookup_list_button_clicked)
         
 # SAMPLER TAB
