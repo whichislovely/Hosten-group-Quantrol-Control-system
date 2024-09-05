@@ -1784,7 +1784,7 @@ class MainWindow(QMainWindow):
             try:
                 #initialize environment and submit the experiment to the scheduler
                 if config.package_manager == "conda":
-                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && set_slow_dds_states.py"%config.artiq_environment_name])
+                    submit_experiment_thread = threading.Thread(target=os.system, args=["conda activate %s && artiq_run set_slow_dds_states.py"%config.artiq_environment_name])
                 elif config.package_manager == "clang64":
                     submit_experiment_thread = threading.Thread(target=os.system, args=["set_slow_dds_states.bat"])
                 submit_experiment_thread.start()
