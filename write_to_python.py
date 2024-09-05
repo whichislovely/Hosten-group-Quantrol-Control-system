@@ -251,7 +251,7 @@ def create_go_to_edge(self, edge_num, to_default = False):
     file.write(indentation + "self.core.break_realtime()\n")
    
     # Initializing the devices 
-    if to_default:
+    if file_name == "init_hardware.py":
         for device in config.list_of_devices_for_initialization:
             file.write(indentation + "self.%s.init()\n"%device)
    
