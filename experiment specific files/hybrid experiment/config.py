@@ -14,7 +14,6 @@ analog_channels_number = 16
 dds_channels_number = 12
 mirny_channels_number = 4
 slow_dds_channels_number = 4
-slow_dds_channels_number = 4
 slow_dds_channels = [
     "urukul3_ch0",
     "urukul3_ch1",
@@ -24,7 +23,7 @@ slow_dds_channels = [
 sampler_channels_number = 8
 package_manager = "conda" #it can be either conda or clang64
 artiq_environment_name = "artiq_5" # it can be either artiq or artiq_5 for Hosten lab systems
-analog_card = "zotino" # it can be either fastino or zotino for Hosten lab systems
+analog_card = "fastino" # it can be either fastino or zotino for Hosten lab systems
 research_group_name = "Hosten"
 allow_skipping_images = True
 list_of_devices_for_initialization = [
@@ -65,6 +64,6 @@ list_of_devices_for_initialization = [
     "ttl13",
     "ttl14",
     "ttl15",
-    "zotino0",
+    "fastino0",
     "sampler0"
 ]
