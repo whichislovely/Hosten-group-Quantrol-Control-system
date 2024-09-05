@@ -34,7 +34,7 @@ def create_experiment(self, run_continuous = False):
     file.write(indentation + "def build(self):\n")
     indentation += "    "
     # Setting the devices to be used 
-    for device in config.list_of_devices_for_initialization:
+    for device in config.list_of_devices_for_use:
         file.write(indentation + "self.setattr_device('%s')\n" %device)
 
     # If lookup variables are requested create and load them
@@ -238,7 +238,7 @@ def create_go_to_edge(self, edge_num, to_default = False):
     file.write(indentation + "def build(self):\n")
     indentation += "    "
     # Setting the devices to be used 
-    for device in config.list_of_devices_for_initialization:
+    for device in config.list_of_devices_for_use:
         file.write(indentation + "self.setattr_device('%s')\n" %device)
     
     file.write("\n")
@@ -327,7 +327,7 @@ def set_slow_dds_states(self):
     file.write(indentation + "def build(self):\n")
     indentation += "    "
     # Setting the devices to be used 
-    for device in config.list_of_devices_for_initialization:
+    for device in config.list_of_devices_for_use:
         file.write(indentation + "self.setattr_device('%s')\n" %device)
     
     file.write("\n")
