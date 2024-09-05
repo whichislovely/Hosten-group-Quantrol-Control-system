@@ -531,54 +531,65 @@ def from_object(self):
     self.sequence_num_rows = len(self.experiment.sequence)
     self.update_off()
     #Setting the row count for each table
-    self.sequence_table.setRowCount(self.sequence_num_rows)                     
-    self.digital_table.setRowCount(self.sequence_num_rows)
-    self.digital_dummy.setRowCount(self.sequence_num_rows)
-    self.analog_table.setRowCount(self.sequence_num_rows)
-    self.analog_dummy.setRowCount(self.sequence_num_rows)
-    self.dds_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
-    self.dds_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
-    self.mirny_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
-    self.mirny_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
-    self.sampler_table.setRowCount(self.sequence_num_rows)
+    self.sequence_table.setRowCount(self.sequence_num_rows) 
+    if config.digital_channels_number > 0:
+        self.digital_table.setRowCount(self.sequence_num_rows)
+        self.digital_dummy.setRowCount(self.sequence_num_rows)
+    if config.analog_channels_number > 0:
+        self.analog_table.setRowCount(self.sequence_num_rows)
+        self.analog_dummy.setRowCount(self.sequence_num_rows)
+    if config.dds_channels_number > 0:
+        self.dds_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
+        self.dds_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
+    if config.mirny_channels_number > 0:
+        self.mirny_table.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
+        self.mirny_dummy.setRowCount(self.sequence_num_rows+2) #2 first rows are used for title name 
+    if config.sampler_channels_number > 0:
+        self.sampler_table.setRowCount(self.sequence_num_rows)
     #Separator
     self.making_separator()
     #Update titles
-    self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
-    self.digital_dummy.setHorizontalHeaderLabels(self.experiment.title_digital_tab[0:3])
-    self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
-    self.analog_dummy.setHorizontalHeaderLabels(self.experiment.title_analog_tab[0:3])
-    self.sampler_table.setHorizontalHeaderLabels(self.experiment.title_sampler_tab)
+    if config.digital_channels_number > 0:
+        self.digital_table.setHorizontalHeaderLabels(self.experiment.title_digital_tab)
+        self.digital_dummy.setHorizontalHeaderLabels(self.experiment.title_digital_tab[0:3])
+    if config.analog_channels_number > 0:
+        self.analog_table.setHorizontalHeaderLabels(self.experiment.title_analog_tab)
+        self.analog_dummy.setHorizontalHeaderLabels(self.experiment.title_analog_tab[0:3])
+    if config.sampler_channels_number > 0:
+        self.sampler_table.setHorizontalHeaderLabels(self.experiment.title_sampler_tab)
     #Update DDS titles
-    for i in range(config.dds_channels_number):
-        self.dds_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_dds_tab[i+4])))
-        self.dds_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
-        #headers Channel attributes (f, Amp, att, phase, state)
-        self.dds_dummy_header.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
-        self.dds_dummy_header.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
-        self.dds_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
-        self.dds_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
-        self.dds_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
+    if config.dds_channels_number > 0:
+        for i in range(config.dds_channels_number):
+            self.dds_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_dds_tab[i+4])))
+            self.dds_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
+            #headers Channel attributes (f, Amp, att, phase, state)
+            self.dds_dummy_header.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
+            self.dds_dummy_header.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
+            self.dds_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
+            self.dds_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
+            self.dds_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
     #Update MIRNY titles
-    for i in range(config.mirny_channels_number):
-        self.mirny_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_mirny_tab[i+4])))
-        self.mirny_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
-        #headers Channel attributes (f, Amp, att, phase, state)
-        self.mirny_dummy_header.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
-        self.mirny_dummy_header.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
-        self.mirny_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
-        self.mirny_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
-        self.mirny_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
-    #Update Slow DDS titles
-    for i in range(config.slow_dds_channels_number):
-        self.slow_dds_table.setItem(0,6*i+4 + 1, QTableWidgetItem(str(self.experiment.title_slow_dds_tab[i+4])))
-        self.slow_dds_table.item(0,6*i+4 + 1).setTextAlignment(Qt.AlignCenter)
-        #headers Channel attributes (f, Amp, att, phase, state)
-        self.slow_dds_table.setItem(1,6*i+1, QTableWidgetItem('f (MHz)'))
-        self.slow_dds_table.setItem(1,6*i+2, QTableWidgetItem('Amp (dBm)'))
-        self.slow_dds_table.setItem(1,6*i+3, QTableWidgetItem('Att (dBm)'))
-        self.slow_dds_table.setItem(1,6*i+4, QTableWidgetItem('phase (deg)'))
-        self.slow_dds_table.setItem(1,6*i+5, QTableWidgetItem('state'))
+    if config.mirny_channels_number > 0:
+        for i in range(config.mirny_channels_number):
+            self.mirny_dummy_header.setItem(0,6*i+4, QTableWidgetItem(str(self.experiment.title_mirny_tab[i+4])))
+            self.mirny_dummy_header.item(0,6*i+4).setTextAlignment(Qt.AlignCenter)
+            #headers Channel attributes (f, Amp, att, phase, state)
+            self.mirny_dummy_header.setItem(1,6*i+4, QTableWidgetItem('f (MHz)'))
+            self.mirny_dummy_header.setItem(1,6*i+5, QTableWidgetItem('Amp (dBm)'))
+            self.mirny_dummy_header.setItem(1,6*i+6, QTableWidgetItem('Att (dBm)'))
+            self.mirny_dummy_header.setItem(1,6*i+7, QTableWidgetItem('phase (deg)'))
+            self.mirny_dummy_header.setItem(1,6*i+8, QTableWidgetItem('state'))
+    if config.slow_dds_channels_number > 0:
+        #Update Slow DDS titles
+        for i in range(config.slow_dds_channels_number):
+            self.slow_dds_table.setItem(0,6*i+4 + 1, QTableWidgetItem(str(self.experiment.title_slow_dds_tab[i+4])))
+            self.slow_dds_table.item(0,6*i+4 + 1).setTextAlignment(Qt.AlignCenter)
+            #headers Channel attributes (f, Amp, att, phase, state)
+            self.slow_dds_table.setItem(1,6*i+1, QTableWidgetItem('f (MHz)'))
+            self.slow_dds_table.setItem(1,6*i+2, QTableWidgetItem('Amp (dBm)'))
+            self.slow_dds_table.setItem(1,6*i+3, QTableWidgetItem('Att (dBm)'))
+            self.slow_dds_table.setItem(1,6*i+4, QTableWidgetItem('phase (deg)'))
+            self.slow_dds_table.setItem(1,6*i+5, QTableWidgetItem('state'))
         
     if config.allow_skipping_images:
         #Updating the "Skip images" button color
@@ -595,270 +606,280 @@ def from_object(self):
         self.sequence_table.setItem(row,2, QTableWidgetItem(edge.id))
         self.sequence_table.setItem(row,3, QTableWidgetItem(edge.expression))
         self.sequence_table.setItem(row,4, QTableWidgetItem(str(edge.value)))
+        if config.digital_channels_number > 0:
+            self.digital_dummy.setItem(row,0, QTableWidgetItem(str(row)))
+            self.digital_dummy.setItem(row,1, QTableWidgetItem(edge.name))
+            self.digital_dummy.setItem(row,2, QTableWidgetItem(str(edge.value)))
 
-        self.digital_dummy.setItem(row,0, QTableWidgetItem(str(row)))
-        self.digital_dummy.setItem(row,1, QTableWidgetItem(edge.name))
-        self.digital_dummy.setItem(row,2, QTableWidgetItem(str(edge.value)))
+        if config.analog_channels_number > 0:
+            self.analog_dummy.setItem(row,0, QTableWidgetItem(str(row)))
+            self.analog_dummy.setItem(row,1, QTableWidgetItem(edge.name))
+            self.analog_dummy.setItem(row,2, QTableWidgetItem(str(edge.value)))
 
-        self.analog_dummy.setItem(row,0, QTableWidgetItem(str(row)))
-        self.analog_dummy.setItem(row,1, QTableWidgetItem(edge.name))
-        self.analog_dummy.setItem(row,2, QTableWidgetItem(str(edge.value)))
-
-        self.dds_dummy.setItem(row+2,0, QTableWidgetItem(str(row)))
-        self.dds_dummy.setItem(row+2,1, QTableWidgetItem(edge.name))
-        self.dds_dummy.setItem(row+2,2, QTableWidgetItem(str(edge.value)))   
+        if config.dds_channels_number > 0:
+            self.dds_dummy.setItem(row+2,0, QTableWidgetItem(str(row)))
+            self.dds_dummy.setItem(row+2,1, QTableWidgetItem(edge.name))
+            self.dds_dummy.setItem(row+2,2, QTableWidgetItem(str(edge.value)))   
         
-        self.mirny_dummy.setItem(row+2,0, QTableWidgetItem(str(row)))
-        self.mirny_dummy.setItem(row+2,1, QTableWidgetItem(edge.name))
-        self.mirny_dummy.setItem(row+2,2, QTableWidgetItem(str(edge.value)))   
+        if config.mirny_channels_number > 0:
+            self.mirny_dummy.setItem(row+2,0, QTableWidgetItem(str(row)))
+            self.mirny_dummy.setItem(row+2,1, QTableWidgetItem(edge.name))
+            self.mirny_dummy.setItem(row+2,2, QTableWidgetItem(str(edge.value)))   
 
-        self.sampler_table.setItem(row,0, QTableWidgetItem(str(row)))
-        self.sampler_table.setItem(row,1, QTableWidgetItem(edge.name))
-        self.sampler_table.setItem(row,2, QTableWidgetItem(str(edge.value)))
+        if config.sampler_channels_number > 0:
+            self.sampler_table.setItem(row,0, QTableWidgetItem(str(row)))
+            self.sampler_table.setItem(row,1, QTableWidgetItem(edge.name))
+            self.sampler_table.setItem(row,2, QTableWidgetItem(str(edge.value)))
 
     #Displaying DIGITAL table
-    for channel_index in range(config.digital_channels_number):
-        for row in range(self.sequence_num_rows):
-            channel = self.experiment.sequence[row].digital[channel_index]
-            # plus 4 is because first 4 columns are used by number, name, time of edge and separator
-            col = channel_index + 4
-            if channel.changed:
-                self.digital_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
-                table_item = self.digital_table.item(row, col)
-                if channel.is_sampled:
-                    table_item.setBackground(self.yellow)
-                    table_item.setToolTip("sampled")
-                elif channel.is_derived:
-                    table_item.setBackground(self.cyan)
-                    table_item.setToolTip("derived")
-                elif channel.is_lookup:
-                    table_item.setBackground(self.light_grey)
-                    table_item.setToolTip("lookup")
-                else:
-                    table_item.setToolTip(str(channel.value))                
-                    if channel.value == 1:
-                        self.digital_table.item(row,col).setBackground(self.green)
+    if config.digital_channels_number > 0:
+        for channel_index in range(config.digital_channels_number):
+            for row in range(self.sequence_num_rows):
+                channel = self.experiment.sequence[row].digital[channel_index]
+                # plus 4 is because first 4 columns are used by number, name, time of edge and separator
+                col = channel_index + 4
+                if channel.changed:
+                    self.digital_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
+                    table_item = self.digital_table.item(row, col)
+                    if channel.is_sampled:
+                        table_item.setBackground(self.yellow)
+                        table_item.setToolTip("sampled")
+                    elif channel.is_derived:
+                        table_item.setBackground(self.cyan)
+                        table_item.setToolTip("derived")
+                    elif channel.is_lookup:
+                        table_item.setBackground(self.light_grey)
+                        table_item.setToolTip("lookup")
                     else:
-                        self.digital_table.item(row,col).setBackground(self.red)
-                #Saving the current state of the channel
-                current_expression = channel.expression
-                current_evaluation = channel.evaluation
-                current_value = channel.value
-                current_for_python = channel.for_python
-                current_is_sampled = channel.is_sampled
-                current_is_derived = channel.is_derived
-                current_is_lookup = channel.is_lookup                
-            else:
-                channel.expression = current_expression
-                channel.evaluation = current_evaluation
-                channel.for_python = current_for_python
-                channel.value = current_value
-                channel.is_sampled = current_is_sampled
-                channel.is_derived = current_is_derived
-                channel.is_lookup = current_is_lookup                
-                self.digital_table.setItem(row, col, QTableWidgetItem(current_expression + " "))
-                table_item = self.digital_table.item(row, col)
-                if channel.is_sampled:
-                    table_item.setToolTip("sampled")
-                elif channel.is_derived:
-                    table_item.setToolTip("derived")
-                elif channel.is_lookup:
-                    table_item.setToolTip("lookup")
+                        table_item.setToolTip(str(channel.value))                
+                        if channel.value == 1:
+                            self.digital_table.item(row,col).setBackground(self.green)
+                        else:
+                            self.digital_table.item(row,col).setBackground(self.red)
+                    #Saving the current state of the channel
+                    current_expression = channel.expression
+                    current_evaluation = channel.evaluation
+                    current_value = channel.value
+                    current_for_python = channel.for_python
+                    current_is_sampled = channel.is_sampled
+                    current_is_derived = channel.is_derived
+                    current_is_lookup = channel.is_lookup                
                 else:
-                    table_item.setToolTip(str(channel.value))
-                #Color coding the values
-                table_item.setBackground(self.white)
+                    channel.expression = current_expression
+                    channel.evaluation = current_evaluation
+                    channel.for_python = current_for_python
+                    channel.value = current_value
+                    channel.is_sampled = current_is_sampled
+                    channel.is_derived = current_is_derived
+                    channel.is_lookup = current_is_lookup                
+                    self.digital_table.setItem(row, col, QTableWidgetItem(current_expression + " "))
+                    table_item = self.digital_table.item(row, col)
+                    if channel.is_sampled:
+                        table_item.setToolTip("sampled")
+                    elif channel.is_derived:
+                        table_item.setToolTip("derived")
+                    elif channel.is_lookup:
+                        table_item.setToolTip("lookup")
+                    else:
+                        table_item.setToolTip(str(channel.value))
+                    #Color coding the values
+                    table_item.setBackground(self.white)
 
     #Displaying ANALOG table
-    for channel_index in range(config.analog_channels_number):
-        for row in range(self.sequence_num_rows):
-            channel = self.experiment.sequence[row].analog[channel_index]
-            # plus 4 is because first 4 columns are used by number, name, time of edge and separator
-            col = channel_index + 4
-            if channel.changed:
-                self.analog_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
-                table_item = self.analog_table.item(row, col)
-                if channel.is_sampled:
-                    table_item.setBackground(self.yellow)
-                    table_item.setToolTip("sampled")
-                elif channel.is_derived:
-                    table_item.setBackground(self.cyan)
-                    table_item.setToolTip("derived")
-                elif channel.is_lookup:
-                    table_item.setBackground(self.light_grey)
-                    table_item.setToolTip("lookup")
-                else:
-                    table_item.setToolTip(str(channel.value))
-                    if channel.value == 0:
-                        self.analog_table.item(row,col).setBackground(self.red)
+    if config.analog_channels_number > 0:
+        for channel_index in range(config.analog_channels_number):
+            for row in range(self.sequence_num_rows):
+                channel = self.experiment.sequence[row].analog[channel_index]
+                # plus 4 is because first 4 columns are used by number, name, time of edge and separator
+                col = channel_index + 4
+                if channel.changed:
+                    self.analog_table.setItem(row, col, QTableWidgetItem(channel.expression + " "))
+                    table_item = self.analog_table.item(row, col)
+                    if channel.is_sampled:
+                        table_item.setBackground(self.yellow)
+                        table_item.setToolTip("sampled")
+                    elif channel.is_derived:
+                        table_item.setBackground(self.cyan)
+                        table_item.setToolTip("derived")
+                    elif channel.is_lookup:
+                        table_item.setBackground(self.light_grey)
+                        table_item.setToolTip("lookup")
                     else:
-                        self.analog_table.item(row,col).setBackground(self.green)
-                #Saving the current state of the channel
-                current_expression = channel.expression
-                current_evaluation = channel.evaluation
-                current_value = channel.value
-                current_for_python = channel.for_python
-                current_is_sampled = channel.is_sampled
-                current_is_derived = channel.is_derived
-                current_is_lookup = channel.is_lookup                
-            else:
-                channel.expression = current_expression
-                channel.evaluation = current_evaluation
-                channel.for_python = current_for_python
-                channel.value = current_value 
-                channel.is_sampled = current_is_sampled
-                channel.is_derived = current_is_derived
-                channel.is_lookup = current_is_lookup                
-                self.analog_table.setItem(row, col, QTableWidgetItem(current_expression + " "))
-                table_item = self.analog_table.item(row, col)
-                if channel.is_sampled:
-                    table_item.setToolTip("sampled")
-                elif channel.is_derived:
-                    table_item.setToolTip("derived")
-                elif channel.is_lookup:
-                    table_item.setToolTip("lookup")
-                else:                
-                    table_item.setToolTip(str(channel.value))
-                #Color coding the values
-                table_item.setBackground(self.white)                
+                        table_item.setToolTip(str(channel.value))
+                        if channel.value == 0:
+                            self.analog_table.item(row,col).setBackground(self.red)
+                        else:
+                            self.analog_table.item(row,col).setBackground(self.green)
+                    #Saving the current state of the channel
+                    current_expression = channel.expression
+                    current_evaluation = channel.evaluation
+                    current_value = channel.value
+                    current_for_python = channel.for_python
+                    current_is_sampled = channel.is_sampled
+                    current_is_derived = channel.is_derived
+                    current_is_lookup = channel.is_lookup                
+                else:
+                    channel.expression = current_expression
+                    channel.evaluation = current_evaluation
+                    channel.for_python = current_for_python
+                    channel.value = current_value 
+                    channel.is_sampled = current_is_sampled
+                    channel.is_derived = current_is_derived
+                    channel.is_lookup = current_is_lookup                
+                    self.analog_table.setItem(row, col, QTableWidgetItem(current_expression + " "))
+                    table_item = self.analog_table.item(row, col)
+                    if channel.is_sampled:
+                        table_item.setToolTip("sampled")
+                    elif channel.is_derived:
+                        table_item.setToolTip("derived")
+                    elif channel.is_lookup:
+                        table_item.setToolTip("lookup")
+                    else:                
+                        table_item.setToolTip(str(channel.value))
+                    #Color coding the values
+                    table_item.setBackground(self.white)                
 
     #Displaying DDS table
-    for channel_index in range(config.dds_channels_number):
-        for setting in range(5):
-            for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
-                channel = self.experiment.sequence[row-2].dds[channel_index]
-                # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
-                col = channel_index * 6 + 4 + setting
-                exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
-                channel_entry = self.channel_entry
-                if channel.changed: 
-                    self.dds_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
-                    table_item = self.dds_table.item(row, col)
-                    if channel_entry.is_sampled:
-                        table_item.setBackground(self.yellow)
-                        table_item.setToolTip("sampled")
-                    elif channel_entry.is_derived:
-                        table_item.setBackground(self.cyan)
-                        table_item.setToolTip("derived")
-                    elif channel_entry.is_lookup:
-                        table_item.setBackground(self.light_grey)
-                        table_item.setToolTip("lookup")
-                    else:
-                        table_item.setToolTip(str(channel_entry.value))
-                        if channel.state.value == 1:
-                            self.dds_table.item(row, col).setBackground(self.green)
+    if config.dds_channels_number > 0:
+        for channel_index in range(config.dds_channels_number):
+            for setting in range(5):
+                for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
+                    channel = self.experiment.sequence[row-2].dds[channel_index]
+                    # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
+                    col = channel_index * 6 + 4 + setting
+                    exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
+                    channel_entry = self.channel_entry
+                    if channel.changed: 
+                        self.dds_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                        table_item = self.dds_table.item(row, col)
+                        if channel_entry.is_sampled:
+                            table_item.setBackground(self.yellow)
+                            table_item.setToolTip("sampled")
+                        elif channel_entry.is_derived:
+                            table_item.setBackground(self.cyan)
+                            table_item.setToolTip("derived")
+                        elif channel_entry.is_lookup:
+                            table_item.setBackground(self.light_grey)
+                            table_item.setToolTip("lookup")
                         else:
-                            self.dds_table.item(row, col).setBackground(self.red)
-                    current_expression = channel_entry.expression
-                    current_evaluation = channel_entry.evaluation
-                    current_value = channel_entry.value
-                    current_for_python = channel_entry.for_python
-                    current_is_sampled = channel_entry.is_sampled
-                    current_is_derived = channel_entry.is_derived
-                    current_is_lookup = channel_entry.is_lookup                    
-                else:
-                    self.dds_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
-                    table_item = self.dds_table.item(row, col)
-                    channel_entry.expression = current_expression
-                    channel_entry.evaluation = current_evaluation
-                    channel_entry.for_python = current_for_python
-                    channel_entry.value = current_value
-                    channel_entry.is_sampled = current_is_sampled
-                    channel_entry.is_derived = current_is_derived
-                    channel_entry.is_lookup = current_is_lookup 
-                    if channel_entry.is_sampled:
-                        table_item.setToolTip("sampled")
-                    elif channel_entry.is_derived:
-                        table_item.setToolTip("derived")
-                    elif channel_entry.is_lookup:
-                        table_item.setToolTip("lookup")
-                    else:                        
-                        table_item.setToolTip(str(channel_entry.value))                                       
-                    #Color coding the values
-                    table_item.setBackground(self.white)
+                            table_item.setToolTip(str(channel_entry.value))
+                            if channel.state.value == 1:
+                                self.dds_table.item(row, col).setBackground(self.green)
+                            else:
+                                self.dds_table.item(row, col).setBackground(self.red)
+                        current_expression = channel_entry.expression
+                        current_evaluation = channel_entry.evaluation
+                        current_value = channel_entry.value
+                        current_for_python = channel_entry.for_python
+                        current_is_sampled = channel_entry.is_sampled
+                        current_is_derived = channel_entry.is_derived
+                        current_is_lookup = channel_entry.is_lookup                    
+                    else:
+                        self.dds_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                        table_item = self.dds_table.item(row, col)
+                        channel_entry.expression = current_expression
+                        channel_entry.evaluation = current_evaluation
+                        channel_entry.for_python = current_for_python
+                        channel_entry.value = current_value
+                        channel_entry.is_sampled = current_is_sampled
+                        channel_entry.is_derived = current_is_derived
+                        channel_entry.is_lookup = current_is_lookup 
+                        if channel_entry.is_sampled:
+                            table_item.setToolTip("sampled")
+                        elif channel_entry.is_derived:
+                            table_item.setToolTip("derived")
+                        elif channel_entry.is_lookup:
+                            table_item.setToolTip("lookup")
+                        else:                        
+                            table_item.setToolTip(str(channel_entry.value))                                       
+                        #Color coding the values
+                        table_item.setBackground(self.white)
                     
     #Displaying MIRNY table
-    for channel_index in range(config.mirny_channels_number):
-        for setting in range(5):
-            for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
-                channel = self.experiment.sequence[row-2].mirny[channel_index]
-                # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
-                col = channel_index * 6 + 4 + setting
-                exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
-                channel_entry = self.channel_entry
-                if channel.changed: 
-                    self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
-                    table_item = self.mirny_table.item(row, col)
-                    if channel_entry.is_sampled:
-                        table_item.setBackground(self.yellow)
-                        table_item.setToolTip("sampled")
-                    elif channel_entry.is_derived:
-                        table_item.setBackground(self.cyan)
-                        table_item.setToolTip("derived")
-                    elif channel_entry.is_lookup:
-                        table_item.setBackground(self.light_grey)
-                        table_item.setToolTip("lookup")
-                    else:
-                        table_item.setToolTip(str(channel_entry.value))
-                        if channel.state.value == 1:
-                            self.mirny_table.item(row, col).setBackground(self.green)
+    if config.mirny_channels_number > 0:
+        for channel_index in range(config.mirny_channels_number):
+            for setting in range(5):
+                for row in range(2, self.sequence_num_rows+2): # plus 2 because of 2 rows used for title
+                    channel = self.experiment.sequence[row-2].mirny[channel_index]
+                    # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
+                    col = channel_index * 6 + 4 + setting
+                    exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
+                    channel_entry = self.channel_entry
+                    if channel.changed: 
+                        self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                        table_item = self.mirny_table.item(row, col)
+                        if channel_entry.is_sampled:
+                            table_item.setBackground(self.yellow)
+                            table_item.setToolTip("sampled")
+                        elif channel_entry.is_derived:
+                            table_item.setBackground(self.cyan)
+                            table_item.setToolTip("derived")
+                        elif channel_entry.is_lookup:
+                            table_item.setBackground(self.light_grey)
+                            table_item.setToolTip("lookup")
                         else:
-                            self.mirny_table.item(row, col).setBackground(self.red)
-                    current_expression = channel_entry.expression
-                    current_evaluation = channel_entry.evaluation
-                    current_value = channel_entry.value
-                    current_for_python = channel_entry.for_python
-                    current_is_sampled = channel_entry.is_sampled
-                    current_is_derived = channel_entry.is_derived
-                    current_is_lookup = channel_entry.is_lookup                   
-                else:
-                    self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
-                    table_item = self.mirny_table.item(row, col)
-                    channel_entry.expression = current_expression
-                    channel_entry.evaluation = current_evaluation
-                    channel_entry.for_python = current_for_python
-                    channel_entry.value = current_value
-                    channel_entry.is_sampled = current_is_sampled
-                    channel_entry.is_derived = current_is_derived
-                    channel_entry.is_lookup = current_is_lookup                     
-                    if channel_entry.is_sampled:
-                        table_item.setToolTip("sampled")
-                    elif channel_entry.is_derived:
-                        table_item.setToolTip("derived")
-                    elif channel_entry.is_lookup:
-                        table_item.setToolTip("lookup")
-                    else:                        
-                        table_item.setToolTip(str(channel_entry.value))                                       
-                    #Color coding the values
-                    table_item.setBackground(self.white)
+                            table_item.setToolTip(str(channel_entry.value))
+                            if channel.state.value == 1:
+                                self.mirny_table.item(row, col).setBackground(self.green)
+                            else:
+                                self.mirny_table.item(row, col).setBackground(self.red)
+                        current_expression = channel_entry.expression
+                        current_evaluation = channel_entry.evaluation
+                        current_value = channel_entry.value
+                        current_for_python = channel_entry.for_python
+                        current_is_sampled = channel_entry.is_sampled
+                        current_is_derived = channel_entry.is_derived
+                        current_is_lookup = channel_entry.is_lookup                   
+                    else:
+                        self.mirny_table.setItem(row, col, QTableWidgetItem(channel_entry.expression + " "))
+                        table_item = self.mirny_table.item(row, col)
+                        channel_entry.expression = current_expression
+                        channel_entry.evaluation = current_evaluation
+                        channel_entry.for_python = current_for_python
+                        channel_entry.value = current_value
+                        channel_entry.is_sampled = current_is_sampled
+                        channel_entry.is_derived = current_is_derived
+                        channel_entry.is_lookup = current_is_lookup                     
+                        if channel_entry.is_sampled:
+                            table_item.setToolTip("sampled")
+                        elif channel_entry.is_derived:
+                            table_item.setToolTip("derived")
+                        elif channel_entry.is_lookup:
+                            table_item.setToolTip("lookup")
+                        else:                        
+                            table_item.setToolTip(str(channel_entry.value))                                       
+                        #Color coding the values
+                        table_item.setBackground(self.white)
 
     #Displaying Slow DDS table
-    for channel_index in range(config.slow_dds_channels_number):
-        for setting in range(5):
-            row = 2
-            channel = self.experiment.slow_dds[channel_index]
-            # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
-            col = channel_index * 6 + 1 + setting
-            exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
-            channel_entry = self.channel_entry
-            self.slow_dds_table.setItem(row, col, QTableWidgetItem(str(channel_entry)))
-            if channel.state == 1:
-                self.slow_dds_table.item(row, col).setBackground(self.green)
-            else:
-                self.slow_dds_table.item(row, col).setBackground(self.red)
+    if config.slow_dds_channels_number > 0:
+        for channel_index in range(config.slow_dds_channels_number):
+            for setting in range(5):
+                row = 2
+                channel = self.experiment.slow_dds[channel_index]
+                # plus 4 is because first 4 columns are used by number, name, time of edge and separator and times 6 is becuase each channel has 5 columns and 1 separator
+                col = channel_index * 6 + 1 + setting
+                exec("self.channel_entry = channel.%s" %self.setting_dict[setting])
+                channel_entry = self.channel_entry
+                self.slow_dds_table.setItem(row, col, QTableWidgetItem(str(channel_entry)))
+                if channel.state == 1:
+                    self.slow_dds_table.item(row, col).setBackground(self.green)
+                else:
+                    self.slow_dds_table.item(row, col).setBackground(self.red)
 
     #Displaying SAMPLER table
-    for channel_index in range(config.sampler_channels_number):
-        for row in range(self.sequence_num_rows):
-            channel = self.experiment.sequence[row].sampler[channel_index]
-            # plus 4 is because first 4 columns are used by number, name, time of edge and separator
-            col = channel_index + 4
-            if channel != "0":
-                self.sampler_table.setItem(row, col, QTableWidgetItem(str(channel)))
-                self.sampler_table.item(row, col).setBackground(self.green)
-            elif channel == "0":
-                self.sampler_table.setItem(row, col, QTableWidgetItem("0"))
-                self.sampler_table.item(row, col).setBackground(self.white)
+    if config.sampler_channels_number > 0:
+        for channel_index in range(config.sampler_channels_number):
+            for row in range(self.sequence_num_rows):
+                channel = self.experiment.sequence[row].sampler[channel_index]
+                # plus 4 is because first 4 columns are used by number, name, time of edge and separator
+                col = channel_index + 4
+                if channel != "0":
+                    self.sampler_table.setItem(row, col, QTableWidgetItem(str(channel)))
+                    self.sampler_table.item(row, col).setBackground(self.green)
+                elif channel == "0":
+                    self.sampler_table.setItem(row, col, QTableWidgetItem("0"))
+                    self.sampler_table.item(row, col).setBackground(self.white)
 
     #building variables table from the self.experiment.new_variables array
     variables_tab(self)

@@ -12,7 +12,7 @@ For the list_of_devices_for_initialization you can have a look at your device_db
 digital_channels_number = 16
 analog_channels_number = 16
 dds_channels_number = 12
-mirny_channels_number = 4
+mirny_channels_number = 0
 slow_dds_channels_number = 4
 slow_dds_channels_number = 4
 slow_dds_channels = [

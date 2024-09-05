@@ -402,13 +402,19 @@ class MainWindow(QMainWindow):
        
         #ADDING TABS TO MAIN WINDOW
         self.main_window.addTab(self.sequence_tab_widget, "Sequence")
-        self.main_window.addTab(self.digital_tab_widget, "Digital")
-        self.main_window.addTab(self.analog_tab_widget, "Analog")
-        self.main_window.addTab(self.dds_tab_widget, "DDS")
-        self.main_window.addTab(self.mirny_tab_widget, "Mirny")
-        self.main_window.addTab(self.sampler_tab_widget, "Sampler")
+        if config.digital_channels_number > 0:
+            self.main_window.addTab(self.digital_tab_widget, "Digital")
+        if config.analog_channels_number > 0:
+           self.main_window.addTab(self.analog_tab_widget, "Analog")
+        if config.dds_channels_number > 0:
+            self.main_window.addTab(self.dds_tab_widget, "DDS")
+        if config.mirny_channels_number > 0:
+            self.main_window.addTab(self.mirny_tab_widget, "Mirny")
+        if config.sampler_channels_number > 0:
+            self.main_window.addTab(self.sampler_tab_widget, "Sampler")
         self.main_window.addTab(self.variables_tab_widget, "Variables")
-        self.main_window.addTab(self.slow_dds_tab_widget, "Slow DDS")
+        if config.slow_dds_channels_number > 0:
+            self.main_window.addTab(self.slow_dds_tab_widget, "Slow DDS")
         self.to_update = True
         
     '''
@@ -481,38 +487,45 @@ class MainWindow(QMainWindow):
         '''
         #making the separation rows a single column
         if self.sequence_num_rows > 1: # to avoid having a warning that single cell span won't be added
-            self.digital_table.setSpan(0,3, self.sequence_num_rows, 1)
-            self.analog_table.setSpan(0,3, self.sequence_num_rows, 1)
-            self.sampler_table.setSpan(0,3, self.sequence_num_rows, 1)
-        else:
-            pass
+            if config.dds_channels_number > 0:
+                self.digital_table.setSpan(0,3, self.sequence_num_rows, 1)
+            if config.analog_channels_number > 0:
+                self.analog_table.setSpan(0,3, self.sequence_num_rows, 1)
+            if config.sampler_channels_number > 0:
+                self.sampler_table.setSpan(0,3, self.sequence_num_rows, 1)
+ 
         # grey coloured separating line digital tab
-        self.digital_table.setItem(0,3, QTableWidgetItem())
-        self.digital_table.item(0,3).setBackground(self.grey)
+        if config.digital_channels_number > 0:
+            self.digital_table.setItem(0,3, QTableWidgetItem())
+            self.digital_table.item(0,3).setBackground(self.grey)
         # grey coloured separating line analog tab
-        self.analog_table.setItem(0,3, QTableWidgetItem())
-        self.analog_table.item(0,3).setBackground(self.grey)
+        if config.analog_channels_number > 0:
+            self.analog_table.setItem(0,3, QTableWidgetItem())
+            self.analog_table.item(0,3).setBackground(self.grey)
         # grey coloured separating line dds tab
-        self.dds_dummy.setSpan(0,3, self.sequence_num_rows + 2, 1)  
-        self.dds_dummy.setItem(0,3, QTableWidgetItem())
-        self.dds_dummy.item(0,3).setBackground(self.grey)
-        # grey coloured separating line in dds tab between channels
-        for i in range(config.dds_channels_number):
-            self.dds_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
-            self.dds_table.setItem(0,6*i + 3, QTableWidgetItem())
-            self.dds_table.item(0, 6*i + 3).setBackground(self.grey)
+        if config.dds_channels_number > 0:
+            self.dds_dummy.setSpan(0,3, self.sequence_num_rows + 2, 1)  
+            self.dds_dummy.setItem(0,3, QTableWidgetItem())
+            self.dds_dummy.item(0,3).setBackground(self.grey)
+            # grey coloured separating line in dds tab between channels
+            for i in range(config.dds_channels_number):
+                self.dds_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
+                self.dds_table.setItem(0,6*i + 3, QTableWidgetItem())
+                self.dds_table.item(0, 6*i + 3).setBackground(self.grey)
         # grey coloured separating line mirny tab
-        self.mirny_dummy.setSpan(0,3, self.sequence_num_rows + 2, 1)  
-        self.mirny_dummy.setItem(0,3, QTableWidgetItem())
-        self.mirny_dummy.item(0,3).setBackground(self.grey)
-        # grey coloured separating line in mirny tab between channels
-        for i in range(config.mirny_channels_number):
-            self.mirny_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
-            self.mirny_table.setItem(0,6*i + 3, QTableWidgetItem())
-            self.mirny_table.item(0, 6*i + 3).setBackground(self.grey)
+        if config.mirny_channels_number > 0:
+            self.mirny_dummy.setSpan(0,3, self.sequence_num_rows + 2, 1)  
+            self.mirny_dummy.setItem(0,3, QTableWidgetItem())
+            self.mirny_dummy.item(0,3).setBackground(self.grey)
+            # grey coloured separating line in mirny tab between channels
+            for i in range(config.mirny_channels_number):
+                self.mirny_table.setSpan(0, 6*i + 3, self.sequence_num_rows+2, 1)
+                self.mirny_table.setItem(0,6*i + 3, QTableWidgetItem())
+                self.mirny_table.item(0, 6*i + 3).setBackground(self.grey)
         # grey coloured separating line sampler tab
-        self.sampler_table.setItem(0,3, QTableWidgetItem())
-        self.sampler_table.item(0,3).setBackground(self.grey)
+        if config.sampler_channels_number > 0:
+            self.sampler_table.setItem(0,3, QTableWidgetItem())
+            self.sampler_table.item(0,3).setBackground(self.grey)
      
 
 
@@ -2046,16 +2059,24 @@ class MainWindow(QMainWindow):
             if row == 0:
                 self.error_message("You can not delete a dummy example", "Protected variable")
             else:
-                #ADD HERE A CHECK IF THE VARIABLE IS USED OR NOT
                 name = self.derived_variables_table.item(row,0).text()
-                edge_index = self.find_edge_index_by_id(self.experiment.derived_variables[row-1].edge_id)
-                if edge_index != None:
-                    self.experiment.sequence[edge_index].derived_variable_requested = 0
-                self.experiment.names_of_derived_variables.remove(name)
-                del self.experiment.derived_variables[row-1] # -1 is due to the dummy variable taking the first row
+                backup = deepcopy(self.experiment.variables[name])
                 del self.experiment.variables[name]
-                self.derived_variables_table.setCurrentCell(row-1, 0)
-                update.variables_tab(self, new_variables = False, lookup_variables = False)
+                return_value = update.digital_analog_dds_mirny_tabs(self)
+                if return_value == None: #Derived variable is not used anywhere and can be deleted
+                    #Undoing the edge id requested to derive the variable
+                    edge_index = self.find_edge_index_by_id(self.experiment.derived_variables[row-1].edge_id)
+                    if edge_index != None:
+                        self.experiment.sequence[edge_index].derived_variable_requested = 0
+                    self.experiment.names_of_derived_variables.remove(name)
+                    del self.experiment.derived_variables[row-1] # -1 is due to the dummy variable taking the first row
+                    self.derived_variables_table.setCurrentCell(row-1, 0)
+                    update.variables_tab(self, new_variables = False, lookup_variables = False)
+                else: #Derived variable is used and can not be deleted
+                    self.experiment.variables[backup.name] = backup
+                    update.digital_analog_dds_mirny_tabs(self)
+                    update.variables_tab(self, new_variables = False, lookup_variables = False)
+                    self.error_message('The variable is used in %s.'%return_value,'Can not delete used variable')
         except: #In case the user pressed delete variable button without selecting the variable that needs to be deleted
             self.error_message("Select the variable that needs to be deleted", "No variable selected")
 
@@ -2116,10 +2137,21 @@ class MainWindow(QMainWindow):
             self.update_on()
             if col == 0: #Variable name was changed
                 if table_item_text not in self.experiment.variables:
+                    backup = deepcopy(self.experiment.variables[variable.name])
                     del self.experiment.variables[variable.name]
-                    variable.name = table_item_text
-                    self.experiment.variables[variable.name] = self.Variable(name = variable.name, value = 0.0, for_python = 0.0, is_derived = True)
-                    self.experiment.names_of_derived_variables.add(variable.name)
+                    return_value = update.digital_analog_dds_mirny_tabs(self)
+                    if return_value == None: #The previous variable was not used and the name can be changed
+                        self.experiment.names_of_derived_variables.remove(variable.name)
+                        self.experiment.names_of_derived_variables.add(table_item_text)
+                        backup.name = table_item_text
+                        variable.name = table_item_text
+                        self.experiment.variables[backup.name] = backup
+                    else: #The previous variable was used and the name can not be changed
+                        self.error_message("The variable is used in %s"%return_value, "Used variable")
+                        self.experiment.variables[backup.name] = backup
+                        self.update_off()
+                        self.derived_variables_table.item(row,col).setText(backup.name)
+                        self.update_on()
                 else:
                     self.error_message("Variable name is already used", "Wrong variable name")
                     self.update_off()
@@ -2144,7 +2176,14 @@ class MainWindow(QMainWindow):
                 new_edge_id = table_item_text
                 if self.find_edge_index_by_id(new_edge_id) == None:
                     self.error_message("The edge id was not found. Please enter correct id value", "Wrong id entered")
+                    self.update_off()
                     self.derived_variables_table.item(row,col).setText(variable.edge_id)
+                    self.update_on()
+                elif new_edge_id == "id0":
+                    self.error_message("User is restricted from using id0 for requesting derivation of variable. All other edges are allowed.","Default edge!")
+                    self.update_off()
+                    self.derived_variables_table.item(row,col).setText(variable.edge_id)
+                    self.update_on()
                 else:
                     if variable.edge_id != "":  #In case it was another id before we need to make that edge.derived_variable_requested to 0 which means that it is not requested
                         edge_index = self.find_edge_index_by_id(variable.edge_id)
@@ -2171,10 +2210,21 @@ class MainWindow(QMainWindow):
             self.update_on()
             if col == 0: #Variable name was changed
                 if table_item_text not in self.experiment.variables:
+                    backup = deepcopy(self.experiment.variables[variable.name])
                     del self.experiment.variables[variable.name]
-                    variable.name = table_item_text
-                    self.experiment.variables[variable.name] = self.Variable(name = variable.name, value = 0.0, for_python = 0.0, is_lookup = True)
-                    self.experiment.names_of_lookup_variables.add(variable.name)
+                    return_value = update.digital_analog_dds_mirny_tabs(self)
+                    if return_value == None: #The previous variable was not used and the name can be changed
+                        self.experiment.names_of_lookup_variables.remove(variable.name)
+                        self.experiment.names_of_lookup_variables.add(table_item_text)
+                        backup.name = table_item_text
+                        variable.name = table_item_text
+                        self.experiment.variables[backup.name] = backup
+                    else: #The previous variable was used and the name can not be changed
+                        self.error_message("The variable is used in %s"%return_value, "Used variable")
+                        self.experiment.variables[backup.name] = backup
+                        self.update_off()
+                        self.lookup_variables_table.item(row,col).setText(backup.name)
+                        self.update_on()
                 else:
                     self.error_message("Variable name is already used", "Wrong variable name")
                     self.update_off()
