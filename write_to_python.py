@@ -126,7 +126,7 @@ def create_experiment(self, run_continuous = False):
             if index_of_derived_variable != -1:
                 variable = self.experiment.derived_variables[index_of_derived_variable]
                 file.write(indentation + "%s = calculate_%s(%s)\n"%(variable.name, variable.name, variable.arguments))
-       
+
         #DIGITAL CHANNEL CHANGES
         if config.dds_channels_number > 0:
             for index, channel in enumerate(self.experiment.sequence[edge_index].digital):

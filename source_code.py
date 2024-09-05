@@ -322,15 +322,18 @@ class MainWindow(QMainWindow):
             is_scanned  :   Flag indicating if the variable is scanned
             for_python  :   The version of the variable description that is used in the python like experimental sequence
                             generation. It is only used in write_to_python.py and only updated when the run_experiment_button_clicked
+            is_scanned  :   Flag indicatinf if the variable is a scanned variable
+            is_sampled  :   Flag indicating if the variable is a sampled variable
             is_derived  :   Flag indicating if the variable is a derived variable
             is_lookup   :   Flag indicating if the variable is a lookup variable
             argument    :   Argument used for the lookup variables
         '''         
-        def __init__(self, name, value, for_python, is_scanned = False, is_derived = False, is_lookup = False):
+        def __init__(self, name, value, for_python, is_scanned = False, is_sampled = False, is_derived = False, is_lookup = False):
             self.name = name
             self.value = value
             self.for_python = for_python
             self.is_scanned = is_scanned
+            self.is_sampled = is_sampled
             self.is_derived = is_derived
             self.is_lookup = is_lookup
             self.argument = ""
@@ -594,7 +597,7 @@ class MainWindow(QMainWindow):
                         output_for_python += "%s" %current + text[index]
                         is_derived = True
                     elif variable.is_lookup: #if lookup assign the self.name[argument] 
-                        output_for_python += "self.%s[%s]"%(current, self.experiment.variables[current].argument) + text[index]
+                        output_for_python += "self.%s[(%s-1)/0.1]"%(current, self.experiment.variables[current].argument) + text[index]
                         is_lookup = True
                     else:
                         output_for_python += str(variable.value) + text[index]
@@ -762,7 +765,6 @@ class MainWindow(QMainWindow):
         #appending a new edge with a unique id
         new_unique_id = self.find_unique_id()
         new_edge = deepcopy(self.experiment.sequence[-1]) #copying the last edge
-        new_edge.derived_variable_requested = -1
         new_edge.id = new_unique_id
         new_edge.name = ""
         self.experiment.sequence.append(new_edge)
@@ -782,6 +784,8 @@ class MainWindow(QMainWindow):
         #Setting MIRNY table values to not changed
         for channel in self.experiment.sequence[-1].mirny:
             channel.changed = False
+        #Setting SAMPLER table values to 0
+        self.experiment.sequence[-1].sampler = ["0"]*8
 
         update.from_object(self)
         self.update_on()
@@ -1027,15 +1031,18 @@ class MainWindow(QMainWindow):
         # for variable in self.experiment.lookup_variables:
         #     print("name: ", variable.name, "argument:", variable.argument)
 
-        # print("EDGES")
-        # for ind, edge in enumerate(self.experiment.sequence):
-        #     print("edge", ind)
-        #     print("    chanel", ind,"evaluation", edge.evaluation, "for_python", edge.for_python, "scanned", edge.is_scanned)
-        # print("END")
-        print("Mirny")
+        print("EDGES")
         for ind, edge in enumerate(self.experiment.sequence):
-            for mirny in edge.mirny:
-                print(ind, mirny.frequency.is_sampled)
+            print("edge", ind)
+            # print("chanel", ind, "evaluation", edge.evaluation, "for_python", edge.for_python, "scanned", edge.is_scanned)
+            print("derived variable requested", edge.derived_variable_requested)
+        print("END")
+
+        # MIRNY
+        # print("Mirny")
+        # for ind, edge in enumerate(self.experiment.sequence):
+        #     for mirny in edge.mirny:
+        #         print(ind, mirny.frequency.is_sampled)
 
         # print("analog channel values")
         # for edge in self.experiment.sequence:
@@ -1815,6 +1822,7 @@ class MainWindow(QMainWindow):
         try:
             row = self.variables_table.selectedIndexes()[0].row()
             name = self.variables_table.item(row,0).text()
+            variable = self.experiment.new_variables[row]
             if name not in self.experiment.sampler_variables: # Check if the variable is being sampled 
                 #Checking if the variable is being scanned
                 variable_scanned = False
@@ -1823,27 +1831,38 @@ class MainWindow(QMainWindow):
                         variable_scanned = True
                         break
                 if variable_scanned == False:
-                    # Checking if the variable is being used in a lookup variables as an argument
-                    is_lookup_argument = False
-                    for lookup_variable in self.experiment.lookup_variables:
-                        if name == lookup_variable.argument:
-                            is_lookup_argument = True
-                            break
-                    if not is_lookup_argument:
-                        backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
-                        del self.experiment.variables[name]
-                        self.variables_table.setCurrentCell(row-1,0)
-                        return_value = update.digital_analog_dds_mirny_tabs(self) #we need to update only values not expressions
-                        if return_value == None: #Variable can be deleted
-                            del self.experiment.new_variables[row]
-                            update.variables_tab(self)
-                        else: #Variable can not be deleted. Reverting all changes back to previous state
-                            self.experiment.variables[name] = backup
-                            update.digital_analog_dds_mirny_tabs(self) 
-                            update.variables_tab(self)
-                            self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                    #Checking if the variable is being used in arguments of derived variables
+                    is_derived_argument = False
+                    for derived_variable in self.experiment.derived_variables:
+                        arguments = derived_variable.arguments.replace(" ","").split(",")
+                        for argument in arguments:
+                            if variable.name == argument:
+                                is_derived_argument = True
+                                break
+                    if not is_derived_argument:
+                        # Checking if the variable is being used in a lookup variables as an argument
+                        is_lookup_argument = False
+                        for lookup_variable in self.experiment.lookup_variables:
+                            if name == lookup_variable.argument:
+                                is_lookup_argument = True
+                                break
+                        if not is_lookup_argument:
+                            backup = deepcopy(self.experiment.variables[name]) #used to be able to revert the process of deletion
+                            del self.experiment.variables[name]
+                            self.variables_table.setCurrentCell(row-1,0)
+                            return_value = update.digital_analog_dds_mirny_tabs(self) #we need to update only values not expressions
+                            if return_value == None: #Variable can be deleted
+                                del self.experiment.new_variables[row]
+                                update.variables_tab(self)
+                            else: #Variable can not be deleted. Reverting all changes back to previous state
+                                self.experiment.variables[name] = backup
+                                update.digital_analog_dds_mirny_tabs(self) 
+                                update.variables_tab(self)
+                                self.error_message('The variable is used in %s.'%return_value, 'Can not delete used variable')
+                        else:
+                            self.error_message("The variable is used as a argument in lookup variables. Remove it from the Lookup variables table before deleting it.", "Lookup variable's argument")
                     else:
-                        self.error_message("The variable is used as a argument in lookup variables. Remove it from the Lookup variables table before deleting it.", "Lookup variable's argument")
+                        self.error_message("The variable is used as a argument in derived variables. Remove it from the Derived variables table before deleting it.", "Derived variable's argument")
                 else:
                     self.error_message("The variable is scanned. Remove it from the scan table before deleting.", "Scanned variable")
             else:
@@ -2067,7 +2086,7 @@ class MainWindow(QMainWindow):
                     #Undoing the edge id requested to derive the variable
                     edge_index = self.find_edge_index_by_id(self.experiment.derived_variables[row-1].edge_id)
                     if edge_index != None:
-                        self.experiment.sequence[edge_index].derived_variable_requested = 0
+                        self.experiment.sequence[edge_index].derived_variable_requested = -1
                     self.experiment.names_of_derived_variables.remove(name)
                     del self.experiment.derived_variables[row-1] # -1 is due to the dummy variable taking the first row
                     self.derived_variables_table.setCurrentCell(row-1, 0)
@@ -2158,15 +2177,15 @@ class MainWindow(QMainWindow):
                     self.derived_variables_table.item(row,col).setText(self.experiment.derived_variables[row-1].name)
                     self.update_on()
             if col == 1: #Variable arguments were changed
-                #Checking if the variables in the arguments are declared in the variables table
+                #Checking if the variables in the arguments are sampled variables
                 arguments = table_item_text.split(",")
-                missing_variable = False
+                not_a_sampled_variable = False
                 for argument in arguments:
-                    if argument not in self.experiment.variables:
-                        missing_variable = True
+                    if argument not in self.experiment.sampler_variables:
+                        not_a_sampled_variable = True
                         break
-                if missing_variable: #Reverting back the Arguments table entry
-                    self.error_message("Arguments include missing variables. First create variables in variables tab","Wrong arguments")
+                if not_a_sampled_variable: #Reverting back the Arguments table entry
+                    self.error_message("Arguments include not sampled variables. First create variables in variables tab and then add them to the sampler to make them sampled","Not sampled arguments")
                     self.update_off()
                     self.derived_variables_table.item(row,col).setText(self.experiment.derived_variables[row-1].arguments)
                     self.update_on()
@@ -2231,8 +2250,9 @@ class MainWindow(QMainWindow):
                     self.lookup_variables_table.item(row, col).setText(self.experiment.lookup_variables[row-1].name)
                     self.update_on()
             if col == 1: #Variable argument was changed
-                if table_item_text not in self.experiment.variables:
-                    self.error_message("Argument include missing variable. First create a variable in variables tab", "Wrong argument")
+                #Checking if the variable in the argument is a sampled variable
+                if table_item_text not in self.experiment.sampler_variables:
+                    self.error_message("Argument include not sampled variable. First create a variable in variables tab and then add it in the sampler to make it sampled", "Not sampled argument")
                     self.update_off()
                     self.lookup_variables_table.item(row, col).setText(self.experiment.lookup_variables[row-1].argument)
                     self.update_on()
@@ -2293,41 +2313,69 @@ class MainWindow(QMainWindow):
             col = item.column()
             table_item = self.sampler_table.item(row, col)
             table_entry = self.sampler_table.item(row,col).text()
-            channel = self.experiment.sequence[row].sampler[col-4]
-            if table_entry == "" or table_entry == "0" or table_entry == "0.0": #User deleted the value or set it to 0. The function will assign 0 value
-                if channel in self.experiment.sampler_variables: #if the previous value of the sampler was a variable we need to revert back the variables tab value and activate editing
-                    self.experiment.sampler_variables.remove(channel)
-                    update.variables_tab(self, derived_variables = False)
-                self.update_off()
-                table_item.setText("0")
-                self.update_on()
-            else: #User attempted to assign a variable name to the sampler input
-                if table_entry in self.experiment.variables: #Check if the variable name is defined in the variables tab
-                    if self.experiment.variables[table_entry].is_scanned == False: #Check if the variable name is not scanned
-                        if table_entry not in self.experiment.sampler_variables:
-                            #Remove the previous variable from the sampler variables if it was not 0 before the human entry
-                            if channel in self.experiment.sampler_variables:
-                                self.experiment.sampler_variables.remove(channel)
-                            self.experiment.sequence[row].sampler[col-4] = table_entry #Updating the sampler value
-                            self.experiment.sampler_variables.add(table_entry) #Adding a new variable to the sampler variables set
+            channel = self.experiment.sequence[row].sampler[col-4] # channel is a variable name or 0
+            #Checking if the variable is used in derived variables table as an argument
+            not_in_derived_variables = True
+            for derived_variable in self.experiment.derived_variables:
+                arguments = derived_variable.arguments.split(",")
+                for argument in arguments:
+                    if channel == argument:
+                        not_in_derived_variables = False
+                        break
+            if not_in_derived_variables:
+                not_in_lookup_variables = True
+                #Checking if the variable is used in lookup variables
+                for lookup_variable in self.experiment.lookup_variables:
+                    if channel == lookup_variable.argument:
+                        not_in_lookup_variables = False
+                        break
+                if not_in_lookup_variables:
+                    if table_entry == "" or table_entry == "0" or table_entry == "0.0": #User deleted the value or set it to 0. The function will assign 0 value
+                        if channel in self.experiment.sampler_variables: #if the previous value of the sampler was a variable we need to revert back the variables tab value and activate editing
+                            self.experiment.sampler_variables.remove(channel)
                             update.variables_tab(self, derived_variables = False)
+                        self.update_off()
+                        table_item.setText("0")
+                        self.update_on()
+                    else: #User attempted to assign a variable name to the sampler input
+                        if table_entry in self.experiment.variables: #Check if the variable name is defined in the variables tab
+                            if self.experiment.variables[table_entry].is_scanned == False: #Check if the variable name is not scanned
+                                if table_entry not in self.experiment.sampler_variables:
+                                    #Remove the previous variable from the sampler variables if it was not 0 before the human entry
+                                    if channel in self.experiment.sampler_variables:
+                                        self.experiment.sampler_variables.remove(channel)
+                                    self.experiment.sequence[row].sampler[col-4] = table_entry #Updating the sampler value
+                                    self.experiment.sampler_variables.add(table_entry) #Adding a new variable to the sampler variables set
+                                    update.variables_tab(self, derived_variables = False)
+                                else:
+                                    self.update_off()
+                                    table_item.setText(str(channel))
+                                    self.update_on()
+                                    self.error_message("Variable you entered is already used in sampler. Duplicates are not allowed.", "Reuse of the variable")        
+                            else:
+                                self.update_off()
+                                table_item.setText(str(channel))
+                                self.update_on()
+                                self.error_message("Variable you entered is in the Scan table. First remove it from there.", "Scanned variable")        
                         else:
                             self.update_off()
                             table_item.setText(str(channel))
                             self.update_on()
-                            self.error_message("Variable you entered is already used in sampler. Duplicates are not allowed.", "Reuse of the variable")        
-                    else:
-                        self.update_off()
-                        table_item.setText(str(channel))
-                        self.update_on()
-                        self.error_message("Variable you entered is in the Scan table. First remove it from there.", "Scanned variable")        
+                            self.error_message("Variable you entered is not found in the variables table. First create the variable there.", "No variable found")
+                    update.sampler_tab(self) 
+                    update.digital_analog_dds_mirny_tabs(self) 
                 else:
+                    self.error_message("Variable is used in a lookup variables table as an argument. First remove it from all lookup variable arguments", "Used sampled variable")
                     self.update_off()
-                    table_item.setText(str(channel))
+                    table_item.setText(channel)
                     self.update_on()
-                    self.error_message("Variable you entered is not found in the variables table. First create the variable there.", "No variable found")
-            update.sampler_tab(self) 
-            update.digital_analog_dds_mirny_tabs(self) 
+            else:
+                self.error_message("Variable is used in a derived variables table as an argument. First remove it from all derived variable arguments", "Used sampled variable")
+                self.update_off()
+                table_item.setText(channel)
+                self.update_on()
+
+
                 
 
 def run():
