@@ -9,3 +9,4 @@ python-dotenv==0.19.1
 qt5-applications==5.15.2.2.2
 qt5-tools==5.15.2.1.2
 sympy==1.10.1    
+scipy==1.9.1
