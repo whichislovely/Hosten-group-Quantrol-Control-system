@@ -573,7 +573,7 @@ class MainWindow(QMainWindow):
         is_derived = False
         is_lookup = False
         text = text.replace(" ", "") # removing spaces
-        text += "+" #Adding a plus in the end of the text in order to avoid typing additional operation for the last element
+        text ="0" + text + "+" #Adding a plus in the end of the text in order to avoid typing additional operation for the last element
         while index < len(text):
             #Adding the next character
             current += text[index]
