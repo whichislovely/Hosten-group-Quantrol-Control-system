@@ -308,8 +308,8 @@ device_db["urukul0_cpld"] = {
         "spi_device": "spi_urukul0",
         "sync_device": None,
         "io_update_device": "ttl_urukul0_io_update",
-        "refclk": 100000000.0,
-        "clk_sel": 0,
+        "refclk": 1000000000.0,
+        "clk_sel": 1,
         "clk_div": 1
     }
 }
@@ -423,8 +423,8 @@ device_db["urukul1_cpld"] = {
         "spi_device": "spi_urukul1",
         "sync_device": None,
         "io_update_device": "ttl_urukul1_io_update",
-        "refclk": 100000000.0,
-        "clk_sel": 0,
+        "refclk": 1000000000.0,
+        "clk_sel": 1,
         "clk_div": 1
     }
 }
@@ -538,8 +538,8 @@ device_db["urukul2_cpld"] = {
         "spi_device": "spi_urukul2",
         "sync_device": None,
         "io_update_device": "ttl_urukul2_io_update",
-        "refclk": 100000000.0,
-        "clk_sel": 0,
+        "refclk": 1000000000.0,
+        "clk_sel": 1,
         "clk_div": 1
     }
 }
@@ -625,8 +625,8 @@ device_db["urukul3_cpld"] = {
         "spi_device": "spi_urukul3",
         "sync_device": None,
         "io_update_device": "ttl_urukul3_io_update",
-        "refclk": 100000000.0,
-        "clk_sel": 0,
+        "refclk": 1000000000.0,
+        "clk_sel": 1,
         "clk_div": 1
     }
 }
