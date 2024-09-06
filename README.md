@@ -134,7 +134,9 @@ State of the DDS turns the channel ON and OFF at 1 and 0 input values.
 Mirny tab has exactly the same appearance and functionality as DDS tab. It was adapted from DDS tab in order to quickly include the functionality of Mirny into Quantrol. However, AFAICT mirny only supports the frequency, attenuation and state parameters. Therefore, amp and phase are not being considered and in principle should be removed from mirny tab.
 
 ## Sampler tab
-Explain
+Sampler tab is used to request sampling by entring the variable name in the corresponding channel at the required time edge. There is a delay between the request of sampling and actual assignment to the variable before it can be used in parameter expression. It is a user responsibility to make sure that there is a sufficient delay. In our lab we found that 160 us is a sufficient delay, but this might depend on different factors. An example of requesting to assign the S2 channel value to the transmission variable is shown below
+
+![image](https://github.com/user-attachments/assets/831efbb9-fc4a-4573-943e-0b36b5c1dd33)
 
 ## Variables tab
 
